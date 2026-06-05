@@ -162,6 +162,10 @@ async function endGame(game, result, reason) {
                 { $set: { rating: r2n }, $inc: inc2 });
 
             ratings = { r1old: r1o, r2old: r2o, r1new: r1n, r2new: r2n };
+
+            // WS 캐시도 즉시 갱신 — 다음 매치에서 올바른 레이팅 표시
+            game.p1ws.rating = r1n;
+            game.p2ws.rating = r2n;
         }
     } catch (e) { console.error('endGame DB error', e); }
 
