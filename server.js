@@ -29,6 +29,10 @@ async function connectDB() {
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'territory_game_online.html'));
+});
+
 function hashPw(pw) {
     return crypto.createHash('sha256').update(pw + 'xgame_십자').digest('hex');
 }
