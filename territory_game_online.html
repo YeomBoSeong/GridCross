@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="only dark">
 <title>십자 땅따먹기</title>
 <style>
 :root {
-    color-scheme: dark;
+    color-scheme: only dark;
     --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --border:#30363d;
     --blue:#58a6ff; --red:#f85149; --green:#3fb950; --yellow:#f0e68c;
     --muted:#8b949e; --text:#e6edf3;
@@ -134,10 +134,13 @@ body{
 .bar1{height:100%;background:#1f6feb;transition:width .3s;width:0%;}
 .bar2{height:100%;background:#da3633;transition:width .3s;width:0%;}
 
-/* grid */
-.grid-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;}
-.grid{display:grid;gap:2px;background:var(--bg3);padding:2px;border-radius:6px;}
-.cell{border-radius:3px;cursor:pointer;background:var(--bg);transition:transform .1s;}
+/* grid — forced-color-adjust 로 브라우저 강제 색상 변환 차단 */
+.grid-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;
+    forced-color-adjust:none;-webkit-forced-color-adjust:none;}
+.grid{display:grid;gap:2px;background:var(--bg3);padding:2px;border-radius:6px;
+    forced-color-adjust:none;-webkit-forced-color-adjust:none;}
+.cell{border-radius:3px;cursor:pointer;background:var(--bg);transition:transform .1s;
+    forced-color-adjust:none;-webkit-forced-color-adjust:none;}
 @media(max-width:540px){
     /* 스코어보드 */
     .sbox{min-width:76px;padding:7px 8px;}
