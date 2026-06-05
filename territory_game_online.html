@@ -365,6 +365,34 @@ body{
     </div>
 </div>
 
+<!-- ══ LOCAL RESULT MODAL ══ -->
+<div id="local-result-modal" class="modal-overlay">
+    <div class="result-card">
+        <div id="lr-emoji" style="font-size:2.5rem"></div>
+        <div id="lr-title" class="result-title"></div>
+        <div id="lr-score" class="result-score"></div>
+        <div id="lr-bar-wrap" style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;display:flex;width:100%">
+            <div id="lr-bar1" style="height:100%;background:#1f6feb;transition:width .6s ease;width:0%"></div>
+            <div id="lr-bar2" style="height:100%;background:#da3633;transition:width .6s ease;width:0%"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+            <div style="flex:1;padding:10px 0;border-radius:8px;background:rgba(31,111,235,.15);text-align:center">
+                <div style="font-size:.78rem;color:var(--muted)" id="lr-lbl1"></div>
+                <div style="font-size:1.5rem;font-weight:bold;color:#58a6ff" id="lr-num1"></div>
+            </div>
+            <div style="flex:1;padding:10px 0;border-radius:8px;background:rgba(248,81,73,.15);text-align:center">
+                <div style="font-size:.78rem;color:var(--muted)" id="lr-lbl2"></div>
+                <div style="font-size:1.5rem;font-weight:bold;color:#f85149" id="lr-num2"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+            <button class="btn btn-primary" onclick="sfx.click();closeLocalResult();initLocalGame()">🔄 다시 하기</button>
+            <button class="btn"            onclick="sfx.click();closeLocalResult()">계속 보기</button>
+            <button class="btn"            onclick="sfx.click();closeLocalResult();goMenu()">메뉴로</button>
+        </div>
+    </div>
+</div>
+
 <!-- ══ RESULT MODAL ══ -->
 <div id="result-modal" class="modal-overlay">
     <div class="result-card">
@@ -906,13 +934,26 @@ function syncLocalUI(){
 function checkLocalEnd(){
     let p1=0,p2=0,em=0;lBoard.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;else em++;}));
     if(em>0)return false;lEnded=true;
-    const p1wins=p1>p2;
-    $e('msg-l').textContent=(p1>p2?'🔵 플레이어 1 승리!':p2>p1?(lMode==='pvai'?'🤖 AI 승리!':'🔴 플레이어 2 승리!'):'🤝 무승부!')+`  (${p1}칸 vs ${p2}칸)`;
+    const p1wins=p1>p2,p2wins=p2>p1;
+    const p2Lbl=lMode==='pvai'?'🤖 AI':'🔴 플레이어 2';
+    let emoji,title;
+    if(p1wins){emoji='🏆';title='🔵 플레이어 1 승리!';}
+    else if(p2wins){emoji=lMode==='pvai'?'🤖':'🏆';title=lMode==='pvai'?'AI 승리!':'🔴 플레이어 2 승리!';}
+    else{emoji='🤝';title='무승부!';}
+    $e('msg-l').textContent=title+`  (${p1}칸 vs ${p2}칸)`;
     $e('lturn').textContent='게임 종료';
-    if(lMode==='pvai'){if(p1wins)sfx.win();else if(p2>p1)sfx.lose();}
-    else sfx.win();
+    if(lMode==='pvai'){if(p1wins)sfx.win();else if(p2wins)sfx.lose();}else sfx.win();
+    const tot=BOARD_N*BOARD_N;
+    $e('lr-emoji').textContent=emoji;$e('lr-title').textContent=title;
+    $e('lr-score').textContent=`총 ${tot}칸 중`;
+    $e('lr-lbl1').textContent='🔵 플레이어 1';$e('lr-lbl2').textContent=p2Lbl;
+    $e('lr-num1').textContent=p1+'칸';$e('lr-num2').textContent=p2+'칸';
+    $e('lr-bar1').style.width='0%';$e('lr-bar2').style.width='0%';
+    setTimeout(()=>{$e('lr-bar1').style.width=(p1/tot*100)+'%';$e('lr-bar2').style.width=(p2/tot*100)+'%';},80);
+    $e('local-result-modal').classList.add('show');
     return true;
 }
+function closeLocalResult(){$e('local-result-modal').classList.remove('show');}
 function hoverInLocal(r,c){clearHoverLocal();if(lEnded||lBoard[r][c]!==EMPTY)return;if(lMode==='pvai'&&lTurn===P2)return;const g=$e('lgrid'),enemy=opp(lTurn);const[prv,prvSt]=lTurn===P1?['prv1','prv1-st']:['prv2','prv2-st'];pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(el)el.classList.add(lBoard[ar][ac]===enemy?prvSt:prv);});}
 function clearHoverLocal(){$e('lgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
 
