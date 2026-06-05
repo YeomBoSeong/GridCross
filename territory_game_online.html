@@ -149,11 +149,6 @@ body{
     #local-mode-lbl,#ai-diff-lbl{display:none!important;}
     #ai-diff-sep{display:none!important;}
     .df-btn{padding:6px 10px;font-size:.82rem;}
-    /* 온라인 VS 헤더: 뱃지가 세로로 쌓이지 않게 */
-    .online-header{flex-wrap:nowrap;gap:8px;}
-    .player-badge{min-width:0;flex:1;padding:6px 8px;overflow:hidden;}
-    .player-badge .pb-name{font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-    .player-badge .pb-rat{font-size:.7rem;}
     .vs-text{flex-shrink:0;}
 }
 .cell:hover{transform:scale(1.1);z-index:5;}
@@ -177,12 +172,13 @@ body{
 #timer-bar-inner{height:100%;border-radius:4px;transition:width 1s linear;width:100%;background:var(--green);}
 #timer-label{font-size:.8rem;color:var(--muted);white-space:nowrap;min-width:70px;text-align:right;}
 
-/* online header */
-.online-header{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;}
+/* online header — 항상 한 줄 유지 */
+.online-header{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;}
 .player-badge{display:flex;flex-direction:column;align-items:center;gap:2px;
     background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-    padding:7px 16px;min-width:130px;}
-.player-badge .pb-name{font-size:.9rem;font-weight:700;}
+    padding:7px 10px;flex:1 1 0;min-width:0;max-width:44%;}
+.player-badge .pb-name{font-size:clamp(.76rem,2.5vw,.9rem);font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .player-badge.blue .pb-name{color:var(--blue);}
 .player-badge.red  .pb-name{color:var(--red);}
 .player-badge .pb-rat{font-size:.76rem;color:var(--yellow);}
