@@ -135,7 +135,17 @@ body{
 /* grid */
 .grid-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;}
 .grid{display:grid;gap:2px;background:var(--bg3);padding:2px;border-radius:6px;}
-.cell{border-radius:3px;cursor:pointer;background:var(--bg);transition:transform .1s;width:30px;height:30px;}
+.cell{border-radius:3px;cursor:pointer;background:var(--bg);transition:transform .1s;}
+@media(max-width:540px){
+    .sbox{min-width:76px;padding:7px 8px;}
+    .sbox .num{font-size:1.5rem;}
+    .sbox .lbl{font-size:.68rem;}
+    .turn-box{min-width:80px;padding:6px 7px;font-size:.78rem;}
+    .player-badge{min-width:100px;padding:6px 10px;}
+    .player-badge .pb-name{font-size:.8rem;}
+    #timer-num{font-size:1.1rem;}
+    #timer-label{min-width:56px;font-size:.72rem;}
+}
 .cell:hover{transform:scale(1.1);z-index:5;}
 .cell.p1{background:#1f6feb;}
 .cell.p2{background:#da3633;}
@@ -540,7 +550,7 @@ body{
         <div class="turn-box" id="lturn">플레이어 1 차례</div>
         <div class="sbox s2"  id="lsb2"><div class="lbl" id="llbl2">🔴 플레이어 2</div><div class="num" id="lnum2">0</div></div>
     </div>
-    <div class="bar-wrap" id="lbar-wrap" style="width:510px;max-width:95vw">
+    <div class="bar-wrap" id="lbar-wrap" style="max-width:95vw">
         <div class="bar1" id="lbar1" style="width:0%"></div><div class="bar2" id="lbar2" style="width:0%"></div>
     </div>
     <div class="grid-wrap"><div class="grid" id="lgrid"></div></div>
@@ -607,7 +617,7 @@ body{
         <span class="vs-text">VS</span>
         <div class="player-badge red"  id="pb2"><span class="pb-name" id="pb2-name">P2</span><span class="pb-rat" id="pb2-rat">⚡1000</span></div>
     </div>
-    <div id="timer-row" style="width:510px;max-width:95vw">
+    <div id="timer-row" style="max-width:95vw">
         <div id="timer-wrap">
             <div id="timer-num">20</div>
             <div id="timer-bar-outer"><div id="timer-bar-inner"></div></div>
@@ -621,7 +631,7 @@ body{
         <div class="turn-box" id="oturn">대기 중</div>
         <div class="sbox s2"  id="osb2"><div class="lbl" id="olbl2">🔴 P2</div><div class="num" id="onum2">0</div></div>
     </div>
-    <div class="bar-wrap" id="obar-wrap" style="width:510px;max-width:95vw">
+    <div class="bar-wrap" id="obar-wrap" style="max-width:95vw">
         <div class="bar1" id="obar1" style="width:0%"></div><div class="bar2" id="obar2" style="width:0%"></div>
     </div>
     <div class="grid-wrap"><div class="grid" id="ogrid"></div></div>
@@ -895,16 +905,25 @@ function aiTurn(){if(lEnded)return;let best=null,bestS=-Infinity;for(let r=0;r<B
 function aiScore(r,c){if(lDiff==='easy')return Math.random();const base=scoreOn(lBoard,r,c,P2)+Math.random()*.25;if(lDiff==='medium')return base;const tmp=lBoard.map(row=>[...row]);pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=P2;});let oB=0;for(let er=0;er<BOARD_N;er++)for(let ec=0;ec<BOARD_N;ec++){if(tmp[er][ec]!==EMPTY)continue;const s=scoreOn(tmp,er,ec,P1);if(s>oB)oB=s;}return base-0.75*oB;}
 
 // ── Grid DOM ──────────────────────────────────
+function getCellSize(){
+    // 뷰포트에서 body 패딩(32) + grid-wrap 패딩(12) + grid 패딩(4) 제외
+    const avail = window.innerWidth - 48;
+    const size  = Math.floor((avail - (BOARD_N-1)*2) / BOARD_N);
+    return Math.max(17, Math.min(30, size));
+}
 function buildGrid(gridEl,clickCb,hoverCb,isOnline){
-    gridEl.innerHTML='';gridEl.style.gridTemplateColumns=`repeat(${BOARD_N},30px)`;
+    gridEl.innerHTML='';
+    const sz=getCellSize();
+    gridEl.style.gridTemplateColumns=`repeat(${BOARD_N},${sz}px)`;
     for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
         const d=document.createElement('div');d.className='cell';d.dataset.rc=`${r},${c}`;
+        d.style.width=d.style.height=sz+'px';
         d.addEventListener('click',()=>clickCb(r,c));
         d.addEventListener('mouseenter',()=>hoverCb(r,c));
         d.addEventListener('mouseleave',()=>gridEl.querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st')));
         gridEl.appendChild(d);
     }
-    const bw=BOARD_N*30+(BOARD_N-1)*2+16;
+    const bw=BOARD_N*sz+(BOARD_N-1)*2+16;
     $e(isOnline?'obar-wrap':'lbar-wrap').style.width=bw+'px';
     if(isOnline)$e('timer-row').style.width=bw+'px';
 }
