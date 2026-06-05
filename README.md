@@ -71,7 +71,6 @@ node server.js
 GridCross/
 ├── server.js                  # Node.js 백엔드 (Express + WebSocket)
 ├── territory_game_online.html # 메인 게임 클라이언트
-├── territory_game.html        # 오프라인 전용 버전
 └── package.json
 ```
 
