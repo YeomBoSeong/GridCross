@@ -134,12 +134,16 @@ body{
 .bar1{height:100%;background:#1f6feb;transition:width .3s;width:0%;}
 .bar2{height:100%;background:#da3633;transition:width .3s;width:0%;}
 
-/* grid — forced-color-adjust 로 브라우저 강제 색상 변환 차단 */
-.grid-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;
+/* grid — gradient로 삼성 브라우저 강제 다크모드 우회 */
+.grid-wrap{background:#161b22;background-image:linear-gradient(#161b22,#161b22);
+    border:1px solid var(--border);border-radius:10px;padding:6px;
     forced-color-adjust:none;-webkit-forced-color-adjust:none;}
-.grid{display:grid;gap:2px;background:var(--bg3);padding:2px;border-radius:6px;
+.grid{display:grid;gap:2px;background:#21262d;background-image:linear-gradient(#21262d,#21262d);
+    padding:2px;border-radius:6px;
     forced-color-adjust:none;-webkit-forced-color-adjust:none;}
-.cell{border-radius:3px;cursor:pointer;background:var(--bg);transition:transform .1s;
+.cell{border-radius:3px;cursor:pointer;
+    background:#0d1117;background-image:linear-gradient(#0d1117,#0d1117);
+    transition:transform .1s;
     forced-color-adjust:none;-webkit-forced-color-adjust:none;}
 @media(max-width:540px){
     /* 스코어보드 */
@@ -157,8 +161,8 @@ body{
     .vs-text{flex-shrink:0;}
 }
 .cell:hover{transform:scale(1.1);z-index:5;}
-.cell.p1{background:#1f6feb;}
-.cell.p2{background:#da3633;}
+.cell.p1{background:#1f6feb;background-image:linear-gradient(#1f6feb,#1f6feb);}
+.cell.p2{background:#da3633;background-image:linear-gradient(#da3633,#da3633);}
 .cell.prv1{background:rgba(88,166,255,.28)!important;box-shadow:inset 0 0 0 2px rgba(88,166,255,.7);}
 .cell.prv1-st{background:rgba(88,166,255,.6)!important;box-shadow:inset 0 0 0 2px var(--blue);}
 .cell.prv2{background:rgba(248,81,73,.28)!important;box-shadow:inset 0 0 0 2px rgba(248,81,73,.7);}
