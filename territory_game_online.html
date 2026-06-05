@@ -164,8 +164,8 @@ body{
 .cell:hover{transform:scale(1.1);z-index:5;}
 .cell.p1{background:#1f6feb;background-image:linear-gradient(#1f6feb,#1f6feb);}
 .cell.p2{background:#da3633;background-image:linear-gradient(#da3633,#da3633);}
-.samsung-browser .cell.p1{background:#58a6ff;background-image:linear-gradient(#58a6ff,#58a6ff);}
-.samsung-browser .cell.p2{background:#f85149;background-image:linear-gradient(#f85149,#f85149);}
+.samsung-browser .cell.p1{background:#99ccff;background-image:linear-gradient(#99ccff,#99ccff);}
+.samsung-browser .cell.p2{background:#ff8080;background-image:linear-gradient(#ff8080,#ff8080);}
 .cell.prv1{background:rgba(88,166,255,.28)!important;box-shadow:inset 0 0 0 2px rgba(88,166,255,.7);}
 .cell.prv1-st{background:rgba(88,166,255,.6)!important;box-shadow:inset 0 0 0 2px var(--blue);}
 .cell.prv2{background:rgba(248,81,73,.28)!important;box-shadow:inset 0 0 0 2px rgba(248,81,73,.7);}
@@ -366,8 +366,9 @@ body{
 </div>
 
 <!-- ══ LOCAL RESULT MODAL ══ -->
-<div id="local-result-modal" class="modal-overlay">
-    <div class="result-card">
+<div id="local-result-modal" class="modal-overlay" onclick="sfx.click();closeLocalResult()">
+    <div class="result-card" style="position:relative" onclick="event.stopPropagation()">
+        <button onclick="sfx.click();closeLocalResult()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1">✕</button>
         <div id="lr-emoji" style="font-size:2.5rem"></div>
         <div id="lr-title" class="result-title"></div>
         <div id="lr-score" class="result-score"></div>
@@ -384,11 +385,6 @@ body{
                 <div style="font-size:.78rem;color:var(--muted)" id="lr-lbl2"></div>
                 <div style="font-size:1.5rem;font-weight:bold;color:#f85149" id="lr-num2"></div>
             </div>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:center">
-            <button class="btn btn-primary" onclick="sfx.click();closeLocalResult();initLocalGame()">🔄 다시 하기</button>
-            <button class="btn"            onclick="sfx.click();closeLocalResult()">계속 보기</button>
-            <button class="btn"            onclick="sfx.click();closeLocalResult();goMenu()">메뉴로</button>
         </div>
     </div>
 </div>
