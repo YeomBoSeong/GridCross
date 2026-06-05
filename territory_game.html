@@ -120,9 +120,89 @@ h1 {
     font-size: 0.84rem; line-height: 1.7;
 }
 .rules b { color: #c9d1d9; }
+
+/* 결과 모달 */
+#result-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 100;
+    align-items: center; justify-content: center;
+}
+#result-overlay.show { display: flex; }
+
+#result-modal {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 16px;
+    padding: 36px 44px;
+    text-align: center;
+    min-width: 280px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    animation: modalPop 0.25s ease-out forwards;
+}
+@keyframes modalPop {
+    0%   { transform: scale(0.75); opacity: 0; }
+    100% { transform: scale(1);    opacity: 1; }
+}
+
+#result-icon   { font-size: 3.2rem; line-height: 1; margin-bottom: 12px; }
+#result-title  { font-size: 1.7rem; font-weight: 700; margin-bottom: 8px; }
+#result-detail { font-size: 1rem; color: #8b949e; margin-bottom: 24px; }
+
+#result-bar-wrap {
+    height: 10px; background: #21262d; border-radius: 5px;
+    overflow: hidden; display: flex; margin-bottom: 24px;
+}
+#result-bar1 { height: 100%; background: #1f6feb; transition: width 0.6s ease; }
+#result-bar2 { height: 100%; background: #da3633; transition: width 0.6s ease; }
+
+.result-scores {
+    display: flex; justify-content: space-between;
+    margin-bottom: 24px; gap: 12px;
+}
+.result-score-box {
+    flex: 1; padding: 10px 0; border-radius: 8px;
+    font-size: 0.8rem; color: #8b949e;
+}
+.result-score-box .rs-num { font-size: 1.6rem; font-weight: bold; margin-top: 4px; }
+.result-score-box.p1 { background: rgba(31,111,235,0.15); }
+.result-score-box.p1 .rs-num { color: #58a6ff; }
+.result-score-box.p2 { background: rgba(248,81,73,0.15); }
+.result-score-box.p2 .rs-num { color: #f85149; }
+
+.result-btns { display: flex; gap: 10px; justify-content: center; }
+.result-btns .btn { padding: 9px 22px; font-size: 0.9rem; }
 </style>
 </head>
 <body>
+
+<!-- 결과 모달 -->
+<div id="result-overlay">
+    <div id="result-modal">
+        <div id="result-icon"></div>
+        <div id="result-title"></div>
+        <div id="result-detail"></div>
+        <div id="result-bar-wrap">
+            <div id="result-bar1" style="width:0%"></div>
+            <div id="result-bar2" style="width:0%"></div>
+        </div>
+        <div class="result-scores">
+            <div class="result-score-box p1">
+                <div id="result-lbl1"></div>
+                <div class="rs-num" id="result-num1"></div>
+            </div>
+            <div class="result-score-box p2">
+                <div id="result-lbl2"></div>
+                <div class="rs-num" id="result-num2"></div>
+            </div>
+        </div>
+        <div class="result-btns">
+            <button class="btn btn-new" onclick="closeResult(); initGame()">🔄 다시 하기</button>
+            <button class="btn" onclick="closeResult()">계속 보기</button>
+        </div>
+    </div>
+</div>
 
 <h1>영역 점령 게임 ✚ 십자</h1>
 
@@ -312,14 +392,43 @@ function checkEnd() {
     const {p1, p2, em} = counts();
     if (em > 0) return false;
     ended = true;
-    const win = p1 > p2
-        ? '🔵 플레이어 1 승리!'
-        : p2 > p1
-            ? (mode === 'pvai' ? '🤖 AI 승리!' : '🔴 플레이어 2 승리!')
-            : '🤝 무승부!';
-    $('msg').textContent = `${win}  (${p1}칸 vs ${p2}칸)`;
+
+    const p2Lbl = mode === 'pvai' ? '🤖 AI' : '🔴 플레이어 2';
+    let icon, title;
+    if (p1 > p2) {
+        icon = '🏆'; title = '🔵 플레이어 1 승리!';
+    } else if (p2 > p1) {
+        icon = mode === 'pvai' ? '🤖' : '🏆';
+        title = mode === 'pvai' ? 'AI 승리!' : '🔴 플레이어 2 승리!';
+    } else {
+        icon = '🤝'; title = '무승부!';
+    }
+
+    $('msg').textContent = `${title}  (${p1}칸 vs ${p2}칸)`;
     $('turnBox').textContent = '게임 종료';
+
+    const total = N * N;
+    $('result-icon').textContent = icon;
+    $('result-title').textContent = title;
+    $('result-detail').textContent = `총 ${total}칸 중`;
+    $('result-lbl1').textContent = '🔵 플레이어 1';
+    $('result-lbl2').textContent = p2Lbl;
+    $('result-num1').textContent = p1 + '칸';
+    $('result-num2').textContent = p2 + '칸';
+
+    $('result-bar1').style.width = '0%';
+    $('result-bar2').style.width = '0%';
+    setTimeout(() => {
+        $('result-bar1').style.width = (p1 / total * 100) + '%';
+        $('result-bar2').style.width = (p2 / total * 100) + '%';
+    }, 80);
+
+    $('result-overlay').classList.add('show');
     return true;
+}
+
+function closeResult() {
+    $('result-overlay').classList.remove('show');
 }
 
 function syncUI() {
