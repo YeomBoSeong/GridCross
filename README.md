@@ -81,7 +81,7 @@ GridCross/
 
 | 메인 메뉴 | 온라인 대전 |
 |-----------|------------|
-| ![메뉴](https://github.com/user-attachments/assets/placeholder1) | ![게임](https://github.com/user-attachments/assets/placeholder2) |
+| ![메뉴](메뉴.png) | ![게임플레이](게임플레이.png) |
 
 ---
 
