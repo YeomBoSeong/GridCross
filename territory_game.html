@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영역 점령 게임 — 십자</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 12px;
+}
+
+h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(120deg, #58a6ff, #f85149);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+
+.btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #e6edf3;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.btn:hover { background: #2d333b; border-color: #58a6ff; }
+.btn.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
+.btn-new { background: #1a4721; border-color: #2ea043; }
+.btn-new:hover { background: #2ea043; }
+
+.sep { width: 1px; height: 22px; background: #30363d; }
+.setting-label { font-size: 0.8rem; color: #8b949e; }
+
+.scoreboard { display: flex; gap: 12px; align-items: stretch; }
+
+.sbox {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px;
+    padding: 10px 20px; border-radius: 8px;
+    border: 2px solid transparent; min-width: 110px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sbox.s1 { background: rgba(31,111,235,0.12); }
+.sbox.s2 { background: rgba(248,81,73,0.12); }
+.sbox.s1.on { border-color: #388bfd; box-shadow: 0 0 12px rgba(56,139,253,0.3); }
+.sbox.s2.on { border-color: #f85149; box-shadow: 0 0 12px rgba(248,81,73,0.3); }
+.sbox .lbl { font-size: 0.78rem; color: #8b949e; }
+.sbox .num { font-size: 2rem; font-weight: bold; }
+.sbox.s1 .num { color: #58a6ff; }
+.sbox.s2 .num { color: #f85149; }
+
+.turn-box {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 14px; background: #161b22;
+    border: 1px solid #30363d; border-radius: 8px;
+    font-size: 0.9rem; text-align: center; min-width: 130px;
+}
+
+#bar-wrap {
+    height: 8px; background: #21262d; border-radius: 4px;
+    overflow: hidden; display: flex; transition: width 0.3s;
+}
+#bar1 { height: 100%; background: #1f6feb; transition: width 0.3s; width: 0%; }
+#bar2 { height: 100%; background: #da3633; transition: width 0.3s; width: 0%; }
+
+#grid-wrap {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 6px;
+}
+#grid {
+    display: grid; gap: 2px; background: #21262d;
+    padding: 2px; border-radius: 4px;
+}
+
+.cell {
+    border-radius: 4px; cursor: pointer;
+    background: #0d1117; transition: transform 0.1s;
+}
+.cell:hover { transform: scale(1.08); z-index: 5; }
+.cell.p1 { background: #1f6feb; }
+.cell.p2 { background: #da3633; }
+
+.cell.prv1    { background: rgba(88,166,255,0.28) !important; box-shadow: inset 0 0 0 2px rgba(88,166,255,0.7); }
+.cell.prv1-st { background: rgba(88,166,255,0.6)  !important; box-shadow: inset 0 0 0 2px #58a6ff; }
+.cell.prv2    { background: rgba(248,81,73,0.28)  !important; box-shadow: inset 0 0 0 2px rgba(248,81,73,0.7); }
+.cell.prv2-st { background: rgba(248,81,73,0.6)   !important; box-shadow: inset 0 0 0 2px #f85149; }
+
+@keyframes pop {
+    0%   { transform: scale(0.55); }
+    65%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+.cell.pop { animation: pop 0.22s ease-out forwards; }
+
+#msg { min-height: 2rem; font-size: 1.25rem; font-weight: bold; text-align: center; }
+
+.rules {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 12px 18px;
+    max-width: 500px; color: #8b949e;
+    font-size: 0.84rem; line-height: 1.7;
+}
+.rules b { color: #c9d1d9; }
+</style>
+</head>
+<body>
+
+<h1>영역 점령 게임 ✚ 십자</h1>
+
+<!-- 모드 / 새 게임 -->
+<div class="row">
+    <button class="btn active" id="pvpBtn" onclick="setMode('pvp')">👥 2인 대전</button>
+    <button class="btn"        id="pvaiBtn" onclick="setMode('pvai')">🤖 AI 대전</button>
+    <div class="sep"></div>
+    <button class="btn btn-new" onclick="initGame()">🔄 새 게임</button>
+</div>
+
+<!-- 설정 -->
+<div class="row">
+    <span class="setting-label">보드 크기</span>
+    <button class="btn sz-btn" data-sz="8"  onclick="setSize(8)">8×8</button>
+    <button class="btn sz-btn active" data-sz="10" onclick="setSize(10)">10×10</button>
+    <button class="btn sz-btn" data-sz="12" onclick="setSize(12)">12×12</button>
+    <button class="btn sz-btn" data-sz="16" onclick="setSize(16)">16×16</button>
+    <div class="sep" id="diffSep" style="display:none"></div>
+    <span class="setting-label" id="diffLbl" style="display:none">AI 난이도</span>
+    <button class="btn df-btn" data-df="easy"   onclick="setDiff('easy')"   id="dfEasy"   style="display:none">쉬움</button>
+    <button class="btn df-btn active" data-df="medium" onclick="setDiff('medium')" id="dfMedium" style="display:none">보통</button>
+    <button class="btn df-btn" data-df="hard"   onclick="setDiff('hard')"   id="dfHard"   style="display:none">어려움</button>
+</div>
+
+<!-- 점수판 -->
+<div class="scoreboard">
+    <div class="sbox s1 on" id="sb1">
+        <div class="lbl" id="lbl1">🔵 플레이어 1</div>
+        <div class="num" id="num1">0</div>
+    </div>
+    <div class="turn-box" id="turnBox">플레이어 1 차례</div>
+    <div class="sbox s2" id="sb2">
+        <div class="lbl" id="lbl2">🔴 플레이어 2</div>
+        <div class="num" id="num2">0</div>
+    </div>
+</div>
+
+<div id="bar-wrap"><div id="bar1"></div><div id="bar2"></div></div>
+
+<div id="grid-wrap"><div id="grid"></div></div>
+
+<div id="msg"></div>
+
+<div class="rules">
+    <b>게임 방법</b><br>
+    • <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우(최대 5칸)가 내 영역으로 바뀝니다<br>
+    • 마우스를 올리면 영향받는 칸을 미리 볼 수 있습니다<br>
+    &nbsp;&nbsp;(연한 색 = 점령, 진한 색 = 상대 칸 빼앗기)<br>
+    • 상대방 칸은 직접 클릭할 수 없습니다<br>
+    • 빈 칸이 모두 채워지면 게임 종료 — 영역이 더 넓은 쪽이 승리!
+</div>
+
+<script>
+const EMPTY = 0, P1 = 1, P2 = 2;
+const CELL_PX = {8: 52, 10: 46, 12: 38, 16: 30};
+
+let N = 10, diff = 'medium', mode = 'pvp';
+let board, turn, ended;
+
+function opp(p) { return p === P1 ? P2 : P1; }
+function $(id) { return document.getElementById(id); }
+function qrc(r, c) { return document.querySelector(`[data-rc="${r},${c}"]`); }
+function px() { return CELL_PX[N] || 46; }
+
+// ---- Settings ----
+
+function setMode(m) {
+    mode = m;
+    $('pvpBtn').classList.toggle('active', m === 'pvp');
+    $('pvaiBtn').classList.toggle('active', m === 'pvai');
+    $('lbl2').textContent = m === 'pvai' ? '🤖 AI' : '🔴 플레이어 2';
+    const show = m === 'pvai' ? '' : 'none';
+    ['diffSep','diffLbl','dfEasy','dfMedium','dfHard'].forEach(id => $(id).style.display = show);
+    initGame();
+}
+
+function setSize(n) {
+    N = n;
+    document.querySelectorAll('.sz-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.sz-btn[data-sz="${n}"]`).classList.add('active');
+    initGame();
+}
+
+function setDiff(d) {
+    diff = d;
+    document.querySelectorAll('.df-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.df-btn[data-df="${d}"]`).classList.add('active');
+}
+
+// ---- Game logic ----
+
+function initGame() {
+    board = Array.from({length: N}, () => new Array(N).fill(EMPTY));
+    turn = P1;
+    ended = false;
+    $('msg').textContent = '';
+    buildGrid();
+    syncUI();
+}
+
+function pattern(r, c) {
+    return [[-1,0],[1,0],[0,-1],[0,1]]
+        .map(([dr,dc]) => [r+dr, c+dc])
+        .filter(([nr,nc]) => nr >= 0 && nr < N && nc >= 0 && nc < N)
+        .concat([[r, c]]);
+}
+
+function onClick(r, c) {
+    if (ended || board[r][c] !== EMPTY) return;
+    if (mode === 'pvai' && turn === P2) return;
+    doMove(r, c, turn);
+}
+
+function doMove(r, c, p) {
+    const cells = pattern(r, c);
+    cells.forEach(([ar,ac]) => { board[ar][ac] = p; });
+
+    cells.forEach(([ar,ac]) => {
+        const el = qrc(ar, ac);
+        if (!el) return;
+        el.className = 'cell ' + (p === P1 ? 'p1' : 'p2');
+        void el.offsetWidth;
+        el.classList.add('pop');
+    });
+
+    turn = opp(p);
+    syncUI();
+    if (checkEnd()) return;
+    if (mode === 'pvai' && turn === P2) setTimeout(aiTurn, 480);
+}
+
+// ---- AI ----
+
+function scoreOn(g, r, c, p) {
+    const enemy = opp(p);
+    return pattern(r, c).reduce((s, [ar,ac]) => {
+        const v = g[ar][ac];
+        return s + (v === EMPTY ? 1 : v === enemy ? 3 : 0);
+    }, 0);
+}
+
+function aiTurn() {
+    if (ended) return;
+    let best = null, bestS = -Infinity;
+
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        if (board[r][c] !== EMPTY) continue;
+        const s = aiScore(r, c);
+        if (s > bestS) { bestS = s; best = [r,c]; }
+    }
+
+    if (best) doMove(best[0], best[1], P2);
+}
+
+function aiScore(r, c) {
+    if (diff === 'easy') return Math.random();
+
+    const base = scoreOn(board, r, c, P2) + Math.random() * 0.25;
+    if (diff === 'medium') return base;
+
+    // Hard: 2-ply lookahead — subtract opponent's best counter
+    const tmp = board.map(row => [...row]);
+    pattern(r, c).forEach(([ar,ac]) => { tmp[ar][ac] = P2; });
+
+    let oppBest = 0;
+    for (let er = 0; er < N; er++) for (let ec = 0; ec < N; ec++) {
+        if (tmp[er][ec] !== EMPTY) continue;
+        const s = scoreOn(tmp, er, ec, P1);
+        if (s > oppBest) oppBest = s;
+    }
+
+    return base - 0.75 * oppBest;
+}
+
+// ---- End / UI ----
+
+function counts() {
+    let p1 = 0, p2 = 0, em = 0;
+    board.forEach(row => row.forEach(v => {
+        if (v === P1) p1++; else if (v === P2) p2++; else em++;
+    }));
+    return {p1, p2, em};
+}
+
+function checkEnd() {
+    const {p1, p2, em} = counts();
+    if (em > 0) return false;
+    ended = true;
+    const win = p1 > p2
+        ? '🔵 플레이어 1 승리!'
+        : p2 > p1
+            ? (mode === 'pvai' ? '🤖 AI 승리!' : '🔴 플레이어 2 승리!')
+            : '🤝 무승부!';
+    $('msg').textContent = `${win}  (${p1}칸 vs ${p2}칸)`;
+    $('turnBox').textContent = '게임 종료';
+    return true;
+}
+
+function syncUI() {
+    const {p1, p2} = counts();
+    const total = N * N;
+    $('num1').textContent = p1;
+    $('num2').textContent = p2;
+    $('bar1').style.width = (p1 / total * 100) + '%';
+    $('bar2').style.width = (p2 / total * 100) + '%';
+
+    if (!ended) {
+        $('turnBox').textContent = turn === P1
+            ? '🔵 플레이어 1 차례'
+            : (mode === 'pvai' ? '🤖 AI 차례' : '🔴 플레이어 2 차례');
+        $('sb1').classList.toggle('on', turn === P1);
+        $('sb2').classList.toggle('on', turn === P2);
+    }
+}
+
+// ---- Grid DOM ----
+
+function buildGrid() {
+    const g = $('grid');
+    g.innerHTML = '';
+    const size = px();
+    g.style.gridTemplateColumns = `repeat(${N}, ${size}px)`;
+
+    for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+            const d = document.createElement('div');
+            d.className = 'cell';
+            d.style.width = d.style.height = size + 'px';
+            d.dataset.rc = `${r},${c}`;
+            d.addEventListener('click',      () => onClick(r, c));
+            d.addEventListener('mouseenter', () => hoverIn(r, c));
+            d.addEventListener('mouseleave', clearHover);
+            g.appendChild(d);
+        }
+    }
+
+    // Match bar width to grid-wrap width
+    const bw = N * size + (N - 1) * 2 + 16;
+    $('bar-wrap').style.width = bw + 'px';
+}
+
+function hoverIn(r, c) {
+    clearHover();
+    if (ended || (mode === 'pvai' && turn === P2)) return;
+    if (board[r][c] !== EMPTY) return;
+
+    const enemy = opp(turn);
+    const [prv, prvSt] = turn === P1 ? ['prv1','prv1-st'] : ['prv2','prv2-st'];
+
+    pattern(r, c).forEach(([ar,ac]) => {
+        const el = qrc(ar, ac);
+        if (el) el.classList.add(board[ar][ac] === enemy ? prvSt : prv);
+    });
+}
+
+function clearHover() {
+    document.querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st')
+        .forEach(el => el.classList.remove('prv1','prv1-st','prv2','prv2-st'));
+}
+
+// ---- Start ----
+initGame();
+</script>
+</body>
+</html>
