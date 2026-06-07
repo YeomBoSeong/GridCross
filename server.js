@@ -33,6 +33,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'territory_game_online.html'));
 });
 
+app.get('/ping', (req, res) => {
+    res.send('ok');
+});
+
 function hashPw(pw) {
     return crypto.createHash('sha256').update(pw + 'xgame_십자').digest('hex');
 }
