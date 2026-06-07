@@ -321,9 +321,25 @@ body{
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);
     border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;
     vertical-align:middle;margin-right:6px;}
+
+/* 광고 반응형 */
+.ad-mobile{display:block;}
+.ad-desktop{display:none;position:fixed;top:50%;right:20px;transform:translateY(-50%);z-index:10;}
+@media(min-width:820px){
+    .ad-mobile{display:none;}
+    .ad-desktop{display:block;}
+}
 </style>
 </head>
 <body>
+
+<!-- ══ DESKTOP AD (160×600 고정 우측) ══ -->
+<div class="ad-desktop">
+    <ins class="kakao_ad_area" style="display:none;"
+        data-ad-unit="DAN-iaJcBPicJleITa8Q"
+        data-ad-width="160"
+        data-ad-height="600"></ins>
+</div>
 
 <!-- ══ DECORATIVE BG ══ -->
 <div id="bg-layer" aria-hidden="true">
@@ -465,7 +481,7 @@ body{
         <button class="btn menu-btn"             onclick="sfx.click();openLeaderboard()"><span class="icon">🏆</span> 리더보드</button>
         <button class="btn menu-btn btn-ghost"   onclick="sfx.click();doLogout()"><span class="icon">🚪</span> 로그아웃</button>
     </div>
-    <div style="margin-top:8px">
+    <div class="ad-mobile" style="margin-top:8px">
         <ins class="kakao_ad_area" style="display:none;"
             data-ad-unit="DAN-4NAQ8mVJ4zHEwpl7"
             data-ad-width="320"
