@@ -286,12 +286,12 @@ body{
 .rules-section li{margin-bottom:3px;}
 .rules-section li b{color:#c9d1d9;}
 
-/* cross demo: 5×5 correct version */
-.demo-grid-5{display:grid;grid-template-columns:repeat(5,30px);grid-template-rows:repeat(5,30px);
+/* cross demo: 3×3 correct version */
+.demo-grid-3{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);
     gap:4px;margin:12px auto;width:fit-content;}
-/* capture demo: two 5×5 side by side */
+/* capture demo: two 3×3 side by side */
 .capture-demo{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
-.demo-grid-cap{display:grid;grid-template-columns:repeat(5,22px);grid-template-rows:repeat(5,22px);gap:3px;}
+.demo-grid-cap{display:grid;grid-template-columns:repeat(3,22px);grid-template-rows:repeat(3,22px);gap:3px;}
 .demo-arrow{font-size:1.4rem;color:var(--muted);}
 .dc{border-radius:4px;background:var(--bg3);}
 .dc.empty{background:var(--bg3);}
@@ -327,28 +327,28 @@ body{
 <!-- ══ DECORATIVE BG ══ -->
 <div id="bg-layer" aria-hidden="true">
     <svg class="bg-cross" style="top:-2%;left:-3%;width:240px;height:240px;opacity:.055;transform:rotate(18deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#58a6ff"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#58a6ff"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#58a6ff"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#58a6ff"/>
     </svg>
     <svg class="bg-cross" style="bottom:-2%;right:-3%;width:260px;height:260px;opacity:.05;transform:rotate(-12deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#f85149"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#f85149"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#f85149"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#f85149"/>
     </svg>
     <svg class="bg-cross" style="top:8%;right:5%;width:120px;height:120px;opacity:.07;transform:rotate(-5deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#58a6ff"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#58a6ff"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#58a6ff"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#58a6ff"/>
     </svg>
     <svg class="bg-cross" style="top:42%;left:2%;width:90px;height:90px;opacity:.06;transform:rotate(30deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#f85149"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#f85149"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#f85149"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#f85149"/>
     </svg>
     <svg class="bg-cross" style="bottom:18%;left:8%;width:60px;height:60px;opacity:.08;transform:rotate(-22deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#58a6ff"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#58a6ff"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#58a6ff"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#58a6ff"/>
     </svg>
     <svg class="bg-cross" style="top:30%;right:8%;width:50px;height:50px;opacity:.07;transform:rotate(42deg)" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-        <rect x="32" y="0"  width="16" height="80" rx="6" fill="#f85149"/>
-        <rect x="0"  y="32" width="80" height="16" rx="6" fill="#f85149"/>
+        <rect x="27" y="0"  width="26" height="80" rx="6" fill="#f85149"/>
+        <rect x="0"  y="27" width="80" height="26" rx="6" fill="#f85149"/>
     </svg>
     <div style="position:absolute;top:15%;left:12%;width:14px;height:14px;background:rgba(88,166,255,.1);border-radius:3px;transform:rotate(8deg)"></div>
     <div style="position:absolute;top:17%;left:15%;width:14px;height:14px;background:rgba(88,166,255,.07);border-radius:3px"></div>
@@ -421,8 +421,8 @@ body{
         <svg class="logo-icon" viewBox="0 0 26 26" width="42" height="42" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="lg-a" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-            <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-a)"/>
-            <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-a)"/>
+            <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-a)"/>
+            <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-a)"/>
         </svg>
         <h1>십자 땅따먹기</h1>
     </div>
@@ -448,8 +448,8 @@ body{
         <svg class="logo-icon" viewBox="0 0 26 26" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="lg-b" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-            <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-b)"/>
-            <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-b)"/>
+            <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-b)"/>
+            <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-b)"/>
         </svg>
         <h1>십자 땅따먹기</h1>
     </div>
@@ -474,8 +474,8 @@ body{
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-r" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-                <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-r)"/>
-                <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-r)"/>
+                <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-r)"/>
+                <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-r)"/>
             </svg>
             <h1>게임 설명</h1>
         </div>
@@ -488,17 +488,15 @@ body{
 
     <div class="rules-section">
         <h3>✚ 기본 규칙 — 십자 점령</h3>
-        <p style="margin-bottom:6px"><b>빈 칸</b>을 클릭하면 그 칸과 <b>위·아래·왼쪽·오른쪽</b>으로 2칸씩(최대 9칸)이 내 영역이 됩니다.<br>
+        <p style="margin-bottom:6px"><b>빈 칸</b>을 클릭하면 그 칸과 <b>위·아래·왼쪽·오른쪽</b>으로 1칸씩(최대 5칸)이 내 영역이 됩니다.<br>
         십자 범위 밖 칸은 포함되지 않습니다.</p>
-        <!-- 5×5 correct demo (9 cells) -->
-        <div class="demo-grid-5">
-            <div class="dc empty"></div><div class="dc empty"></div><div class="dc up"></div>   <div class="dc empty"></div><div class="dc empty"></div>
-            <div class="dc empty"></div><div class="dc empty"></div><div class="dc up"></div>   <div class="dc empty"></div><div class="dc empty"></div>
-            <div class="dc left"></div> <div class="dc left"></div> <div class="dc clicked"></div><div class="dc right"></div><div class="dc right"></div>
-            <div class="dc empty"></div><div class="dc empty"></div><div class="dc down"></div> <div class="dc empty"></div><div class="dc empty"></div>
-            <div class="dc empty"></div><div class="dc empty"></div><div class="dc down"></div> <div class="dc empty"></div><div class="dc empty"></div>
+        <!-- 3×3 correct demo (5 cells) -->
+        <div class="demo-grid-3">
+            <div class="dc empty"></div><div class="dc up"></div>   <div class="dc empty"></div>
+            <div class="dc left"></div> <div class="dc clicked"></div><div class="dc right"></div>
+            <div class="dc empty"></div><div class="dc down"></div> <div class="dc empty"></div>
         </div>
-        <p class="demo-caption">★ = 클릭한 칸 &nbsp;|&nbsp; 파란 칸 = 점령되는 9칸 &nbsp;|&nbsp; 회색 = 포함 안 됨 (십자 범위 밖)</p>
+        <p class="demo-caption">★ = 클릭한 칸 &nbsp;|&nbsp; 파란 칸 = 점령되는 5칸 &nbsp;|&nbsp; 회색 = 포함 안 됨 (십자 범위 밖)</p>
     </div>
 
     <div class="rules-section">
@@ -512,11 +510,9 @@ body{
             <div>
                 <p class="demo-caption" style="margin-bottom:6px">클릭 전</p>
                 <div class="demo-grid-cap">
-                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
-                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
-                    <div class="dc red"></div><div class="dc red"></div><div class="dc empty" style="box-shadow:inset 0 0 0 2px #fff;border-radius:3px"></div><div class="dc red"></div><div class="dc red"></div>
-                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
-                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
+                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
+                    <div class="dc red"></div><div class="dc empty" style="box-shadow:inset 0 0 0 2px #fff;border-radius:3px"></div><div class="dc red"></div>
+                    <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
                 </div>
                 <p class="demo-caption" style="margin-top:4px">흰 테두리 = 클릭할 빈 칸<br>빨간 칸 = 상대방 영역</p>
             </div>
@@ -524,18 +520,16 @@ body{
             <div>
                 <p class="demo-caption" style="margin-bottom:6px">클릭 후</p>
                 <div class="demo-grid-cap">
-                    <div class="dc red"></div> <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div> <div class="dc red"></div>
-                    <div class="dc red"></div> <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div> <div class="dc red"></div>
-                    <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
-                    <div class="dc red"></div> <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div> <div class="dc red"></div>
-                    <div class="dc red"></div> <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div> <div class="dc red"></div>
+                    <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div>
+                    <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
+                    <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">파란 칸 = 내 영역이 됨 (9칸)<br>십자 범위 밖은 그대로</p>
+                <p class="demo-caption" style="margin-top:4px">파란 칸 = 내 영역이 됨 (5칸)<br>십자 범위 밖은 그대로</p>
             </div>
         </div>
         <p style="margin-top:4px;font-size:.82rem;color:var(--muted)">
-            ※ 이 예시에서 가운데 빈 칸을 클릭하면 상하좌우 각 2칸씩 총 8개의 빨간 칸이 모두 내 것이 됩니다.<br>
-            십자 범위 밖 16칸은 그대로 상대방 영역으로 남습니다.
+            ※ 이 예시에서 가운데 빈 칸을 클릭하면 상하좌우 각 1칸씩 총 4개의 빨간 칸이 모두 내 것이 됩니다.<br>
+            십자 범위 밖 4칸은 그대로 상대방 영역으로 남습니다.
         </p>
     </div>
 
@@ -574,7 +568,7 @@ body{
         <ul>
             <li>초반에는 중앙을 선점하면 더 넓은 공간을 확보할 수 있습니다.</li>
             <li>상대 영역 <b>여러 칸에 인접한 빈 칸</b>을 노려 한 번에 많이 빼앗으세요.</li>
-            <li>한 수로 최대 <b>9칸</b>을 차지하거나 빼앗을 수 있습니다.</li>
+            <li>한 수로 최대 <b>5칸</b>을 차지하거나 빼앗을 수 있습니다.</li>
             <li>끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.</li>
         </ul>
     </div>
@@ -591,8 +585,8 @@ body{
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-c" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-                <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-c)"/>
-                <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-c)"/>
+                <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-c)"/>
+                <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-c)"/>
             </svg>
             <h1>십자 땅따먹기</h1>
         </div>
@@ -619,7 +613,7 @@ body{
     <div id="msg-l"></div>
     <div class="rules-inline">
         <b>게임 방법</b><br>
-        • <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우 2칸씩(최대 9칸)이 내 영역으로 바뀝니다<br>
+        • <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우 1칸씩(최대 5칸)이 내 영역으로 바뀝니다<br>
         • 마우스를 올리면 영향받는 칸을 미리 볼 수 있습니다<br>
         • 상대방 칸은 직접 클릭할 수 없지만 범위 안에 들어오면 빼앗깁니다
     </div>
@@ -633,8 +627,8 @@ body{
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-d" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-                <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-d)"/>
-                <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-d)"/>
+                <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-d)"/>
+                <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-d)"/>
             </svg>
             <h1>온라인 대전</h1>
         </div>
@@ -669,8 +663,8 @@ body{
         <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="lg-e" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
-            <rect x="10" y="0" width="6" height="26" rx="2" fill="url(#lg-e)"/>
-            <rect x="0" y="10" width="26" height="6" rx="2" fill="url(#lg-e)"/>
+            <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-e)"/>
+            <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-e)"/>
         </svg>
         <h1>십자 땅따먹기</h1>
     </div>
@@ -868,7 +862,7 @@ function startOnlineGame(msg){
     syncOnlineUI(0,0,BOARD_N*BOARD_N);showScreen('s-online-game');
 }
 function onlineClick(r,c){if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'make_move',r,c}));}
-function pattern(r,c){return[[-2,0],[-1,0],[1,0],[2,0],[0,-2],[0,-1],[0,1],[0,2]].map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<BOARD_N&&nc>=0&&nc<BOARD_N).concat([[r,c]]);}
+function pattern(r,c){return[[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<BOARD_N&&nc>=0&&nc<BOARD_N).concat([[r,c]]);}
 function renderOnlineBoard(){const g=$e('ogrid');for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){const el=qrc(g,r,c);if(!el)continue;const v=oBoard[r][c];el.className='cell'+(v===P1?' p1':v===P2?' p2':'');}}
 function animateOnlineCells(r,c,player){const g=$e('ogrid');pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('pop');});}
 function syncOnlineUI(p1,p2,em){const tot=BOARD_N*BOARD_N;$e('onum1').textContent=p1;$e('onum2').textContent=p2;$e('obar1').style.width=(p1/tot*100)+'%';$e('obar2').style.width=(p2/tot*100)+'%';if(!oEnded){$e('oturn').textContent=oTurn===myNum?'⚡ 내 차례':'⏳ 상대 차례';$e('osb1').classList.toggle('on',oTurn===P1);$e('osb2').classList.toggle('on',oTurn===P2);}}
