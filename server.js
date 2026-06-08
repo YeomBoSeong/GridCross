@@ -343,11 +343,7 @@ wss.on('connection', ws => {
     });
 });
 
-// MongoDB 연결 후 서버 시작
+// 포트 먼저 열고 DB는 백그라운드 연결 (Render 포트 스캔 타임아웃 방지)
+server.listen(PORT, () => console.log(`✅ 서버 실행 중: http://localhost:${PORT}`));
 connectDB()
-    .then(() => server.listen(PORT, () => console.log(`✅ 서버 실행 중: http://localhost:${PORT}`)))
-    .catch(err => {
-        console.error('MongoDB 연결 실패:', err.message);
-        // 로컬 테스트용 — MongoDB 없이도 실행 (데이터 저장 안 됨)
-        server.listen(PORT, () => console.log(`⚠️  DB 없이 실행 중: http://localhost:${PORT}`));
-    });
+    .catch(err => console.error('MongoDB 연결 실패:', err.message));
