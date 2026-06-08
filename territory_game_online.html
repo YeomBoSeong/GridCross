@@ -1011,36 +1011,33 @@ function aiScore(r,c){
     if(lDiff==='medium')return base;
     const tmp=lBoard.map(row=>[...row]);
     pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=P2;});
-    let oB=0,oBR=-1,oBC=-1;
+    let oB=0;
+    const oppMoves=[];
     for(let er=0;er<BOARD_N;er++)for(let ec=0;ec<BOARD_N;ec++){
         if(tmp[er][ec]!==EMPTY)continue;
         const s=scoreOn(tmp,er,ec,P1);
-        if(s>oB){oB=s;oBR=er;oBC=ec;}
+        if(s>oB)oB=s;
+        if(lDiff==='vhard')oppMoves.push([s,er,ec]);
     }
     if(lDiff==='hard')return base-0.75*oB;
-    // vhard: 3수 탐색 — 상대 응수 → AI 반격 → 상대 재응수까지 계산
-    let aiB2=0,aiB2R=-1,aiB2C=-1;
-    if(oBR>=0){
+    // vhard: 상대 상위 5개 응수 각각에 대해 AI 최선 반격 계산 → 최악의 경우가 최선인 수 선택
+    oppMoves.sort((a,b)=>b[0]-a[0]);
+    const topK=oppMoves.slice(0,5);
+    if(topK.length===0)return base;
+    let worstCase=Infinity;
+    for(const [oScore,er,ec] of topK){
         const tmp2=tmp.map(row=>[...row]);
-        pattern(oBR,oBC).forEach(([ar,ac])=>{tmp2[ar][ac]=P1;});
+        pattern(er,ec).forEach(([ar,ac])=>{tmp2[ar][ac]=P1;});
+        let aiB2=0;
         for(let ar=0;ar<BOARD_N;ar++)for(let ac=0;ac<BOARD_N;ac++){
             if(tmp2[ar][ac]!==EMPTY)continue;
             const s=scoreOn(tmp2,ar,ac,P2);
-            if(s>aiB2){aiB2=s;aiB2R=ar;aiB2C=ac;}
+            if(s>aiB2)aiB2=s;
         }
-        if(aiB2R>=0){
-            const tmp3=tmp2.map(row=>[...row]);
-            pattern(aiB2R,aiB2C).forEach(([ar,ac])=>{tmp3[ar][ac]=P2;});
-            let oppB3=0;
-            for(let ar=0;ar<BOARD_N;ar++)for(let ac=0;ac<BOARD_N;ac++){
-                if(tmp3[ar][ac]!==EMPTY)continue;
-                const s=scoreOn(tmp3,ar,ac,P1);
-                if(s>oppB3)oppB3=s;
-            }
-            return base-oB+0.6*aiB2-0.36*oppB3;
-        }
+        const adj=base-oScore+0.6*aiB2;
+        if(adj<worstCase)worstCase=adj;
     }
-    return base-oB+0.6*aiB2;
+    return worstCase;
 }
 
 // ── Grid DOM ──────────────────────────────────
