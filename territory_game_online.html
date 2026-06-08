@@ -623,6 +623,7 @@ body{
         <button class="btn df-btn"        data-df="easy"   onclick="sfx.click();setDiff('easy')"   id="dfEasy"   style="display:none">쉬움</button>
         <button class="btn df-btn active" data-df="medium" onclick="sfx.click();setDiff('medium')" id="dfMedium" style="display:none">보통</button>
         <button class="btn df-btn"        data-df="hard"   onclick="sfx.click();setDiff('hard')"   id="dfHard"   style="display:none">어려움</button>
+        <button class="btn df-btn"        data-df="vhard"  onclick="sfx.click();setDiff('vhard')"  id="dfVhard"  style="display:none">매우 어려움</button>
         <div class="sep"></div>
         <button class="btn btn-success" onclick="sfx.click();initLocalGame()">🔄 새 게임</button>
     </div>
@@ -827,7 +828,7 @@ function goLocal(mode){
     lMode=mode;
     $e('local-mode-lbl').textContent=mode==='pvp'?'👥 2인 대전 (로컬)':'🤖 AI 대전';
     const ai=mode==='pvai';
-    ['ai-diff-sep','ai-diff-lbl','dfEasy','dfMedium','dfHard'].forEach(id=>$e(id).style.display=ai?'':'none');
+    ['ai-diff-sep','ai-diff-lbl','dfEasy','dfMedium','dfHard','dfVhard'].forEach(id=>$e(id).style.display=ai?'':'none');
     initLocalGame();showScreen('s-local');
 }
 function goOnline(){$e('result-modal').classList.remove('show');updateMenuHeader();resetLobbyUI();showScreen('s-online');}
@@ -1004,7 +1005,32 @@ function clearHoverLocal(){$e('lgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.p
 function setDiff(d){lDiff=d;document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.df-btn[data-df="${d}"]`).classList.add('active');}
 function scoreOn(g,r,c,p){const e=opp(p);return pattern(r,c).reduce((s,[ar,ac])=>{const v=g[ar][ac];return s+(v===EMPTY?1:v===e?3:0);},0);}
 function aiTurn(){if(lEnded)return;let best=null,bestS=-Infinity;for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){if(lBoard[r][c]!==EMPTY)continue;const s=aiScore(r,c);if(s>bestS){bestS=s;best=[r,c];}}if(best)doLocalMove(best[0],best[1],P2);}
-function aiScore(r,c){if(lDiff==='easy')return Math.random();const base=scoreOn(lBoard,r,c,P2)+Math.random()*.25;if(lDiff==='medium')return base;const tmp=lBoard.map(row=>[...row]);pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=P2;});let oB=0;for(let er=0;er<BOARD_N;er++)for(let ec=0;ec<BOARD_N;ec++){if(tmp[er][ec]!==EMPTY)continue;const s=scoreOn(tmp,er,ec,P1);if(s>oB)oB=s;}return base-0.75*oB;}
+function aiScore(r,c){
+    if(lDiff==='easy')return Math.random();
+    const base=scoreOn(lBoard,r,c,P2)+Math.random()*.25;
+    if(lDiff==='medium')return base;
+    const tmp=lBoard.map(row=>[...row]);
+    pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=P2;});
+    let oB=0,oBR=-1,oBC=-1;
+    for(let er=0;er<BOARD_N;er++)for(let ec=0;ec<BOARD_N;ec++){
+        if(tmp[er][ec]!==EMPTY)continue;
+        const s=scoreOn(tmp,er,ec,P1);
+        if(s>oB){oB=s;oBR=er;oBC=ec;}
+    }
+    if(lDiff==='hard')return base-0.75*oB;
+    // vhard: 2수 탐색 — 상대 최선 응수 시뮬레이션 후 AI 최선 반격까지 계산
+    let aiB2=0;
+    if(oBR>=0){
+        const tmp2=tmp.map(row=>[...row]);
+        pattern(oBR,oBC).forEach(([ar,ac])=>{tmp2[ar][ac]=P1;});
+        for(let ar=0;ar<BOARD_N;ar++)for(let ac=0;ac<BOARD_N;ac++){
+            if(tmp2[ar][ac]!==EMPTY)continue;
+            const s=scoreOn(tmp2,ar,ac,P2);
+            if(s>aiB2)aiB2=s;
+        }
+    }
+    return base-oB+0.6*aiB2;
+}
 
 // ── Grid DOM ──────────────────────────────────
 function getCellSize(){
