@@ -569,9 +569,44 @@ body{
             상대방 칸 덩어리를 <b>내 칸으로 완전히 둘러싸면</b>(빈 칸에 닿는 부분이 하나도 없으면) 그 덩어리 전체가 <b>통째로 내 영역</b>으로 바뀝니다.<br>
             단, 그 덩어리가 보드의 <b>위·아래·왼쪽·오른쪽 벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다.
         </p>
-        <p style="font-size:.82rem;color:var(--muted)">
-            ※ 상대 칸을 완전히 감싸는 마지막 수를 두는 순간 즉시 발동합니다. 벽에 많이 붙어 있는(모서리 등) 덩어리는 안전합니다.
-        </p>
+
+        <p class="demo-caption" style="margin-bottom:2px">예시 1 — 포위 성공</p>
+        <div class="capture-demo">
+            <div>
+                <p class="demo-caption" style="margin-bottom:6px">클릭 전</p>
+                <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
+                    <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
+                    <div class="dc blue"></div><div class="dc red"></div><div class="dc red"></div><div class="dc empty" style="box-shadow:inset 0 0 0 2px #fff;border-radius:3px"></div>
+                    <div class="dc blue"></div><div class="dc red"></div><div class="dc red"></div><div class="dc blue"></div>
+                    <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
+                </div>
+                <p class="demo-caption" style="margin-top:4px">흰 테두리 = 마지막으로 클릭할 빈 칸<br>빨간 칸 = 상대방 덩어리<br>파란 칸 = 이미 둘러싼 내 영역</p>
+            </div>
+            <div class="demo-arrow">→</div>
+            <div>
+                <p class="demo-caption" style="margin-bottom:6px">클릭 후</p>
+                <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
+                    <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
+                    <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
+                    <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
+                    <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
+                </div>
+                <p class="demo-caption" style="margin-top:4px">마지막 빈 칸을 클릭하는 순간<br>덩어리 전체가 한 번에 뒤집힙니다</p>
+            </div>
+        </div>
+
+        <p class="demo-caption" style="margin-top:14px;margin-bottom:2px">예시 2 — 벽에 닿아 포획 실패</p>
+        <div class="capture-demo">
+            <div>
+                <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
+                    <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
+                    <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
+                    <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
+                    <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
+                </div>
+                <p class="demo-caption" style="margin-top:4px">빨간 덩어리가 <b>왼쪽·위·아래 벽 3개</b>에 닿아 있어<br>오른쪽을 파란 칸으로 완전히 막아도 <b>포획되지 않습니다</b> 🚫</p>
+            </div>
+        </div>
     </div>
 
     <div class="rules-section">
