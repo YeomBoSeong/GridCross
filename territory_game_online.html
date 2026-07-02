@@ -6,18 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only dark">
 <title>십자 땅따먹기 — 온라인 전략 보드게임</title>
-<meta name="description" content="16×16 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임. AI 대전, 2인 로컬 대전, 온라인 매치메이킹을 즐겨보세요.">
+<meta name="description" content="12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임. AI 대전, 2인 로컬 대전, 온라인 매치메이킹을 즐겨보세요.">
 <meta name="keywords" content="십자 땅따먹기, 보드게임, 온라인 게임, 전략 게임, 2인 게임, AI 대전, 무료 게임">
 <meta name="author" content="GridCross">
 <link rel="canonical" href="https://gridcrossgame.onrender.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://gridcrossgame.onrender.com/">
 <meta property="og:title" content="십자 땅따먹기 — 온라인 전략 보드게임">
-<meta property="og:description" content="16×16 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임. AI·2인 대전 지원.">
+<meta property="og:description" content="12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임. AI·2인 대전 지원.">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="십자 땅따먹기">
-<meta name="twitter:description" content="16×16 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임.">
+<meta name="twitter:description" content="12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임.">
 <meta name="google-site-verification" content="sSqqsEQFi1CN6Pg4jk9VRVl2XeRWoBjt08-SDUUYcJE" />
 <meta name="naver-site-verification" content="1505adfe6ccf0760a5747c6c216c0b5176bbc29f" />
 <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
@@ -513,7 +513,7 @@ body{
 
     <div class="rules-section">
         <h3>🎯 목표</h3>
-        <p>16×16 보드의 모든 칸이 채워졌을 때, <b style="color:#c9d1d9">더 많은 칸</b>을 차지한 플레이어가 승리합니다.</p>
+        <p>12×12 보드의 모든 칸이 채워졌을 때, <b style="color:#c9d1d9">더 많은 칸</b>을 차지한 플레이어가 승리합니다.</p>
     </div>
 
     <div class="rules-section">
@@ -800,7 +800,7 @@ const sfx = {
 };
 
 // ── Constants & state ────────────────────────
-const EMPTY=0,P1=1,P2=2,BOARD_N=16,TURN_TIME=20;
+const EMPTY=0,P1=1,P2=2,BOARD_N=12,TURN_TIME=20;
 let currentUser=null, ws=null;
 let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff='medium';

@@ -93,7 +93,7 @@ app.get('/api/leaderboard', async (req, res) => {
 // ── WebSocket 게임 서버 ───────────────────────
 
 const EMPTY = 0, P1 = 1, P2 = 2;
-const N          = 16;
+const N          = 12;
 const TURN_TIME  = 20;
 
 const waitingQueue      = [];
