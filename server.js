@@ -13,18 +13,21 @@ const PORT      = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI;       // Render 환경변수로 주입
 
 // ── MongoDB 연결 ──────────────────────────────
-let usersCol = null;   // users 컬렉션
-let dailyCol = null;   // dailyGames 컬렉션 (일일 게임 방 · 대국)
+let usersCol   = null;   // users 컬렉션
+let dailyCol   = null;   // dailyGames 컬렉션 (일일 게임 방 · 대국)
+let historyCol = null;   // gameHistory 컬렉션 (게임 기록)
 
 async function connectDB() {
     if (usersCol) return usersCol;
     const client = new MongoClient(MONGO_URI);
     await client.connect();
-    usersCol = client.db('십자게임').collection('users');
-    dailyCol = client.db('십자게임').collection('dailyGames');
+    usersCol   = client.db('십자게임').collection('users');
+    dailyCol   = client.db('십자게임').collection('dailyGames');
+    historyCol = client.db('십자게임').collection('gameHistory');
     // 유저네임에 고유 인덱스
     await usersCol.createIndex({ username: 1 }, { unique: true });
     await dailyCol.createIndex({ status: 1 });
+    await historyCol.createIndex({ username: 1, createdAt: -1 });
     console.log('✅ MongoDB 연결 성공');
     return usersCol;
 }
@@ -197,6 +200,40 @@ async function applyEloResult(p1name, p2name, result) {
     return { r1old: r1o, r2old: r2o, r1new: r1n, r2new: r2n };
 }
 
+// ── 게임 기록 ──────────────────────────────────
+async function recordHistory(p1name, p2name, result, mode, reason, ratings, p1Score, p2Score) {
+    const mk = (me, opponent, myScore, oppScore, myResult, rBefore, rAfter) => ({
+        username: me, opponent, result: myResult, mode, reason,
+        myScore, oppScore,
+        ratingBefore: rBefore != null ? rBefore : null,
+        ratingAfter:  rAfter  != null ? rAfter  : null,
+        delta: (rBefore != null && rAfter != null) ? rAfter - rBefore : null,
+        createdAt: Date.now(),
+    });
+    const r1 = result === 'p1' ? 'win' : result === 'p2' ? 'loss' : 'draw';
+    const r2 = result === 'p2' ? 'win' : result === 'p1' ? 'loss' : 'draw';
+    try {
+        await historyCol.insertMany([
+            mk(p1name, p2name, p1Score, p2Score, r1, ratings.r1old, ratings.r1new),
+            mk(p2name, p1name, p2Score, p1Score, r2, ratings.r2old, ratings.r2new),
+        ]);
+    } catch (e) { console.error('recordHistory error', e); }
+}
+
+app.get('/api/history', async (req, res) => {
+    const { username } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    if (!username) return res.json([]);
+    try {
+        await connectDB();
+        const docs = await historyCol.find({ username }).sort({ createdAt: -1 }).limit(limit).toArray();
+        res.json(docs.map(d => ({
+            opponent: d.opponent, result: d.result, mode: d.mode, reason: d.reason,
+            myScore: d.myScore, oppScore: d.oppScore, delta: d.delta, createdAt: d.createdAt,
+        })));
+    } catch (e) { res.json([]); }
+});
+
 // ── 일일 게임 (Daily Game: 수 제한 1일, 비동기, 방 목록) ──────
 const DAILY_TURN_MS      = 24 * 60 * 60 * 1000;
 const MAX_DAILY_PER_USER = 5;
@@ -230,6 +267,9 @@ async function endDailyGame(doc, result, reason) {
     let ratings = {};
     try { ratings = await applyEloResult(doc.p1, doc.p2, result); }
     catch (e) { console.error('endDailyGame elo error', e); }
+
+    const { p1: p1Score, p2: p2Score } = cnt(doc.board);
+    await recordHistory(doc.p1, doc.p2, result, 'daily', reason, ratings, p1Score, p2Score);
 
     const update = { status: 'finished', result, reason, ratings, finishedAt: Date.now() };
     await dailyCol.updateOne({ _id: doc._id }, { $set: update });
@@ -440,6 +480,7 @@ async function endGame(game, result, reason) {
             game.p1ws.rating = ratings.r1new;
             game.p2ws.rating = ratings.r2new;
         }
+        await recordHistory(game.p1name, game.p2name, result, game.mode, reason, ratings, p1, p2);
     } catch (e) { console.error('endGame DB error', e); }
 
     const msg = { type: 'game_over', result, reason, p1, p2, ratings };
@@ -450,7 +491,7 @@ async function endGame(game, result, reason) {
     games.delete(game.id);
 }
 
-function startGame(p1ws, p2ws) {
+function startGame(p1ws, p2ws, mode) {
     [p1ws, p2ws].forEach(w => {
         const i = waitingQueue.indexOf(w);
         if (i !== -1) waitingQueue.splice(i, 1);
@@ -458,7 +499,7 @@ function startGame(p1ws, p2ws) {
 
     const gid   = genId();
     const board = emptyBoard();
-    const game  = { id: gid, board, turn: P1, ended: false,
+    const game  = { id: gid, board, turn: P1, ended: false, mode,
         p1ws, p2ws, p1name: p1ws.username, p2name: p2ws.username, turnTimer: null };
     games.set(gid, game);
     p1ws.gameId = gid;
@@ -506,7 +547,7 @@ wss.on('connection', ws => {
             if (i !== -1) waitingQueue.splice(i, 1);
             waitingQueue.push(ws);
             send(ws, { type: 'waiting' });
-            if (waitingQueue.length >= 2) startGame(waitingQueue.shift(), waitingQueue.shift());
+            if (waitingQueue.length >= 2) startGame(waitingQueue.shift(), waitingQueue.shift(), 'random');
             return;
         }
 
@@ -554,7 +595,7 @@ wss.on('connection', ws => {
                 send(ch.fromWs, { type: 'challenge_declined', by: ws.username });
                 return;
             }
-            startGame(ch.fromWs, ws);
+            startGame(ch.fromWs, ws, 'invite');
             return;
         }
 

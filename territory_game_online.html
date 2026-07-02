@@ -293,6 +293,23 @@ body{
 .rating-cell{color:var(--yellow);font-weight:600;text-align:right;}
 .stat{color:var(--muted);text-align:center;}
 
+/* history */
+#history-modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);
+    align-items:center;justify-content:center;padding:20px;display:none;}
+#history-modal.show{display:flex;}
+.hist-row{display:flex;flex-direction:column;gap:4px;background:var(--bg);
+    border:1px solid var(--bg3);border-radius:10px;padding:10px 14px;}
+.hist-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.hist-badge{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap;}
+.hist-badge.mode-random{background:rgba(88,166,255,.15);color:var(--blue);}
+.hist-badge.mode-invite{background:rgba(240,230,140,.15);color:#e3b341;}
+.hist-badge.mode-daily{background:rgba(63,185,80,.15);color:var(--green);}
+.hist-badge.res-win{background:rgba(63,185,80,.18);color:var(--green);}
+.hist-badge.res-loss{background:rgba(248,81,73,.18);color:var(--red);}
+.hist-badge.res-draw{background:rgba(240,230,140,.18);color:var(--yellow);}
+.hist-opp{font-size:.88rem;font-weight:600;color:var(--text);}
+.hist-sub{font-size:.78rem;color:var(--muted);}
+
 /* rules screen */
 .rules-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
     padding:18px 22px;width:100%;max-width:560px;}
@@ -503,6 +520,7 @@ body{
         <button class="btn menu-btn"             onclick="sfx.click();goLocal('pvp')"><span class="icon">👥</span> 2인 대전 (로컬)</button>
         <button class="btn menu-btn"             onclick="sfx.click();showScreen('s-rules')"><span class="icon">📖</span> 게임 설명</button>
         <button class="btn menu-btn"             onclick="sfx.click();openLeaderboard()"><span class="icon">🏆</span> 리더보드</button>
+        <button class="btn menu-btn"             onclick="sfx.click();openHistory()"><span class="icon">📜</span> 게임 기록</button>
         <button class="btn menu-btn btn-ghost"   onclick="sfx.click();doLogout()"><span class="icon">🚪</span> 로그아웃</button>
     </div>
 </div>
@@ -865,6 +883,17 @@ body{
             </tr></thead>
             <tbody id="lb-body"></tbody>
         </table>
+    </div>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div id="history-modal">
+    <div class="lb-card">
+        <div class="lb-header">
+            <span class="lb-title">📜 최근 게임 기록</span>
+            <button class="btn-close" onclick="closeHistory()">✕</button>
+        </div>
+        <div id="history-body" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 </div>
 
@@ -1257,13 +1286,22 @@ function updateDailyDeadline(){
 }
 async function dailyClick(r,c){
     if(!dGame||dGame.status!=='active'||dGame.turn!==dMyNum||dGame.board[r][c]!==EMPTY)return;
+    clearHoverDaily();
+    // 낙관적 업데이트: AI 대전처럼 클릭 즉시 로컬에서 반영하고, 서버 응답은 백그라운드에서 확정만 한다
+    const myNum=dMyNum;
+    const board=dGame.board.map(row=>[...row]);
+    pattern(r,c).forEach(([ar,ac])=>{board[ar][ac]=myNum;});
+    const captured=applyEnclosures(board,myNum);
+    dGame={...dGame,board,turn:opp(myNum)};
+    renderDailyBoard();animateDailyCells(r,c,myNum);
+    if(captured.length)animateDailyCapture(captured,myNum);
+    syncDailyUI();sfx.myMove();
+
     const res=await fetch(`/api/daily/games/${dGameId}/move`,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({username:currentUser.username,r,c})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
     if(!res.ok){alert(res.msg||'이동 실패');openDailyGame(dGameId);return;}
     dGame=res.game;
-    renderDailyBoard();animateDailyCells(res.r,res.c,res.player);
-    if(res.captured&&res.captured.length)animateDailyCapture(res.captured,res.player);
-    syncDailyUI();updateDailyDeadline();sfx.myMove();
+    renderDailyBoard();syncDailyUI();updateDailyDeadline();
     if(dGame.status==='finished'){clearInterval(dDeadlineInterval);showDailyResult();}
 }
 function animateDailyCells(r,c,player){const g=$e('dgrid');pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('pop');});}
@@ -1545,6 +1583,33 @@ async function openLeaderboard(){
 }
 function closeLeaderboard(){$e('lb-modal').classList.remove('show');}
 $e('lb-modal').addEventListener('click',e=>{if(e.target===$e('lb-modal'))closeLeaderboard();});
+
+// ── History ───────────────────────────────────
+const HIST_MODE_LBL={random:'🔀 랜덤 매치',invite:'📨 유저 초대',daily:'📅 일일 게임'};
+const HIST_MODE_CLS={random:'mode-random',invite:'mode-invite',daily:'mode-daily'};
+const HIST_RES_LBL={win:'승',loss:'패',draw:'무'};
+const HIST_RES_CLS={win:'res-win',loss:'res-loss',draw:'res-draw'};
+const HIST_REASON_LBL={timeout:'시간초과',forfeit:'기권',disconnect:'연결끊김'};
+async function openHistory(){
+    $e('history-modal').classList.add('show');
+    $e('history-body').innerHTML='<div class="daily-empty">불러오는 중...</div>';
+    const data=await fetch(`/api/history?username=${encodeURIComponent(currentUser.username)}&limit=20`).then(r=>r.json()).catch(()=>[]);
+    if(!data.length){$e('history-body').innerHTML='<div class="daily-empty">아직 게임 기록이 없습니다</div>';return;}
+    $e('history-body').innerHTML=data.map(h=>{
+        const deltaTxt=h.delta==null?'':` · ${h.delta>0?'+':''}${h.delta}`;
+        const reasonTxt=h.reason&&HIST_REASON_LBL[h.reason]?` · ${HIST_REASON_LBL[h.reason]}`:'';
+        return`<div class="hist-row">
+            <div class="hist-top">
+                <span class="hist-badge ${HIST_MODE_CLS[h.mode]||'mode-random'}">${HIST_MODE_LBL[h.mode]||h.mode}</span>
+                <span class="hist-badge ${HIST_RES_CLS[h.result]||''}">${HIST_RES_LBL[h.result]||h.result}</span>
+                <span class="hist-opp">vs ${h.opponent}</span>
+            </div>
+            <div class="hist-sub">${h.myScore}칸 vs ${h.oppScore}칸${deltaTxt}${reasonTxt} · ${timeAgo(h.createdAt)}</div>
+        </div>`;
+    }).join('');
+}
+function closeHistory(){$e('history-modal').classList.remove('show');}
+$e('history-modal').addEventListener('click',e=>{if(e.target===$e('history-modal'))closeHistory();});
 </script>
 </body>
 </html>
