@@ -141,6 +141,7 @@ body{
 .sbox .num{font-size:1.9rem;font-weight:800;line-height:1.1;}
 .sbox.s1 .num{color:var(--blue);}
 .sbox.s2 .num{color:var(--red);}
+.sbox .cap{font-size:.66rem;color:var(--muted);}
 .turn-box{display:flex;align-items:center;justify-content:center;
     padding:8px 12px;background:var(--bg2);border:1px solid var(--border);
     border-radius:10px;font-size:.88rem;text-align:center;min-width:112px;}
@@ -187,7 +188,11 @@ body{
 .cell.prv2-st{background:rgba(248,81,73,.6)!important;box-shadow:inset 0 0 0 2px var(--red);}
 @keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
 .cell.pop{animation:pop .22s ease-out forwards;}
+@keyframes flip{0%{transform:scale(1) rotateY(0deg);filter:brightness(1);}40%{transform:scale(1.25) rotateY(90deg);filter:brightness(2.5);}70%{transform:scale(1.15) rotateY(0deg);filter:brightness(1.8);}100%{transform:scale(1) rotateY(0deg);filter:brightness(1);}}
+.cell.cap-anim{animation:flip .45s ease-out forwards;}
 #msg-l,#msg-o{min-height:1.8rem;font-size:1.1rem;font-weight:bold;text-align:center;}
+.capture-msg{min-height:1.3rem;font-size:.88rem;font-weight:bold;text-align:center;color:#e3b341;opacity:0;transition:opacity .3s;}
+.capture-msg.show{opacity:1;}
 
 /* timer */
 #s-online-game{gap:8px;}
@@ -559,6 +564,17 @@ body{
     </div>
 
     <div class="rules-section">
+        <h3>⭐ 포위 포획</h3>
+        <p style="margin-bottom:6px">
+            상대방 칸 덩어리를 <b>내 칸으로 완전히 둘러싸면</b>(빈 칸에 닿는 부분이 하나도 없으면) 그 덩어리 전체가 <b>통째로 내 영역</b>으로 바뀝니다.<br>
+            단, 그 덩어리가 보드의 <b>위·아래·왼쪽·오른쪽 벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다.
+        </p>
+        <p style="font-size:.82rem;color:var(--muted)">
+            ※ 상대 칸을 완전히 감싸는 마지막 수를 두는 순간 즉시 발동합니다. 벽에 많이 붙어 있는(모서리 등) 덩어리는 안전합니다.
+        </p>
+    </div>
+
+    <div class="rules-section">
         <h3>🔍 미리보기</h3>
         <ul>
             <li>마우스를 올리면 클릭 시 영향받는 칸을 미리 확인할 수 있습니다.</li>
@@ -594,6 +610,8 @@ body{
             <li>초반에는 중앙을 선점하면 더 넓은 공간을 확보할 수 있습니다.</li>
             <li>상대 영역 <b>여러 칸에 인접한 빈 칸</b>을 노려 한 번에 많이 빼앗으세요.</li>
             <li>한 수로 최대 <b>5칸</b>을 차지하거나 빼앗을 수 있습니다.</li>
+            <li>상대 칸 덩어리가 벽에서 멀리 떨어져 있다면 <b>포위 포획</b>을 노려보세요 — 한 번에 큰 덩어리를 뒤집을 수 있습니다.</li>
+            <li>내 덩어리가 포위당하지 않으려면 <b>벽(모서리)에 붙여서</b> 영역을 넓히는 것도 좋은 전략입니다.</li>
             <li>끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.</li>
         </ul>
     </div>
@@ -623,26 +641,29 @@ body{
         <button class="btn df-btn"        data-df="easy"   onclick="sfx.click();setDiff('easy')"   id="dfEasy"   style="display:none">쉬움</button>
         <button class="btn df-btn active" data-df="medium" onclick="sfx.click();setDiff('medium')" id="dfMedium" style="display:none">보통</button>
         <button class="btn df-btn"        data-df="hard"   onclick="sfx.click();setDiff('hard')"   id="dfHard"   style="display:none">어려움</button>
-        <button class="btn df-btn"        data-df="vhard"  onclick="sfx.click();setDiff('vhard')"  id="dfVhard"  style="display:none">매우 어려움</button>
+        <button class="btn df-btn"        data-df="expert" onclick="sfx.click();setDiff('expert')" id="dfExpert" style="display:none">전문가</button>
     </div>
     <div class="row" style="justify-content:center">
         <button class="btn btn-success" onclick="sfx.click();initLocalGame()">🔄 새 게임</button>
     </div>
     <div class="scoreboard">
-        <div class="sbox s1 on" id="lsb1"><div class="lbl" id="llbl1">🔵 플레이어 1</div><div class="num" id="lnum1">0</div></div>
+        <div class="sbox s1 on" id="lsb1"><div class="lbl" id="llbl1">🔵 플레이어 1</div><div class="num" id="lnum1">0</div><div class="cap" id="lcap1">포획 0칸</div></div>
         <div class="turn-box" id="lturn">플레이어 1 차례</div>
-        <div class="sbox s2"  id="lsb2"><div class="lbl" id="llbl2">🔴 플레이어 2</div><div class="num" id="lnum2">0</div></div>
+        <div class="sbox s2"  id="lsb2"><div class="lbl" id="llbl2">🔴 플레이어 2</div><div class="num" id="lnum2">0</div><div class="cap" id="lcap2">포획 0칸</div></div>
     </div>
     <div class="bar-wrap" id="lbar-wrap" style="max-width:95vw">
         <div class="bar1" id="lbar1" style="width:0%"></div><div class="bar2" id="lbar2" style="width:0%"></div>
     </div>
+    <div class="capture-msg" id="lcapmsg"></div>
     <div class="grid-wrap"><div class="grid" id="lgrid"></div></div>
     <div id="msg-l"></div>
     <div class="rules-inline">
         <b>게임 방법</b><br>
         • <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우 1칸씩(최대 5칸)이 내 영역으로 바뀝니다<br>
         • 마우스를 올리면 영향받는 칸을 미리 볼 수 있습니다<br>
-        • 상대방 칸은 직접 클릭할 수 없지만 범위 안에 들어오면 빼앗깁니다
+        • 상대방 칸은 직접 클릭할 수 없지만 범위 안에 들어오면 빼앗깁니다<br>
+        • <b style="color:#e3b341">⭐ 포위 포획</b>: 상대 칸 덩어리를 내 칸으로 완전히 둘러싸면 통째로 뒤집힙니다<br>
+        &nbsp;&nbsp;단, 덩어리가 보드 <b>벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다
     </div>
 </div>
 
@@ -710,13 +731,14 @@ body{
                 onclick="sfx.click();openForfeitModal()">🏳️ 기권</button>
     </div>
     <div class="scoreboard">
-        <div class="sbox s1 on" id="osb1"><div class="lbl" id="olbl1">🔵 P1</div><div class="num" id="onum1">0</div></div>
+        <div class="sbox s1 on" id="osb1"><div class="lbl" id="olbl1">🔵 P1</div><div class="num" id="onum1">0</div><div class="cap" id="ocap1">포획 0칸</div></div>
         <div class="turn-box" id="oturn">대기 중</div>
-        <div class="sbox s2"  id="osb2"><div class="lbl" id="olbl2">🔴 P2</div><div class="num" id="onum2">0</div></div>
+        <div class="sbox s2"  id="osb2"><div class="lbl" id="olbl2">🔴 P2</div><div class="num" id="onum2">0</div><div class="cap" id="ocap2">포획 0칸</div></div>
     </div>
     <div class="bar-wrap" id="obar-wrap" style="max-width:95vw">
         <div class="bar1" id="obar1" style="width:0%"></div><div class="bar2" id="obar2" style="width:0%"></div>
     </div>
+    <div class="capture-msg" id="ocapmsg"></div>
     <div class="grid-wrap"><div class="grid" id="ogrid"></div></div>
     <div id="msg-o"></div>
 </div>
@@ -782,6 +804,7 @@ const EMPTY=0,P1=1,P2=2,BOARD_N=16,TURN_TIME=20;
 let currentUser=null, ws=null;
 let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff='medium';
+let lCapCounts=[0,0],oCapCounts=[0,0];
 let timerInterval=null,timerSecs=TURN_TIME,timerFor=P1,timerPrevSecs=TURN_TIME+1;
 
 function $e(id){return document.getElementById(id);}
@@ -829,7 +852,7 @@ function goLocal(mode){
     lMode=mode;
     $e('local-mode-lbl').textContent=mode==='pvp'?'👥 2인 대전 (로컬)':'🤖 AI 대전';
     const ai=mode==='pvai';
-    ['ai-diff-sep','ai-diff-lbl','dfEasy','dfMedium','dfHard','dfVhard'].forEach(id=>$e(id).style.display=ai?'':'none');
+    ['ai-diff-sep','ai-diff-lbl','dfEasy','dfMedium','dfHard','dfExpert'].forEach(id=>$e(id).style.display=ai?'':'none');
     initLocalGame();showScreen('s-local');
 }
 function goOnline(){$e('result-modal').classList.remove('show');updateMenuHeader();resetLobbyUI();showScreen('s-online');}
@@ -860,6 +883,12 @@ function handleWS(msg){
         case 'move_made':
             oBoard=msg.board;oTurn=msg.turn;
             renderOnlineBoard();animateOnlineCells(msg.r,msg.c,msg.player);
+            if(msg.captured&&msg.captured.length){
+                animateOnlineCapture(msg.captured,msg.player);
+                oCapCounts[msg.player-1]+=msg.captured.length;
+                $e('ocap1').textContent=`포획 ${oCapCounts[0]}칸`;$e('ocap2').textContent=`포획 ${oCapCounts[1]}칸`;
+                showOnlineCaptureMsg(msg.player,msg.captured.length);
+            }
             syncOnlineUI(msg.p1,msg.p2,msg.em);
             if(msg.player===myNum) sfx.myMove(); else sfx.oppMove();
             break;
@@ -887,7 +916,7 @@ function switchTab(tabId,btn){document.querySelectorAll('.tab-pane').forEach(p=>
 // ── Online game ───────────────────────────────
 function startOnlineGame(msg){
     myNum=msg.playerNum;oBoard=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
-    oTurn=P1;oEnded=false;
+    oTurn=P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent='포획 0칸';$e('ocap2').textContent='포획 0칸';$e('ocapmsg').classList.remove('show');
     $e('challenge-notif').classList.remove('show');$e('result-modal').classList.remove('show');pendingChallengeFrom=null;
     const myN=currentUser.username,oppN=msg.opponent,myR=currentUser.rating,opR=msg.opponentRating;
     if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (나)`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent='🔵 나';$e('olbl2').textContent=`🔴 ${oppN}`;}
@@ -898,8 +927,44 @@ function startOnlineGame(msg){
 }
 function onlineClick(r,c){if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'make_move',r,c}));}
 function pattern(r,c){return[[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<BOARD_N&&nc>=0&&nc<BOARD_N).concat([[r,c]]);}
+
+// ── 포위 포획 (siege capture) ───────────────────
+// board를 직접 변형하며, 뒤집힌 [r,c] 좌표 배열을 반환
+function applyEnclosures(board,p){
+    const enemy=opp(p);
+    const visited=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(false));
+    const toFlip=[];
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
+        if(board[r][c]!==enemy||visited[r][c])continue;
+        const group=[];const queue=[[r,c]];let enclosed=true;const wallsHit=new Set();
+        while(queue.length){
+            const[cr,cc]=queue.shift();
+            if(visited[cr][cc])continue;
+            visited[cr][cc]=true;group.push([cr,cc]);
+            for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){
+                const nr=cr+dr,nc=cc+dc;
+                if(nr<0){wallsHit.add('top');continue;}
+                if(nr>=BOARD_N){wallsHit.add('bottom');continue;}
+                if(nc<0){wallsHit.add('left');continue;}
+                if(nc>=BOARD_N){wallsHit.add('right');continue;}
+                if(board[nr][nc]===EMPTY)enclosed=false;
+                if(board[nr][nc]===enemy&&!visited[nr][nc])queue.push([nr,nc]);
+            }
+        }
+        if(enclosed&&wallsHit.size<=2)group.forEach(cell=>toFlip.push(cell));
+    }
+    toFlip.forEach(([fr,fc])=>{board[fr][fc]=p;});
+    return toFlip;
+}
 function renderOnlineBoard(){const g=$e('ogrid');for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){const el=qrc(g,r,c);if(!el)continue;const v=oBoard[r][c];el.className='cell'+(v===P1?' p1':v===P2?' p2':'');}}
 function animateOnlineCells(r,c,player){const g=$e('ogrid');pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('pop');});}
+function animateOnlineCapture(cells,player){const g=$e('ogrid');cells.forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('cap-anim');});}
+let oCapTimer=null;
+function showOnlineCaptureMsg(player,n){
+    const who=player===myNum?'⭐ 내가':'⭐ 상대가';
+    const el=$e('ocapmsg');el.textContent=`${who} 포위 포획! ${n}칸을 뒤집었습니다`;el.classList.add('show');
+    clearTimeout(oCapTimer);oCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
 function syncOnlineUI(p1,p2,em){const tot=BOARD_N*BOARD_N;$e('onum1').textContent=p1;$e('onum2').textContent=p2;$e('obar1').style.width=(p1/tot*100)+'%';$e('obar2').style.width=(p2/tot*100)+'%';if(!oEnded){$e('oturn').textContent=oTurn===myNum?'⚡ 내 차례':'⏳ 상대 차례';$e('osb1').classList.toggle('on',oTurn===P1);$e('osb2').classList.toggle('on',oTurn===P2);}}
 function hoverInOnline(r,c){clearHoverOnline();if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;const g=$e('ogrid'),enemy=opp(oTurn);const[prv,prvSt]=oTurn===P1?['prv1','prv1-st']:['prv2','prv2-st'];pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(el)el.classList.add(oBoard[ar][ac]===enemy?prvSt:prv);});}
 function clearHoverOnline(){$e('ogrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
@@ -957,7 +1022,8 @@ function updateTimerUI(){
 // ── Local game ────────────────────────────────
 function initLocalGame(){
     lBoard=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
-    lTurn=P1;lEnded=false;$e('msg-l').textContent='';
+    lTurn=P1;lEnded=false;lCapCounts=[0,0];$e('msg-l').textContent='';
+    $e('lcap1').textContent='포획 0칸';$e('lcap2').textContent='포획 0칸';$e('lcapmsg').classList.remove('show');
     $e('llbl1').textContent='🔵 플레이어 1';$e('llbl2').textContent=lMode==='pvai'?'🤖 AI':'🔴 플레이어 2';
     buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),false);syncLocalUI();
 }
@@ -966,12 +1032,25 @@ function doLocalMove(r,c,p){
     const cells=pattern(r,c);cells.forEach(([ar,ac])=>{lBoard[ar][ac]=p;});
     const g=$e('lgrid');
     cells.forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(p===P1?'p1':'p2');void el.offsetWidth;el.classList.add('pop');});
+    const flipped=applyEnclosures(lBoard,p);
+    if(flipped.length){
+        lCapCounts[p-1]+=flipped.length;
+        flipped.forEach(([fr,fc])=>{const el=qrc(g,fr,fc);if(!el)return;el.className='cell '+(p===P1?'p1':'p2');void el.offsetWidth;el.classList.add('cap-anim');});
+        showLocalCaptureMsg(p,flipped.length);
+    }
     if(p===P1) sfx.myMove(); else sfx.oppMove();
-    lTurn=opp(p);syncLocalUI();if(checkLocalEnd())return;if(lMode==='pvai'&&lTurn===P2)setTimeout(aiTurn,480);
+    lTurn=opp(p);syncLocalUI();if(checkLocalEnd())return;if(lMode==='pvai'&&lTurn===P2)setTimeout(aiTurn,flipped.length?680:480);
+}
+let lCapTimer=null;
+function showLocalCaptureMsg(p,n){
+    const name=p===P1?'🔵 플레이어 1':(lMode==='pvai'?'🤖 AI':'🔴 플레이어 2');
+    const el=$e('lcapmsg');el.textContent=`⭐ 포위 포획! ${name}이 ${n}칸을 뒤집었습니다`;el.classList.add('show');
+    clearTimeout(lCapTimer);lCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
 }
 function syncLocalUI(){
     let p1=0,p2=0;lBoard.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));
     const tot=BOARD_N*BOARD_N;$e('lnum1').textContent=p1;$e('lnum2').textContent=p2;
+    $e('lcap1').textContent=`포획 ${lCapCounts[0]}칸`;$e('lcap2').textContent=`포획 ${lCapCounts[1]}칸`;
     $e('lbar1').style.width=(p1/tot*100)+'%';$e('lbar2').style.width=(p2/tot*100)+'%';
     if(!lEnded){$e('lturn').textContent=lTurn===P1?'🔵 플레이어 1 차례':(lMode==='pvai'?'🤖 AI 차례':'🔴 플레이어 2 차례');
         $e('lsb1').classList.toggle('on',lTurn===P1);$e('lsb2').classList.toggle('on',lTurn===P2);}
@@ -1002,43 +1081,111 @@ function closeLocalResult(){$e('local-result-modal').classList.remove('show');}
 function hoverInLocal(r,c){clearHoverLocal();if(lEnded||lBoard[r][c]!==EMPTY)return;if(lMode==='pvai'&&lTurn===P2)return;const g=$e('lgrid'),enemy=opp(lTurn);const[prv,prvSt]=lTurn===P1?['prv1','prv1-st']:['prv2','prv2-st'];pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(el)el.classList.add(lBoard[ar][ac]===enemy?prvSt:prv);});}
 function clearHoverLocal(){$e('lgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
 
-// ── AI ────────────────────────────────────────
+// ── AI (minimax + alpha-beta, 포위 포획까지 완전 시뮬레이션) ──
 function setDiff(d){lDiff=d;document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.df-btn[data-df="${d}"]`).classList.add('active');}
-function scoreOn(g,r,c,p){const e=opp(p);return pattern(r,c).reduce((s,[ar,ac])=>{const v=g[ar][ac];return s+(v===EMPTY?1:v===e?3:0);},0);}
-function aiTurn(){if(lEnded)return;let best=null,bestS=-Infinity;for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){if(lBoard[r][c]!==EMPTY)continue;const s=aiScore(r,c);if(s>bestS){bestS=s;best=[r,c];}}if(best)doLocalMove(best[0],best[1],P2);}
-function aiScore(r,c){
-    if(lDiff==='easy')return Math.random();
-    const base=scoreOn(lBoard,r,c,P2)+Math.random()*.25;
-    if(lDiff==='medium')return base;
-    const tmp=lBoard.map(row=>[...row]);
-    pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=P2;});
-    let oB=0;
-    const oppMoves=[];
-    for(let er=0;er<BOARD_N;er++)for(let ec=0;ec<BOARD_N;ec++){
-        if(tmp[er][ec]!==EMPTY)continue;
-        const s=scoreOn(tmp,er,ec,P1);
-        if(s>oB)oB=s;
-        if(lDiff==='vhard')oppMoves.push([s,er,ec]);
+
+function scoreOn(g,r,c,p){
+    const e=opp(p);
+    return pattern(r,c).reduce((s,[ar,ac])=>{const v=g[ar][ac];return s+(v===EMPTY?1:v===e?5:0);},0);
+}
+// 내부 노드 빠른 후보 정렬
+function topMoves(g,p,k){
+    const moves=[];
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++)
+        if(g[r][c]===EMPTY)moves.push([r,c,scoreOn(g,r,c,p)]);
+    return moves.sort((a,b)=>b[2]-a[2]).slice(0,k).map(([r,c])=>[r,c]);
+}
+// 루트 전용: 완전 시뮬레이션 결과로 수 정렬 (알파-베타 가지치기 효율 극대화)
+function topMovesQ(g,p,k){
+    const moves=[];
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
+        if(g[r][c]!==EMPTY)continue;
+        const s=evalBoard(applyMoveB(g,r,c,p));
+        moves.push([r,c,p===P2?s:-s]);
     }
-    if(lDiff==='hard')return base-0.75*oB;
-    // vhard: 상대 상위 5개 응수 각각에 대해 AI 최선 반격 계산 → 최악의 경우가 최선인 수 선택
-    oppMoves.sort((a,b)=>b[0]-a[0]);
-    const topK=oppMoves.slice(0,5);
-    if(topK.length===0)return base;
-    let worstCase=Infinity;
-    for(const [oScore,er,ec] of topK){
-        const tmp2=tmp.map(row=>[...row]);
-        pattern(er,ec).forEach(([ar,ac])=>{tmp2[ar][ac]=P1;});
-        let aiB2=0;
-        for(let ar=0;ar<BOARD_N;ar++)for(let ac=0;ac<BOARD_N;ac++){
-            if(tmp2[ar][ac]!==EMPTY)continue;
-            const s=scoreOn(tmp2,ar,ac,P2);
-            if(s>aiB2)aiB2=s;
+    return moves.sort((a,b)=>b[2]-a[2]).slice(0,k).map(([r,c])=>[r,c]);
+}
+// 수를 복사본에 시뮬레이션 (포위 포획까지 완전 적용)
+function applyMoveB(g,r,c,p){
+    const tmp=g.map(row=>[...row]);
+    pattern(r,c).forEach(([ar,ac])=>{tmp[ar][ac]=p;});
+    applyEnclosures(tmp,p);
+    return tmp;
+}
+// 포위 위협 점수: p에 의해 거의 포위된 enemy 그룹에 보너스
+function nearEnclosureScore(g,p){
+    const enemy=opp(p);
+    const vis=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(false));
+    let bonus=0;
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
+        if(g[r][c]!==enemy||vis[r][c])continue;
+        const group=[];const q=[[r,c]];let emptyEdges=0;const walls=new Set();
+        while(q.length){
+            const[cr,cc]=q.shift();
+            if(vis[cr][cc])continue;
+            vis[cr][cc]=true;group.push([cr,cc]);
+            for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){
+                const nr=cr+dr,nc=cc+dc;
+                if(nr<0){walls.add('T');continue;}
+                if(nr>=BOARD_N){walls.add('B');continue;}
+                if(nc<0){walls.add('L');continue;}
+                if(nc>=BOARD_N){walls.add('R');continue;}
+                if(g[nr][nc]===EMPTY)emptyEdges++;
+                else if(g[nr][nc]===enemy&&!vis[nr][nc])q.push([nr,nc]);
+            }
         }
-        const adj=base-oScore+0.6*aiB2;
-        if(adj<worstCase)worstCase=adj;
+        if(walls.size<=2){
+            const w=emptyEdges<=1?1.8:emptyEdges<=3?0.7:emptyEdges<=5?0.25:0;
+            bonus+=group.length*w;
+        }
     }
-    return worstCase;
+    return bonus;
+}
+function evalBoard(g){
+    let p1=0,p2=0;
+    g.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));
+    return (p2-p1)+nearEnclosureScore(g,P2)-nearEnclosureScore(g,P1);
+}
+function aiTurn(){
+    if(lEnded)return;
+    let best=null;
+    if(lDiff==='easy')best=minimaxRoot(1,12);
+    else if(lDiff==='medium')best=minimaxRoot(2,12);
+    else{const depth=lDiff==='expert'?6:4;best=minimaxRoot(depth,12);}
+    if(best)doLocalMove(best[0],best[1],P2);
+}
+function minimaxRoot(depth,beam){
+    const cands=topMovesQ(lBoard,P2,beam);
+    if(!cands.length)return null;
+    let best=cands[0],bestVal=-Infinity;
+    for(const[r,c]of cands){
+        const val=minimax(applyMoveB(lBoard,r,c,P2),depth-1,false,-Infinity,Infinity);
+        if(val>bestVal){bestVal=val;best=[r,c];}
+    }
+    return best;
+}
+function minimax(g,depth,isMax,alpha,beta){
+    if(depth===0)return evalBoard(g);
+    const p=isMax?P2:P1;const beam=12;
+    const cands=topMoves(g,p,beam);
+    if(!cands.length)return evalBoard(g);
+    if(isMax){
+        let val=-Infinity;
+        for(const[r,c]of cands){
+            val=Math.max(val,minimax(applyMoveB(g,r,c,p),depth-1,false,alpha,beta));
+            alpha=Math.max(alpha,val);
+            if(beta<=alpha)break;
+        }
+        return val;
+    }else{
+        let val=Infinity;
+        for(const[r,c]of cands){
+            val=Math.min(val,minimax(applyMoveB(g,r,c,p),depth-1,true,alpha,beta));
+            beta=Math.min(beta,val);
+            if(beta<=alpha)break;
+        }
+        return val;
+    }
 }
 
 // ── Grid DOM ──────────────────────────────────

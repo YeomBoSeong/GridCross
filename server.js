@@ -118,6 +118,47 @@ function cnt(board) {
     return { p1, p2, em };
 }
 
+// ── 포위 포획 (siege capture) ───────────────────
+// board를 직접 변형하며, 뒤집힌 [r,c] 좌표 배열을 반환
+function applyEnclosures(board, p) {
+    const enemy = p === P1 ? P2 : P1;
+    const visited = Array.from({ length: N }, () => new Array(N).fill(false));
+    const toFlip = [];
+
+    for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+            if (board[r][c] !== enemy || visited[r][c]) continue;
+
+            const group = [];
+            const queue = [[r, c]];
+            let enclosed = true;
+            const wallsHit = new Set();
+
+            while (queue.length) {
+                const [cr, cc] = queue.shift();
+                if (visited[cr][cc]) continue;
+                visited[cr][cc] = true;
+                group.push([cr, cc]);
+
+                for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    const nr = cr+dr, nc = cc+dc;
+                    if (nr < 0)  { wallsHit.add('top');    continue; }
+                    if (nr >= N) { wallsHit.add('bottom'); continue; }
+                    if (nc < 0)  { wallsHit.add('left');   continue; }
+                    if (nc >= N) { wallsHit.add('right');  continue; }
+                    if (board[nr][nc] === EMPTY) enclosed = false;
+                    if (board[nr][nc] === enemy && !visited[nr][nc]) queue.push([nr, nc]);
+                }
+            }
+
+            if (enclosed && wallsHit.size <= 2) group.forEach(cell => toFlip.push(cell));
+        }
+    }
+
+    toFlip.forEach(([fr, fc]) => { board[fr][fc] = p; });
+    return toFlip;
+}
+
 function eloCalc(ra, rb, s) {
     return Math.round(ra + 32 * (s - 1 / (1 + Math.pow(10, (rb - ra) / 400))));
 }
@@ -299,11 +340,12 @@ wss.on('connection', ws => {
             if (game.board[r][c] !== EMPTY) return;
 
             pts(game.board, r, c).forEach(([ar,ac]) => { game.board[ar][ac] = myNum; });
+            const captured = applyEnclosures(game.board, myNum);
             game.turn = myNum === P1 ? P2 : P1;
 
             const { p1, p2, em } = cnt(game.board);
             const mv = { type: 'move_made', r, c, player: myNum,
-                board: game.board, turn: game.turn, p1, p2, em };
+                board: game.board, turn: game.turn, p1, p2, em, captured };
             send(game.p1ws, mv);
             send(game.p2ws, mv);
 
