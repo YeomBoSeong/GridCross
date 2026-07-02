@@ -228,6 +228,17 @@ body{
     display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;}
 .lobby-status{font-size:.88rem;color:var(--muted);min-height:1.4em;line-height:1.5;}
 
+/* daily rooms & games */
+.daily-list{width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;}
+.daily-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.daily-row .dr-info{display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0;}
+.daily-row .dr-name{font-size:.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.daily-row .dr-sub{font-size:.76rem;color:var(--muted);}
+.daily-row .dr-turn{color:#3fb950;font-weight:700;}
+.daily-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:14px 0;}
+.daily-section-title{font-size:.85rem;color:var(--muted);font-weight:600;align-self:flex-start;margin:4px 0 -2px;}
+
 /* challenge notif */
 #challenge-notif{display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
     z-index:150;min-width:320px;max-width:90vw;}
@@ -722,6 +733,7 @@ body{
     <div class="tabs">
         <button class="tab-btn active" onclick="sfx.click();switchTab('tab-random',this)">🔀 랜덤 매치</button>
         <button class="tab-btn"        onclick="sfx.click();switchTab('tab-invite',this)">📨 유저 초대</button>
+        <button class="tab-btn"        onclick="sfx.click();switchTab('tab-daily',this)">📅 일일 게임</button>
     </div>
     <div class="tab-pane active" id="tab-random">
         <div class="lobby-box">
@@ -737,6 +749,20 @@ body{
             <button class="btn btn-primary" style="width:100%;padding:11px" id="btn-invite" onclick="sfx.click();sendChallenge()">📨 초대 보내기</button>
             <div class="lobby-status" id="invite-status"></div>
         </div>
+    </div>
+    <div class="tab-pane" id="tab-daily">
+        <div class="lobby-box" style="width:100%;max-width:420px">
+            <p class="info-text">수 제한 시간 <b style="color:#c9d1d9">1일</b>의 비동기 대전입니다. 결과에 따라 레이팅이 변동됩니다.</p>
+            <div class="row" style="width:100%">
+                <button class="btn btn-primary" style="flex:1" onclick="sfx.click();createDailyRoom()">➕ 방 만들기</button>
+                <button class="btn btn-success" style="flex:1" onclick="sfx.click();randomJoinDaily()">🎲 랜덤 참가</button>
+            </div>
+            <div class="lobby-status" id="daily-status"></div>
+        </div>
+        <div class="daily-section-title">내 일일 게임</div>
+        <div class="daily-list" id="daily-my-list"><div class="daily-empty">불러오는 중...</div></div>
+        <div class="daily-section-title">참가 대기 중인 방</div>
+        <div class="daily-list" id="daily-room-list"><div class="daily-empty">불러오는 중...</div></div>
     </div>
 </div>
 
@@ -776,6 +802,52 @@ body{
     <div class="capture-msg" id="ocapmsg"></div>
     <div class="grid-wrap"><div class="grid" id="ogrid"></div></div>
     <div id="msg-o"></div>
+</div>
+
+<!-- ══════════ DAILY GAME ══════════ -->
+<div id="s-daily-game" class="screen">
+    <div class="shead">
+        <button class="btn btn-ghost shead-back" onclick="sfx.click();closeDailyGame()">← 목록</button>
+        <div class="logo-title sm">
+            <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="lg-f" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
+                <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-f)"/>
+                <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-f)"/>
+            </svg>
+            <h1>일일 게임</h1>
+        </div>
+    </div>
+    <div class="online-header">
+        <div class="player-badge blue" id="dpb1"><span class="pb-name" id="dpb1-name">P1</span><span class="pb-rat" id="dpb1-rat">⚡1000</span></div>
+        <span class="vs-text">VS</span>
+        <div class="player-badge red"  id="dpb2"><span class="pb-name" id="dpb2-name">P2</span><span class="pb-rat" id="dpb2-rat">⚡1000</span></div>
+    </div>
+    <div id="daily-timer-row" style="max-width:95vw;display:flex;align-items:center;gap:8px;width:100%">
+        <div id="daily-timer-wrap" style="flex:1;display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 14px">
+            <span style="font-size:1.1rem">⏳</span>
+            <div id="daily-deadline-txt" style="flex:1;font-size:.85rem;text-align:center">-</div>
+        </div>
+        <button class="btn btn-warn" id="daily-forfeit-btn" style="padding:7px 14px;flex-shrink:0" onclick="sfx.click();openDailyForfeitModal()">🏳️ 기권</button>
+    </div>
+    <div class="scoreboard">
+        <div class="sbox s1 on" id="dsb1"><div class="lbl" id="dlbl1">🔵 P1</div><div class="num" id="dnum1">0</div></div>
+        <div class="turn-box" id="dturn">대기 중</div>
+        <div class="sbox s2"  id="dsb2"><div class="lbl" id="dlbl2">🔴 P2</div><div class="num" id="dnum2">0</div></div>
+    </div>
+    <div class="bar-wrap" id="dbar-wrap" style="max-width:95vw">
+        <div class="bar1" id="dbar1" style="width:0%"></div><div class="bar2" id="dbar2" style="width:0%"></div>
+    </div>
+    <div class="capture-msg" id="dcapmsg"></div>
+    <div class="grid-wrap"><div class="grid" id="dgrid"></div></div>
+    <div id="msg-d"></div>
+    <div id="daily-result-box" class="result-card" style="display:none">
+        <div id="dr-emoji" style="font-size:2rem"></div>
+        <div id="dr-title" class="result-title"></div>
+        <div id="dr-score" class="result-score"></div>
+        <div id="dr-rating" class="result-rating-row" style="display:none"></div>
+        <button class="btn btn-primary" style="margin-top:4px;padding:11px 24px" onclick="sfx.click();closeDailyGame()">← 목록으로</button>
+    </div>
 </div>
 
 <!-- ══ LEADERBOARD ══ -->
@@ -938,6 +1010,10 @@ function handleWS(msg){
             else{$e('invite-status').textContent=msg.msg||'초대 실패';$e('btn-invite').disabled=false;}break;
         case 'challenge_declined':$e('invite-status').textContent=`${msg.by}님이 초대를 거절했습니다.`;$e('btn-invite').disabled=false;break;
         case 'challenge_expired':$e('invite-status').textContent='초대가 만료되었습니다.';$e('btn-invite').disabled=false;break;
+        case 'daily_notify':
+            if(dGameId===msg.gameId&&$e('s-daily-game').classList.contains('active'))openDailyGame(dGameId);
+            if($e('s-online').classList.contains('active')&&$e('tab-daily').classList.contains('active'))loadDailyLobby();
+            break;
     }
 }
 
@@ -946,7 +1022,8 @@ function findRandomMatch(){if(!ws||ws.readyState!==WebSocket.OPEN){connectWS();s
 function cancelRandomMatch(){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave_queue'}));$e('random-status').textContent='버튼을 눌러 상대를 찾으세요.';$e('btn-find').style.display='';$e('btn-cancel').style.display='none';}
 function sendChallenge(){const to=$e('invite-input').value.trim();if(!to){$e('invite-status').textContent='유저네임을 입력하세요';return;}if(!ws||ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(sendChallenge,600);return;}ws.send(JSON.stringify({type:'send_challenge',to}));}
 function respondChallenge(accept){$e('challenge-notif').classList.remove('show');if(!pendingChallengeFrom)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'respond_challenge',from:pendingChallengeFrom,accept}));pendingChallengeFrom=null;}
-function switchTab(tabId,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));$e(tabId).classList.add('active');btn.classList.add('active');}
+function switchTab(tabId,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));$e(tabId).classList.add('active');btn.classList.add('active');if(tabId==='tab-daily')loadDailyLobby();}
+function switchTabById(tabId){const idx=tabId==='tab-random'?0:tabId==='tab-invite'?1:2;switchTab(tabId,document.querySelectorAll('.tab-btn')[idx]);}
 
 // ── Online game ───────────────────────────────
 function startOnlineGame(msg){
@@ -957,7 +1034,7 @@ function startOnlineGame(msg){
     if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (나)`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent='🔵 나';$e('olbl2').textContent=`🔴 ${oppN}`;}
     else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (나)`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent='🔴 나';}
     $e('msg-o').textContent='';$e('forfeit-btn').style.display='';
-    buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),true);
+    buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),'online');
     syncOnlineUI(0,0,BOARD_N*BOARD_N);showScreen('s-online-game');
 }
 function onlineClick(r,c){if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'make_move',r,c}));}
@@ -1025,9 +1102,216 @@ function showOnlineResult(msg){
     $e('forfeit-btn').style.display='none';$e('result-modal').classList.add('show');
 }
 
-function openForfeitModal(){if(!oEnded)$e('forfeit-modal').classList.add('show');}
+let forfeitMode='online';
+function openForfeitModal(){if(!oEnded){forfeitMode='online';$e('forfeit-modal').classList.add('show');}}
+function openDailyForfeitModal(){if(dGame&&dGame.status==='active'){forfeitMode='daily';$e('forfeit-modal').classList.add('show');}}
 function closeForfeitModal(){$e('forfeit-modal').classList.remove('show');}
-function confirmForfeit(){closeForfeitModal();if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'forfeit'}));}
+function confirmForfeit(){closeForfeitModal();if(forfeitMode==='daily'){dailyForfeit();}else if(ws&&ws.readyState===WebSocket.OPEN){ws.send(JSON.stringify({type:'forfeit'}));}}
+
+// ── Daily game (async, 1-day move limit) ──────
+let dGame=null,dGameId=null,dMyNum=0,dDeadlineInterval=null;
+
+function cntBoard(b){let p1=0,p2=0;b.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));return{p1,p2};}
+function timeAgo(ts){
+    const diff=Date.now()-ts,m=Math.floor(diff/60000);
+    if(m<1)return'방금 전';if(m<60)return`${m}분 전`;
+    const h=Math.floor(m/60);if(h<24)return`${h}시간 전`;
+    return`${Math.floor(h/24)}일 전`;
+}
+
+async function loadDailyLobby(){loadDailyRoomList();loadDailyMyList();}
+async function loadDailyRoomList(){
+    const el=$e('daily-room-list');
+    const data=await fetch('/api/daily/rooms').then(r=>r.json()).catch(()=>[]);
+    if(!data.length){el.innerHTML='<div class="daily-empty">대기 중인 방이 없습니다</div>';return;}
+    el.innerHTML=data.map(r=>`
+        <div class="daily-row">
+            <div class="dr-info">
+                <div class="dr-name">${r.creator}</div>
+                <div class="dr-sub">⚡${r.creatorRating} · ${timeAgo(r.createdAt)}</div>
+            </div>
+            <button class="btn btn-success" onclick="sfx.click();joinDailyRoom('${r.id}')">참가</button>
+        </div>`).join('');
+}
+async function loadDailyMyList(){
+    const el=$e('daily-my-list');
+    if(!currentUser){el.innerHTML='';return;}
+    const data=await fetch(`/api/daily/games?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).catch(()=>[]);
+    if(!data.length){el.innerHTML='<div class="daily-empty">진행 중인 일일 게임이 없습니다</div>';return;}
+    el.innerHTML=data.map(g=>{
+        if(g.status==='waiting')return`
+            <div class="daily-row">
+                <div class="dr-info"><div class="dr-name">내가 만든 방 (대기 중)</div>
+                <div class="dr-sub">${timeAgo(g.createdAt)}</div></div>
+                <button class="btn btn-danger" onclick="sfx.click();cancelDailyRoom('${g.id}')">취소</button>
+            </div>`;
+        const turnTxt=g.myTurn?'<span class="dr-turn">⚡ 내 차례</span>':'⏳ 상대 차례';
+        return`
+            <div class="daily-row" style="cursor:pointer" onclick="sfx.click();openDailyGame('${g.id}')">
+                <div class="dr-info"><div class="dr-name">vs ${g.opponent} (⚡${g.opponentRating})</div>
+                <div class="dr-sub">${g.p1Score}:${g.p2Score} · ${turnTxt}</div></div>
+                <button class="btn">보기</button>
+            </div>`;
+    }).join('');
+}
+
+async function createDailyRoom(){
+    if(!currentUser)return;
+    const res=await fetch('/api/daily/rooms',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
+    $e('daily-status').textContent=res.ok?'방을 만들었습니다. 다른 유저가 참가할 때까지 기다려주세요.':(res.msg||'방 생성 실패');
+    if(res.ok)loadDailyLobby();
+}
+async function randomJoinDaily(){
+    if(!currentUser)return;
+    const res=await fetch('/api/daily/rooms/random-join',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
+    if(!res.ok){$e('daily-status').textContent=res.msg||'참가 실패';return;}
+    $e('daily-status').textContent='';
+    openDailyGameFromData(res.game);
+}
+async function joinDailyRoom(id){
+    if(!currentUser)return;
+    const res=await fetch(`/api/daily/rooms/${id}/join`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
+    if(!res.ok){$e('daily-status').textContent=res.msg||'참가 실패';loadDailyLobby();return;}
+    openDailyGameFromData(res.game);
+}
+async function cancelDailyRoom(id){
+    if(!currentUser)return;
+    await fetch(`/api/daily/rooms/${id}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({}));
+    loadDailyLobby();
+}
+
+async function openDailyGame(id){
+    if(!currentUser)return;
+    const res=await fetch(`/api/daily/games/${id}?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).catch(()=>({ok:false}));
+    if(!res.ok){alert(res.msg||'게임을 불러올 수 없습니다');return;}
+    openDailyGameFromData(res.game);
+}
+function openDailyGameFromData(game){
+    dGame=game;dGameId=game.id;dMyNum=game.p1===currentUser.username?P1:P2;
+    renderDailyGame();showScreen('s-daily-game');
+}
+function closeDailyGame(){
+    clearInterval(dDeadlineInterval);dGame=null;dGameId=null;
+    showScreen('s-online');switchTabById('tab-daily');
+}
+
+function renderDailyGame(){
+    const g=dGame;
+    if(dMyNum===P1){
+        $e('dpb1-name').textContent=`🔵 ${currentUser.username} (나)`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
+        $e('dpb2-name').textContent=`🔴 ${g.p2}`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
+        $e('dlbl1').textContent='🔵 나';$e('dlbl2').textContent=`🔴 ${g.p2}`;
+    }else{
+        $e('dpb1-name').textContent=`🔵 ${g.p1}`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
+        $e('dpb2-name').textContent=`🔴 ${currentUser.username} (나)`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
+        $e('dlbl1').textContent=`🔵 ${g.p1}`;$e('dlbl2').textContent='🔴 나';
+    }
+    $e('msg-d').textContent='';$e('dcapmsg').classList.remove('show');
+    $e('daily-result-box').style.display='none';$e('daily-forfeit-btn').style.display=g.status==='active'?'':'none';
+    buildGrid($e('dgrid'),(r,c)=>dailyClick(r,c),(r,c)=>hoverInDaily(r,c),'daily');
+    renderDailyBoard();syncDailyUI();
+    clearInterval(dDeadlineInterval);
+    if(g.status==='finished'){showDailyResult();}
+    else{dailyTick();dDeadlineInterval=setInterval(dailyTick,30000);}
+}
+function renderDailyBoard(){
+    const g=$e('dgrid');
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
+        const el=qrc(g,r,c);if(!el)continue;
+        const v=dGame.board[r][c];el.className='cell'+(v===P1?' p1':v===P2?' p2':'');
+    }
+}
+function syncDailyUI(){
+    const tot=BOARD_N*BOARD_N,{p1,p2}=cntBoard(dGame.board);
+    $e('dnum1').textContent=p1;$e('dnum2').textContent=p2;
+    $e('dbar1').style.width=(p1/tot*100)+'%';$e('dbar2').style.width=(p2/tot*100)+'%';
+    if(dGame.status==='active'){
+        $e('dturn').textContent=dGame.turn===dMyNum?'⚡ 내 차례':'⏳ 상대 차례';
+        $e('dsb1').classList.toggle('on',dGame.turn===P1);$e('dsb2').classList.toggle('on',dGame.turn===P2);
+    }else{
+        $e('dturn').textContent='게임 종료';$e('dsb1').classList.remove('on');$e('dsb2').classList.remove('on');
+    }
+}
+async function dailyTick(){
+    updateDailyDeadline();
+    if(!dGame||dGame.status!=='active'||!dGameId||!currentUser)return;
+    try{
+        const res=await fetch(`/api/daily/games/${dGameId}?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json());
+        if(res.ok&&(res.game.turn!==dGame.turn||res.game.status!==dGame.status)){
+            dGame=res.game;renderDailyBoard();syncDailyUI();updateDailyDeadline();
+            if(dGame.status==='finished'){clearInterval(dDeadlineInterval);showDailyResult();}
+        }
+    }catch(e){}
+}
+function updateDailyDeadline(){
+    if(!dGame||dGame.status!=='active'||!dGame.deadline){$e('daily-deadline-txt').textContent=dGame&&dGame.status==='finished'?'게임 종료':'-';return;}
+    const diff=dGame.deadline-Date.now();
+    if(diff<=0){$e('daily-deadline-txt').textContent='마감됨 (처리 중...)';return;}
+    const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+    const who=dGame.turn===dMyNum?'내 차례':'상대 차례';
+    $e('daily-deadline-txt').textContent=`${who} · ${h}시간 ${m}분 남음`;
+}
+async function dailyClick(r,c){
+    if(!dGame||dGame.status!=='active'||dGame.turn!==dMyNum||dGame.board[r][c]!==EMPTY)return;
+    const res=await fetch(`/api/daily/games/${dGameId}/move`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username,r,c})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
+    if(!res.ok){alert(res.msg||'이동 실패');openDailyGame(dGameId);return;}
+    dGame=res.game;
+    renderDailyBoard();animateDailyCells(res.r,res.c,res.player);
+    if(res.captured&&res.captured.length)animateDailyCapture(res.captured,res.player);
+    syncDailyUI();updateDailyDeadline();sfx.myMove();
+    if(dGame.status==='finished'){clearInterval(dDeadlineInterval);showDailyResult();}
+}
+function animateDailyCells(r,c,player){const g=$e('dgrid');pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('pop');});}
+let dCapTimer=null;
+function animateDailyCapture(cells,player){
+    const g=$e('dgrid');
+    cells.forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('cap-anim');});
+    const who=player===dMyNum?'⭐ 내가':'⭐ 상대가';
+    const el=$e('dcapmsg');el.textContent=`${who} 포위 포획! ${cells.length}칸을 뒤집었습니다`;el.classList.add('show');
+    clearTimeout(dCapTimer);dCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+function hoverInDaily(r,c){
+    clearHoverDaily();
+    if(!dGame||dGame.status!=='active'||dGame.turn!==dMyNum||dGame.board[r][c]!==EMPTY)return;
+    const g=$e('dgrid'),enemy=opp(dGame.turn);
+    const[prv,prvSt]=dGame.turn===P1?['prv1','prv1-st']:['prv2','prv2-st'];
+    pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(el)el.classList.add(dGame.board[ar][ac]===enemy?prvSt:prv);});
+}
+function clearHoverDaily(){$e('dgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
+async function dailyForfeit(){
+    if(!dGame||dGame.status!=='active')return;
+    const res=await fetch(`/api/daily/games/${dGameId}/forfeit`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok&&res.game){clearInterval(dDeadlineInterval);dGame=res.game;syncDailyUI();showDailyResult();}
+}
+function showDailyResult(){
+    const g=dGame,{result,reason}=g;
+    const iWon=(result==='p1'&&dMyNum===P1)||(result==='p2'&&dMyNum===P2);
+    let emoji,txt;
+    if(reason==='timeout'){txt=iWon?'상대방 시간 초과! 승리':'시간 초과로 패배';emoji=iWon?'🏆':'⏰';}
+    else if(reason==='forfeit'){txt=iWon?'상대방 기권! 승리':'기권';emoji=iWon?'🏆':'🏳️';}
+    else if(result==='draw'){txt='무승부';emoji='🤝';}
+    else{txt=iWon?'승리!':'패배';emoji=iWon?'🏆':'😢';}
+    const{p1,p2}=cntBoard(g.board);
+    $e('dr-emoji').textContent=emoji;$e('dr-title').textContent=txt;$e('dr-score').textContent=`${p1}칸 vs ${p2}칸`;
+    const rr=$e('dr-rating');rr.style.display='none';
+    if(g.ratings&&g.ratings.r1new!==undefined){
+        const myOld=dMyNum===P1?g.ratings.r1old:g.ratings.r2old,myNew=dMyNum===P1?g.ratings.r1new:g.ratings.r2new,delta=myNew-myOld;
+        const cls=delta>0?'rc-pos':delta<0?'rc-neg':'rc-zero';
+        rr.innerHTML=`<div class="${cls}">${delta>0?'+':''}${delta} 레이팅</div><div style="color:var(--muted);font-size:.82rem">${myOld} → <b style="color:var(--yellow)">${myNew}</b></div>`;
+        rr.style.display='';
+        if(currentUser.username===g.p1||currentUser.username===g.p2){currentUser.rating=myNew;updateMenuHeader();}
+    }
+    if(result==='draw')sfx._tone(440,.3,'sine',.12);else if(iWon)sfx.win();else sfx.lose();
+    $e('daily-forfeit-btn').style.display='none';
+    $e('daily-result-box').style.display='flex';
+    $e('dturn').textContent='게임 종료';
+}
 
 // ── Timer ─────────────────────────────────────
 function startTimer(seconds,forPlayer){
@@ -1060,7 +1344,7 @@ function initLocalGame(){
     lTurn=P1;lEnded=false;lCapCounts=[0,0];$e('msg-l').textContent='';
     $e('lcap1').textContent='포획 0칸';$e('lcap2').textContent='포획 0칸';$e('lcapmsg').classList.remove('show');
     $e('llbl1').textContent='🔵 플레이어 1';$e('llbl2').textContent=lMode==='pvai'?'🤖 AI':'🔴 플레이어 2';
-    buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),false);syncLocalUI();
+    buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),'local');syncLocalUI();
 }
 function localClick(r,c){if(lEnded||lBoard[r][c]!==EMPTY)return;if(lMode==='pvai'&&lTurn===P2)return;doLocalMove(r,c,lTurn);}
 function doLocalMove(r,c,p){
@@ -1230,7 +1514,7 @@ function getCellSize(){
     const size  = Math.floor((avail - (BOARD_N-1)*2) / BOARD_N);
     return Math.max(17, Math.min(38, size));
 }
-function buildGrid(gridEl,clickCb,hoverCb,isOnline){
+function buildGrid(gridEl,clickCb,hoverCb,kind){
     gridEl.innerHTML='';
     const sz=getCellSize();
     gridEl.style.gridTemplateColumns=`repeat(${BOARD_N},${sz}px)`;
@@ -1243,8 +1527,10 @@ function buildGrid(gridEl,clickCb,hoverCb,isOnline){
         gridEl.appendChild(d);
     }
     const bw=BOARD_N*sz+(BOARD_N-1)*2+16;
-    $e(isOnline?'obar-wrap':'lbar-wrap').style.width=bw+'px';
-    if(isOnline)$e('timer-row').style.width=bw+'px';
+    const barWrapId=kind==='online'?'obar-wrap':kind==='daily'?'dbar-wrap':'lbar-wrap';
+    $e(barWrapId).style.width=bw+'px';
+    if(kind==='online')$e('timer-row').style.width=bw+'px';
+    if(kind==='daily')$e('daily-timer-row').style.width=bw+'px';
 }
 
 // ── Leaderboard ───────────────────────────────
