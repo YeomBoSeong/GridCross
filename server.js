@@ -82,7 +82,6 @@ app.get('/api/leaderboard', async (req, res) => {
         const list = await col
             .find({}, { projection: { password: 0, _id: 0 } })
             .sort({ rating: -1 })
-            .limit(50)
             .toArray();
         res.json(list);
     } catch (e) {

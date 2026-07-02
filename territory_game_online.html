@@ -1228,7 +1228,7 @@ function getCellSize(){
     // .screen의 max-width(600px)를 기준으로, 뷰포트에서 body 패딩(32) + grid-wrap 패딩(12) + grid 패딩(4) 제외
     const avail = Math.min(window.innerWidth, 600) - 48;
     const size  = Math.floor((avail - (BOARD_N-1)*2) / BOARD_N);
-    return Math.max(17, Math.min(48, size));
+    return Math.max(17, Math.min(38, size));
 }
 function buildGrid(gridEl,clickCb,hoverCb,isOnline){
     gridEl.innerHTML='';
