@@ -125,7 +125,9 @@ app.get('/api/ai/conquerors', async (req, res) => {
             .find({ aiWins: lv }, { projection: { password: 0, _id: 0 } })
             .sort({ rating: -1 })
             .toArray();
-        res.json(list);
+        // 유저가 정복한 가장 높은 난이도에서만 표시 (낮은 난이도 목록에는 중복 노출 안 함)
+        const topOnly = list.filter(u => Math.max(...(u.aiWins || [lv])) === lv);
+        res.json(topOnly);
     } catch (e) {
         res.json([]);
     }

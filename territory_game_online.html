@@ -97,6 +97,7 @@ body{
 .btn-danger{background:#2d1b1b;border-color:#6e2c2c;color:var(--red);}
 .btn-danger:hover{background:#4a1f1f;}
 .btn-warn{background:#2d2215;border-color:#7d5a1e;color:#e3b341;}
+.df-btn{font-weight:800;border-width:2px;}
 .btn-warn:hover{background:#3d2d1a;}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--muted);}
 .btn-ghost:hover{background:var(--bg3);color:var(--text);border-color:var(--border);}
@@ -718,7 +719,10 @@ body{
         <button class="btn df-btn"        data-df="5" onclick="sfx.click();setDiff(5)" id="df5" style="display:none;border-color:#3b82f6;color:#3b82f6">LV.5</button>
         <button class="btn df-btn"        data-df="6" onclick="sfx.click();setDiff(6)" id="df6" style="display:none;border-color:#9b59b6;color:#9b59b6">LV.6</button>
         <button class="btn df-btn"        data-df="7" onclick="sfx.click();setDiff(7)" id="df7" style="display:none;border-color:#e74c3c;color:#e74c3c">LV.7</button>
-        <button class="btn" id="btn-ai-conq" onclick="sfx.click();openAiConquerors()" style="display:none">🏅 정복자 보기</button>
+        <button class="btn" id="btn-ai-conq" onclick="sfx.click();openAiConquerors()" style="display:none;flex-basis:100%">🏅 정복자 보기</button>
+    </div>
+    <div class="row" style="justify-content:center">
+        <span class="info-text" id="ai-color-info" style="display:none">💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다</span>
     </div>
     <div class="row" style="justify-content:center">
         <button class="btn btn-success" onclick="sfx.click();initLocalGame()">🔄 새 게임</button>
@@ -888,7 +892,7 @@ body{
             <span class="lb-title">🏆 리더보드</span>
             <button class="btn-close" onclick="closeLeaderboard()">✕</button>
         </div>
-        <div class="lb-tabs">
+        <div class="lb-tabs" id="lb-tabs">
             <button class="lb-tab active" id="lb-tab-online" onclick="sfx.click();switchLbTab('online')">온라인 레이팅</button>
             <button class="lb-tab" id="lb-tab-ai" onclick="sfx.click();switchLbTab('ai')">🤖 AI 정복자</button>
         </div>
@@ -970,13 +974,13 @@ let currentUser=null, ws=null;
 let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff=3;
 const AI_LEVEL_CFG={
-    1:{depth:1,beam:12,color:'#8b5a2b'},
-    2:{depth:2,beam:6, color:'#d4b106'},
-    3:{depth:2,beam:12,color:'#ff8c00'},
-    4:{depth:3,beam:12,color:'#2ea043'},
-    5:{depth:4,beam:12,color:'#3b82f6'},
-    6:{depth:5,beam:12,color:'#9b59b6'},
-    7:{depth:6,beam:12,color:'#e74c3c'},
+    1:{depth:1,beam:12,color:'#8b5a2b',name:'갈색'},
+    2:{depth:2,beam:6, color:'#d4b106',name:'노란색'},
+    3:{depth:2,beam:12,color:'#ff8c00',name:'주황색'},
+    4:{depth:3,beam:12,color:'#2ea043',name:'초록색'},
+    5:{depth:4,beam:12,color:'#3b82f6',name:'파란색'},
+    6:{depth:5,beam:12,color:'#9b59b6',name:'보라색'},
+    7:{depth:6,beam:12,color:'#e74c3c',name:'빨간색'},
 };
 function nameColor(aiWins){
     if(!aiWins||!aiWins.length)return 'var(--text)';
@@ -1033,7 +1037,7 @@ function goLocal(mode){
     lMode=mode;
     $e('local-mode-lbl').textContent=mode==='pvp'?'👥 2인 대전 (로컬)':'🤖 AI 대전';
     const ai=mode==='pvai';
-    ['ai-diff-sep','ai-diff-lbl','df1','df2','df3','df4','df5','df6','df7','btn-ai-conq'].forEach(id=>$e(id).style.display=ai?'':'none');
+    ['ai-diff-sep','ai-diff-lbl','df1','df2','df3','df4','df5','df6','df7','btn-ai-conq','ai-color-info'].forEach(id=>$e(id).style.display=ai?'':'none');
     initLocalGame();showScreen('s-local');
 }
 function goOnline(){$e('result-modal').classList.remove('show');updateMenuHeader();resetLobbyUI();showScreen('s-online');}
@@ -1496,9 +1500,10 @@ async function recordAiWin(level){
     currentUser.aiWins=res.aiWins;
     updateMenuHeader();
     if(!already){
-        const c=(AI_LEVEL_CFG[level]&&AI_LEVEL_CFG[level].color)||'var(--text)';
+        const cfg=AI_LEVEL_CFG[level]||{};
+        const c=cfg.color||'var(--text)',n=cfg.name||'특별한 색';
         const el=$e('lr-conquer');
-        el.innerHTML=`🎉 LV.${level} 최초 정복! 앞으로 유저네임이 <b style="color:${c}">이 색</b>으로 표시됩니다`;
+        el.innerHTML=`🎉 LV.${level} 최초 정복! 앞으로 유저네임이 <b style="color:${c}">${n}</b>으로 표시됩니다`;
         el.style.display='';
     }
 }
@@ -1641,10 +1646,12 @@ buildLvSelRow();
 let lbAiLevel=1;
 function openLeaderboard(){
     $e('lb-modal').classList.add('show');
+    $e('lb-tabs').style.display='';
     switchLbTab('online');
 }
 function openAiConquerors(){
     $e('lb-modal').classList.add('show');
+    $e('lb-tabs').style.display='none';
     switchLbTab('ai');
     selectAiLevel(lDiff);
 }
