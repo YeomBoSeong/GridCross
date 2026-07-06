@@ -97,7 +97,12 @@ body{
 .btn-danger{background:#2d1b1b;border-color:#6e2c2c;color:var(--red);}
 .btn-danger:hover{background:#4a1f1f;}
 .btn-warn{background:#2d2215;border-color:#7d5a1e;color:#e3b341;}
-.df-btn{font-weight:800;border-width:2px;}
+.df-btn{font-weight:800;border-width:2px;padding:7px 10px;font-size:.86rem;}
+#ai-diff-row{gap:6px;}
+.ai-color-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+    padding:12px 16px;width:100%;max-width:560px;}
+.ai-color-box .acb-title{font-size:.87rem;color:var(--text);font-weight:600;margin-bottom:6px;}
+.ai-color-box .acb-legend{font-size:.83rem;color:var(--muted);line-height:1.8;}
 .btn-warn:hover{background:#3d2d1a;}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--muted);}
 .btn-ghost:hover{background:var(--bg3);color:var(--text);border-color:var(--border);}
@@ -708,7 +713,7 @@ body{
             <h1>십자 땅따먹기</h1>
         </div>
     </div>
-    <div class="row">
+    <div class="row" id="ai-diff-row">
         <span id="local-mode-lbl" class="info-text"></span>
         <div class="sep" id="ai-diff-sep" style="display:none"></div>
         <span class="info-text" id="ai-diff-lbl" style="display:none">AI 난이도</span>
@@ -722,7 +727,19 @@ body{
         <button class="btn" id="btn-ai-conq" onclick="sfx.click();openAiConquerors()" style="display:none;flex-basis:100%">🏅 정복자 보기</button>
     </div>
     <div class="row" style="justify-content:center">
-        <span class="info-text" id="ai-color-info" style="display:none">💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다</span>
+        <div class="ai-color-box" id="ai-color-info" style="display:none">
+            <div class="acb-title">💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다</div>
+            <div class="acb-legend">
+                기본: <b style="color:var(--text)">흰색</b>,
+                LV.1: <b style="color:#8b5a2b">갈색</b>,
+                LV.2: <b style="color:#d4b106">노란색</b>,
+                LV.3: <b style="color:#ff8c00">주황색</b>,
+                LV.4: <b style="color:#2ea043">초록색</b>,
+                LV.5: <b style="color:#3b82f6">파란색</b>,
+                LV.6: <b style="color:#9b59b6">보라색</b>,
+                LV.7: <b style="color:#e74c3c">빨간색</b>
+            </div>
+        </div>
     </div>
     <div class="row" style="justify-content:center">
         <button class="btn btn-success" onclick="sfx.click();initLocalGame()">🔄 새 게임</button>
