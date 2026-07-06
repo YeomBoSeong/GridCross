@@ -64,10 +64,10 @@ app.post('/api/auth', async (req, res) => {
         const existing = await col.findOne({ username });
 
         if (!existing) {
-            const newUser = { username, password: hash, rating: 1000, wins: 0, losses: 0, draws: 0 };
+            const newUser = { username, password: hash, rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [] };
             await col.insertOne(newUser);
             return res.json({ ok: true, created: true,
-                user: { username, rating: 1000, wins: 0, losses: 0, draws: 0 } });
+                user: { username, rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [] } });
         }
 
         if (existing.password !== hash)
@@ -75,7 +75,7 @@ app.post('/api/auth', async (req, res) => {
 
         return res.json({ ok: true, created: false,
             user: { username, rating: existing.rating, wins: existing.wins,
-                    losses: existing.losses, draws: existing.draws } });
+                    losses: existing.losses, draws: existing.draws, aiWins: existing.aiWins || [] } });
     } catch (e) {
         console.error(e);
         return res.json({ ok: false, msg: '서버 오류가 발생했습니다' });
@@ -87,6 +87,42 @@ app.get('/api/leaderboard', async (req, res) => {
         const col  = await connectDB();
         const list = await col
             .find({}, { projection: { password: 0, _id: 0 } })
+            .sort({ rating: -1 })
+            .toArray();
+        res.json(list);
+    } catch (e) {
+        res.json([]);
+    }
+});
+
+// ── AI 난이도 정복 기록 (LV.1~LV.7) ────────────
+app.post('/api/ai/win', async (req, res) => {
+    const { username, level } = req.body || {};
+    const lv = parseInt(level);
+    if (!username || !Number.isInteger(lv) || lv < 1 || lv > 7)
+        return res.json({ ok: false, msg: '잘못된 요청입니다' });
+    try {
+        const col    = await connectDB();
+        const result = await col.findOneAndUpdate(
+            { username },
+            { $addToSet: { aiWins: lv } },
+            { returnDocument: 'after' }
+        );
+        if (!result) return res.json({ ok: false, msg: '유저를 찾을 수 없습니다' });
+        res.json({ ok: true, aiWins: result.aiWins || [] });
+    } catch (e) {
+        console.error(e);
+        res.json({ ok: false, msg: '서버 오류가 발생했습니다' });
+    }
+});
+
+app.get('/api/ai/conquerors', async (req, res) => {
+    const lv = parseInt(req.query.level);
+    if (!Number.isInteger(lv) || lv < 1 || lv > 7) return res.json([]);
+    try {
+        const col  = await connectDB();
+        const list = await col
+            .find({ aiWins: lv }, { projection: { password: 0, _id: 0 } })
             .sort({ rating: -1 })
             .toArray();
         res.json(list);
