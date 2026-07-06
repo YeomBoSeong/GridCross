@@ -53,10 +53,10 @@ app.post('/api/auth', async (req, res) => {
     const { username, password } = req.body || {};
     if (!username || !password)
         return res.json({ ok: false, msg: '입력값을 확인해주세요' });
-    if (username.length < 2 || username.length > 16)
-        return res.json({ ok: false, msg: '유저네임은 2~16자여야 합니다' });
-    if (password.length < 4)
-        return res.json({ ok: false, msg: '비밀번호는 4자 이상이어야 합니다' });
+    if (username.length < 2 || username.length > 20)
+        return res.json({ ok: false, msg: '유저네임은 2~20자여야 합니다' });
+    if (password.length < 4 || password.length > 20)
+        return res.json({ ok: false, msg: '비밀번호는 4~20자여야 합니다' });
 
     try {
         const col  = await connectDB();
@@ -530,6 +530,12 @@ async function endGame(game, result, reason) {
 }
 
 function startGame(p1ws, p2ws, mode) {
+    if (p1ws.username === p2ws.username) {
+        const msg = { type: 'error', msg: '같은 계정끼리는 대전할 수 없습니다' };
+        send(p1ws, msg);
+        if (p2ws !== p1ws) send(p2ws, msg);
+        return;
+    }
     [p1ws, p2ws].forEach(w => {
         const i = waitingQueue.indexOf(w);
         if (i !== -1) waitingQueue.splice(i, 1);
@@ -583,9 +589,14 @@ wss.on('connection', ws => {
             if (ws.gameId) return;
             const i = waitingQueue.indexOf(ws);
             if (i !== -1) waitingQueue.splice(i, 1);
-            waitingQueue.push(ws);
-            send(ws, { type: 'waiting' });
-            if (waitingQueue.length >= 2) startGame(waitingQueue.shift(), waitingQueue.shift(), 'random');
+            const oppIdx = waitingQueue.findIndex(w => w.username !== ws.username);
+            if (oppIdx !== -1) {
+                const opp = waitingQueue.splice(oppIdx, 1)[0];
+                startGame(ws, opp, 'random');
+            } else {
+                waitingQueue.push(ws);
+                send(ws, { type: 'waiting' });
+            }
             return;
         }
 

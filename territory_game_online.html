@@ -508,8 +508,8 @@ body{
             <b>자동으로 계정이 만들어집니다.</b><br>
             기존 계정은 동일하게 입력해 로그인하세요.
         </div>
-        <input class="inp" type="text"     id="inp-user" placeholder="유저네임 (2~16자)"  maxlength="16" autocomplete="username">
-        <input class="inp" type="password" id="inp-pw"   placeholder="비밀번호 (4자 이상)"               autocomplete="current-password">
+        <input class="inp" type="text"     id="inp-user" placeholder="유저네임 (2~20자)"  maxlength="20" autocomplete="username">
+        <input class="inp" type="password" id="inp-pw"   placeholder="비밀번호 (4~20자)"   maxlength="20" autocomplete="current-password">
         <button class="btn btn-primary" id="login-btn"
                 style="width:100%;padding:11px;font-size:1rem;border-radius:9px"
                 onclick="doLogin()">로그인 / 회원가입</button>
@@ -801,7 +801,7 @@ body{
     <div class="tab-pane" id="tab-invite">
         <div class="lobby-box">
             <p class="info-text">초대할 유저의 이름을 입력하세요.</p>
-            <input class="inp" type="text" id="invite-input" placeholder="유저네임" maxlength="16" autocomplete="off">
+            <input class="inp" type="text" id="invite-input" placeholder="유저네임" maxlength="20" autocomplete="off">
             <button class="btn btn-primary" style="width:100%;padding:11px" id="btn-invite" onclick="sfx.click();sendChallenge()">📨 초대 보내기</button>
             <div class="lobby-status" id="invite-status"></div>
         </div>
@@ -1115,6 +1115,10 @@ function handleWS(msg){
         case 'daily_notify':
             if(dGameId===msg.gameId&&$e('s-daily-game').classList.contains('active'))openDailyGame(dGameId);
             if($e('s-online').classList.contains('active')&&$e('tab-daily').classList.contains('active'))loadDailyLobby();
+            break;
+        case 'error':
+            alert(msg.msg||'오류가 발생했습니다');
+            resetLobbyUI();
             break;
     }
 }
