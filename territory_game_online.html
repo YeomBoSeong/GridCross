@@ -1593,10 +1593,39 @@ function nearEnclosureScore(g,p){
     }
     return bonus;
 }
+// 벽 부착 점수: 자기 진영 그룹이 몇 개의 벽에 닿아있는지에 따라 단계적 보너스.
+// applyEnclosures의 포획 조건이 wallsHit.size<=2 이므로, 벽 3개 이상에 닿은 그룹은
+// 아무리 포위되어도 절대 포획되지 않음 -> 그 경계에서 보너스가 크게 도약해야 함.
+function wallAttachScore(g,p){
+    const vis=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(false));
+    let bonus=0;
+    for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
+        if(g[r][c]!==p||vis[r][c])continue;
+        const group=[];const q=[[r,c]];const walls=new Set();
+        while(q.length){
+            const[cr,cc]=q.shift();
+            if(vis[cr][cc])continue;
+            vis[cr][cc]=true;group.push([cr,cc]);
+            if(cr===0)walls.add('T');
+            if(cr===BOARD_N-1)walls.add('B');
+            if(cc===0)walls.add('L');
+            if(cc===BOARD_N-1)walls.add('R');
+            for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){
+                const nr=cr+dr,nc=cc+dc;
+                if(nr<0||nr>=BOARD_N||nc<0||nc>=BOARD_N)continue;
+                if(g[nr][nc]===p&&!vis[nr][nc])q.push([nr,nc]);
+            }
+        }
+        const n=walls.size;
+        const w=n>=3?1.5:n===2?0.35:n===1?0.1:0;
+        bonus+=group.length*w;
+    }
+    return bonus;
+}
 function evalBoard(g){
     let p1=0,p2=0;
     g.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));
-    return (p2-p1)+nearEnclosureScore(g,P2)-nearEnclosureScore(g,P1);
+    return (p2-p1)+nearEnclosureScore(g,P2)-nearEnclosureScore(g,P1)+wallAttachScore(g,P2)-wallAttachScore(g,P1);
 }
 function aiTurn(){
     if(lEnded)return;
