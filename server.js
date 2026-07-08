@@ -116,21 +116,6 @@ app.post('/api/ai/win', async (req, res) => {
     }
 });
 
-// 임시 관리자 엔드포인트: 테스트 중 쌓인 정복 기록 초기화용 (1회 사용 후 제거 예정)
-app.post('/api/admin/reset-ai-wins', async (req, res) => {
-    const token = req.headers['x-admin-token'];
-    if (!token || token !== process.env.ADMIN_RESET_TOKEN)
-        return res.status(403).json({ ok: false, msg: 'forbidden' });
-    try {
-        const col = await connectDB();
-        const result = await col.updateMany({}, { $set: { aiWins: [] } });
-        res.json({ ok: true, matched: result.matchedCount, modified: result.modifiedCount });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ ok: false, msg: '서버 오류가 발생했습니다' });
-    }
-});
-
 app.get('/api/ai/conquerors', async (req, res) => {
     const lv = parseInt(req.query.level);
     if (!Number.isInteger(lv) || lv < 1 || lv > 7) return res.json([]);
