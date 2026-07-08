@@ -32,7 +32,7 @@
 body{
     font-family:'Malgun Gothic','Segoe UI',sans-serif;
     background:var(--bg); color:var(--text);
-    min-height:100vh; padding:24px 16px 110px;
+    min-height:100vh; padding:80px 16px 60px;
     display:flex; flex-direction:column; align-items:center;
     overflow-x:hidden;
 }
@@ -372,7 +372,7 @@ body{
     vertical-align:middle;margin-right:6px;}
 
 /* language toggle */
-#lang-toggle{position:fixed;bottom:22px;right:22px;z-index:300;
+#lang-toggle{position:fixed;top:16px;right:16px;z-index:300;
     padding:14px 26px;border-radius:28px;display:flex;align-items:center;gap:9px;
     border:2px solid var(--blue);background:rgba(31,111,235,.16);color:var(--text);
     font-size:1.05rem;font-weight:700;cursor:pointer;letter-spacing:.3px;font-family:inherit;
@@ -380,9 +380,9 @@ body{
 #lang-toggle span:first-child{font-size:1.3rem;}
 #lang-toggle:hover{background:rgba(31,111,235,.3);transform:scale(1.04);}
 #lang-toggle:active{transform:scale(.96);}
-@media(max-width:540px){#lang-toggle{bottom:70px;right:14px;padding:11px 20px;font-size:.92rem;gap:7px;}
+@media(max-width:540px){#lang-toggle{top:10px;right:10px;padding:11px 20px;font-size:.92rem;gap:7px;}
     #lang-toggle span:first-child{font-size:1.15rem;}
-    body{padding-bottom:150px;}}
+    body{padding-top:68px;}}
 
 /* 광고 반응형 */
 .ad-desktop-left,.ad-desktop-right{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:10;}
