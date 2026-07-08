@@ -1341,6 +1341,7 @@ function refreshDynamicScreens(){
 function toggleLang(){
     LANG=LANG==='ko'?'en':'ko';
     localStorage.setItem('lang',LANG);
+    if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'set_lang',lang:LANG}));
     applyI18n();
 }
 // 변수가 섞인 동적 문구는 사전 대신 언어별 템플릿 함수로 처리
@@ -1409,7 +1410,7 @@ async function doLogin(){
     if(!username||!password){errEl.textContent=t('login.needBoth');return;}
     $e('login-btn').disabled=true;$e('login-btn').textContent=t('login.connecting');
     const res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username,password})}).then(r=>r.json())
+        body:JSON.stringify({username,password,lang:LANG})}).then(r=>r.json())
         .catch(()=>({ok:false,msg:t('login.serverUnreachable')}));
     $e('login-btn').disabled=false;$e('login-btn').textContent=t('login.submit');
     if(!res.ok){errEl.textContent=res.msg||t('login.genericErr');return;}
@@ -1453,7 +1454,7 @@ function connectWS(){
     if(ws&&ws.readyState<2)return;
     const proto=location.protocol==='https:'?'wss:':'ws:';
     ws=new WebSocket(`${proto}//${location.host}`);
-    ws.onopen=()=>ws.send(JSON.stringify({type:'auth',username:currentUser.username,rating:currentUser.rating}));
+    ws.onopen=()=>ws.send(JSON.stringify({type:'auth',username:currentUser.username,rating:currentUser.rating,lang:LANG}));
     ws.onmessage=evt=>{let m;try{m=JSON.parse(evt.data);}catch{return;}handleWS(m);};
     ws.onclose=()=>{if(currentUser)setTimeout(()=>{if(currentUser)connectWS();},3000);};
     ws.onerror=()=>ws.close();
@@ -1635,14 +1636,14 @@ async function loadDailyMyList(){
 async function createDailyRoom(){
     if(!currentUser)return;
     const res=await fetch('/api/daily/rooms',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     $e('daily-status').textContent=res.ok?t('daily.roomCreated'):(res.msg||t('daily.roomCreateFail'));
     if(res.ok)loadDailyLobby();
 }
 async function randomJoinDaily(){
     if(!currentUser)return;
     const res=await fetch('/api/daily/rooms/random-join',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');return;}
     $e('daily-status').textContent='';
     openDailyGameFromData(res.game);
@@ -1650,20 +1651,20 @@ async function randomJoinDaily(){
 async function joinDailyRoom(id){
     if(!currentUser)return;
     const res=await fetch(`/api/daily/rooms/${id}/join`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');loadDailyLobby();return;}
     openDailyGameFromData(res.game);
 }
 async function cancelDailyRoom(id){
     if(!currentUser)return;
     await fetch(`/api/daily/rooms/${id}/cancel`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({}));
     loadDailyLobby();
 }
 
 async function openDailyGame(id){
     if(!currentUser)return;
-    const res=await fetch(`/api/daily/games/${id}?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).catch(()=>({ok:false}));
+    const res=await fetch(`/api/daily/games/${id}?username=${encodeURIComponent(currentUser.username)}&lang=${LANG}`).then(r=>r.json()).catch(()=>({ok:false}));
     if(!res.ok){alert(res.msg||t('daily.loadFail'));return;}
     openDailyGameFromData(res.game);
 }
@@ -1746,7 +1747,7 @@ async function dailyClick(r,c){
     syncDailyUI();sfx.myMove();
 
     const res=await fetch(`/api/daily/games/${dGameId}/move`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username,r,c})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,r,c,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     if(!res.ok){alert(res.msg||t('common.moveFail'));openDailyGame(dGameId);return;}
     dGame=res.game;
     renderDailyBoard();syncDailyUI();updateDailyDeadline();
@@ -1772,7 +1773,7 @@ function clearHoverDaily(){$e('dgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.p
 async function dailyForfeit(){
     if(!dGame||dGame.status!=='active')return;
     const res=await fetch(`/api/daily/games/${dGameId}/forfeit`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false}));
     if(res.ok&&res.game){clearInterval(dDeadlineInterval);dGame=res.game;syncDailyUI();showDailyResult();}
 }
 function showDailyResult(){

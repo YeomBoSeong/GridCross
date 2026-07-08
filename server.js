@@ -47,16 +47,93 @@ function hashPw(pw) {
     return crypto.createHash('sha256').update(pw + 'xgame_십자').digest('hex');
 }
 
+// ── 서버 메시지 i18n ───────────────────────────
+const MSG = {
+    ko: {
+        invalidInput: '입력값을 확인해주세요',
+        usernameLen: '유저네임은 2~20자여야 합니다',
+        passwordLen: '비밀번호는 4~20자여야 합니다',
+        wrongCreds: '유저네임이 이미 존재하거나 비밀번호가 틀렸습니다',
+        serverError: '서버 오류가 발생했습니다',
+        badRequest: '잘못된 요청입니다',
+        userNotFound: '유저를 찾을 수 없습니다',
+        loginRequired: '로그인이 필요합니다',
+        noPermission: '권한이 없습니다',
+        alreadyWaitingRoom: '이미 대기 중인 방이 있습니다',
+        maxActiveGames: n => `진행 중인 일일 게임은 최대 ${n}개까지 가능합니다`,
+        cannotCancelRoom: '취소할 수 없는 방입니다',
+        cannotJoinRoom: '참가할 수 없는 방입니다',
+        cannotJoinOwnRoom: '자신이 만든 방에는 참가할 수 없습니다',
+        alreadyJoinedByOther: '다른 사용자가 먼저 참가했습니다',
+        noJoinableRooms: '참가할 수 있는 방이 없습니다',
+        gameNotFound: '게임을 찾을 수 없습니다',
+        notActiveGame: '진행 중인 게임이 아닙니다',
+        notParticipant: '참가자가 아닙니다',
+        notYourTurn: '내 차례가 아닙니다',
+        invalidCoords: '잘못된 좌표입니다',
+        cellFilled: '이미 채워진 칸입니다',
+        staleRequest: '이미 처리된 요청입니다. 새로고침 해주세요',
+        sameAccount: '같은 계정끼리는 대전할 수 없습니다',
+        inGameCannotInvite: '게임 중에는 초대할 수 없습니다',
+        cannotInviteSelf: '자기 자신에게는 초대할 수 없습니다',
+        userNotOnline: '해당 유저가 온라인 상태가 아닙니다',
+        userInGame: '해당 유저가 현재 게임 중입니다',
+        inviteExpired: '초대가 만료되었습니다',
+        alreadyInGame: '이미 게임 중입니다',
+    },
+    en: {
+        invalidInput: 'Please check your input',
+        usernameLen: 'Username must be 2-20 characters',
+        passwordLen: 'Password must be 4-20 characters',
+        wrongCreds: 'Username already exists or password is incorrect',
+        serverError: 'A server error occurred',
+        badRequest: 'Invalid request',
+        userNotFound: 'User not found',
+        loginRequired: 'Login required',
+        noPermission: 'You do not have permission',
+        alreadyWaitingRoom: 'You already have a room waiting',
+        maxActiveGames: n => `You can have at most ${n} daily games in progress`,
+        cannotCancelRoom: 'This room cannot be canceled',
+        cannotJoinRoom: 'This room cannot be joined',
+        cannotJoinOwnRoom: 'You cannot join a room you created',
+        alreadyJoinedByOther: 'Another user already joined first',
+        noJoinableRooms: 'No rooms available to join',
+        gameNotFound: 'Game not found',
+        notActiveGame: 'This game is not active',
+        notParticipant: 'You are not a participant',
+        notYourTurn: 'It is not your turn',
+        invalidCoords: 'Invalid coordinates',
+        cellFilled: 'This cell is already filled',
+        staleRequest: 'This request was already processed. Please refresh',
+        sameAccount: 'You cannot play against the same account',
+        inGameCannotInvite: 'You cannot invite while in a game',
+        cannotInviteSelf: 'You cannot invite yourself',
+        userNotOnline: 'That user is not online',
+        userInGame: 'That user is currently in a game',
+        inviteExpired: 'The invite has expired',
+        alreadyInGame: 'Already in a game',
+    },
+};
+function tr(key, lang, ...args) {
+    const dict = MSG[lang] || MSG.ko;
+    const entry = dict[key] !== undefined ? dict[key] : MSG.ko[key];
+    return typeof entry === 'function' ? entry(...args) : entry;
+}
+function reqLang(req) {
+    return (req.body && req.body.lang === 'en') || req.query.lang === 'en' ? 'en' : 'ko';
+}
+
 // ── HTTP API ──────────────────────────────────
 
 app.post('/api/auth', async (req, res) => {
+    const lang = reqLang(req);
     const { username, password } = req.body || {};
     if (!username || !password)
-        return res.json({ ok: false, msg: '입력값을 확인해주세요' });
+        return res.json({ ok: false, msg: tr('invalidInput', lang) });
     if (username.length < 2 || username.length > 20)
-        return res.json({ ok: false, msg: '유저네임은 2~20자여야 합니다' });
+        return res.json({ ok: false, msg: tr('usernameLen', lang) });
     if (password.length < 4 || password.length > 20)
-        return res.json({ ok: false, msg: '비밀번호는 4~20자여야 합니다' });
+        return res.json({ ok: false, msg: tr('passwordLen', lang) });
 
     try {
         const col  = await connectDB();
@@ -71,14 +148,14 @@ app.post('/api/auth', async (req, res) => {
         }
 
         if (existing.password !== hash)
-            return res.json({ ok: false, msg: '유저네임이 이미 존재하거나 비밀번호가 틀렸습니다' });
+            return res.json({ ok: false, msg: tr('wrongCreds', lang) });
 
         return res.json({ ok: true, created: false,
             user: { username, rating: existing.rating, wins: existing.wins,
                     losses: existing.losses, draws: existing.draws, aiWins: existing.aiWins || [] } });
     } catch (e) {
         console.error(e);
-        return res.json({ ok: false, msg: '서버 오류가 발생했습니다' });
+        return res.json({ ok: false, msg: tr('serverError', lang) });
     }
 });
 
@@ -97,10 +174,11 @@ app.get('/api/leaderboard', async (req, res) => {
 
 // ── AI 난이도 정복 기록 (LV.1~LV.7) ────────────
 app.post('/api/ai/win', async (req, res) => {
+    const lang = reqLang(req);
     const { username, level } = req.body || {};
     const lv = parseInt(level);
     if (!username || !Number.isInteger(lv) || lv < 1 || lv > 7)
-        return res.json({ ok: false, msg: '잘못된 요청입니다' });
+        return res.json({ ok: false, msg: tr('badRequest', lang) });
     try {
         const col    = await connectDB();
         const result = await col.findOneAndUpdate(
@@ -108,11 +186,11 @@ app.post('/api/ai/win', async (req, res) => {
             { $addToSet: { aiWins: lv } },
             { returnDocument: 'after' }
         );
-        if (!result) return res.json({ ok: false, msg: '유저를 찾을 수 없습니다' });
+        if (!result) return res.json({ ok: false, msg: tr('userNotFound', lang) });
         res.json({ ok: true, aiWins: result.aiWins || [] });
     } catch (e) {
         console.error(e);
-        res.json({ ok: false, msg: '서버 오류가 발생했습니다' });
+        res.json({ ok: false, msg: tr('serverError', lang) });
     }
 });
 
@@ -316,20 +394,20 @@ async function endDailyGame(doc, result, reason) {
     return { ...doc, ...update };
 }
 
-async function joinDailyRoom(roomId, username, res) {
+async function joinDailyRoom(roomId, username, res, lang) {
     const room = await dailyCol.findOne({ _id: roomId });
     if (!room || room.status !== 'waiting')
-        return res.json({ ok: false, msg: '참가할 수 없는 방입니다' });
+        return res.json({ ok: false, msg: tr('cannotJoinRoom', lang) });
     if (room.creator === username)
-        return res.json({ ok: false, msg: '자신이 만든 방에는 참가할 수 없습니다' });
+        return res.json({ ok: false, msg: tr('cannotJoinOwnRoom', lang) });
 
     const user = await usersCol.findOne({ username });
-    if (!user) return res.json({ ok: false, msg: '유저를 찾을 수 없습니다' });
+    if (!user) return res.json({ ok: false, msg: tr('userNotFound', lang) });
 
     const activeCount = await dailyCol.countDocuments(
         { status: 'active', $or: [{ p1: username }, { p2: username }] });
     if (activeCount >= MAX_DAILY_PER_USER)
-        return res.json({ ok: false, msg: `진행 중인 일일 게임은 최대 ${MAX_DAILY_PER_USER}개까지 가능합니다` });
+        return res.json({ ok: false, msg: tr('maxActiveGames', lang, MAX_DAILY_PER_USER) });
 
     const now = Date.now();
     const update = {
@@ -339,7 +417,7 @@ async function joinDailyRoom(roomId, username, res) {
     };
     const upd = await dailyCol.updateOne({ _id: roomId, status: 'waiting' }, { $set: update });
     if (upd.matchedCount === 0)
-        return res.json({ ok: false, msg: '다른 사용자가 먼저 참가했습니다' });
+        return res.json({ ok: false, msg: tr('alreadyJoinedByOther', lang) });
 
     const full = { ...room, ...update };
     notifyDaily(full.creator, roomId);
@@ -348,20 +426,21 @@ async function joinDailyRoom(roomId, username, res) {
 }
 
 app.post('/api/daily/rooms', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.body || {};
-    if (!username) return res.json({ ok: false, msg: '로그인이 필요합니다' });
+    if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
         const user = await usersCol.findOne({ username });
-        if (!user) return res.json({ ok: false, msg: '유저를 찾을 수 없습니다' });
+        if (!user) return res.json({ ok: false, msg: tr('userNotFound', lang) });
 
         const existing = await dailyCol.findOne({ creator: username, status: 'waiting' });
-        if (existing) return res.json({ ok: false, msg: '이미 대기 중인 방이 있습니다' });
+        if (existing) return res.json({ ok: false, msg: tr('alreadyWaitingRoom', lang) });
 
         const activeCount = await dailyCol.countDocuments(
             { status: 'active', $or: [{ p1: username }, { p2: username }] });
         if (activeCount >= MAX_DAILY_PER_USER)
-            return res.json({ ok: false, msg: `진행 중인 일일 게임은 최대 ${MAX_DAILY_PER_USER}개까지 가능합니다` });
+            return res.json({ ok: false, msg: tr('maxActiveGames', lang, MAX_DAILY_PER_USER) });
 
         const room = {
             _id: genId(), creator: username, creatorRating: user.rating || 1000,
@@ -370,7 +449,7 @@ app.post('/api/daily/rooms', async (req, res) => {
         await dailyCol.insertOne(room);
         res.json({ ok: true, room: { id: room._id, creator: room.creator,
             creatorRating: room.creatorRating, createdAt: room.createdAt } });
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.get('/api/daily/rooms', async (req, res) => {
@@ -383,34 +462,37 @@ app.get('/api/daily/rooms', async (req, res) => {
 });
 
 app.post('/api/daily/rooms/:id/cancel', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.body || {};
     try {
         await connectDB();
         const room = await dailyCol.findOne({ _id: req.params.id });
-        if (!room || room.status !== 'waiting') return res.json({ ok: false, msg: '취소할 수 없는 방입니다' });
-        if (room.creator !== username) return res.json({ ok: false, msg: '권한이 없습니다' });
+        if (!room || room.status !== 'waiting') return res.json({ ok: false, msg: tr('cannotCancelRoom', lang) });
+        if (room.creator !== username) return res.json({ ok: false, msg: tr('noPermission', lang) });
         await dailyCol.deleteOne({ _id: req.params.id });
         res.json({ ok: true });
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.post('/api/daily/rooms/:id/join', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.body || {};
-    if (!username) return res.json({ ok: false, msg: '로그인이 필요합니다' });
-    try { await connectDB(); await joinDailyRoom(req.params.id, username, res); }
-    catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
+    try { await connectDB(); await joinDailyRoom(req.params.id, username, res, lang); }
+    catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.post('/api/daily/rooms/random-join', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.body || {};
-    if (!username) return res.json({ ok: false, msg: '로그인이 필요합니다' });
+    if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
         const rooms = await dailyCol.find({ status: 'waiting', creator: { $ne: username } }).toArray();
-        if (!rooms.length) return res.json({ ok: false, msg: '참가할 수 있는 방이 없습니다' });
+        if (!rooms.length) return res.json({ ok: false, msg: tr('noJoinableRooms', lang) });
         const room = rooms[Math.floor(Math.random() * rooms.length)];
-        await joinDailyRoom(room._id, username, res);
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+        await joinDailyRoom(room._id, username, res, lang);
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.get('/api/daily/games', async (req, res) => {
@@ -428,29 +510,31 @@ app.get('/api/daily/games', async (req, res) => {
 });
 
 app.get('/api/daily/games/:id', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.query;
     try {
         await connectDB();
         const doc = await dailyCol.findOne({ _id: req.params.id });
-        if (!doc) return res.json({ ok: false, msg: '게임을 찾을 수 없습니다' });
-        if (doc.p1 !== username && doc.p2 !== username) return res.json({ ok: false, msg: '권한이 없습니다' });
+        if (!doc) return res.json({ ok: false, msg: tr('gameNotFound', lang) });
+        if (doc.p1 !== username && doc.p2 !== username) return res.json({ ok: false, msg: tr('noPermission', lang) });
         res.json({ ok: true, game: dailyFull(doc) });
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.post('/api/daily/games/:id/move', async (req, res) => {
+    const lang = reqLang(req);
     const { username, r, c } = req.body || {};
-    if (!username) return res.json({ ok: false, msg: '로그인이 필요합니다' });
+    if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
         const game = await dailyCol.findOne({ _id: req.params.id });
-        if (!game || game.status !== 'active') return res.json({ ok: false, msg: '진행 중인 게임이 아닙니다' });
+        if (!game || game.status !== 'active') return res.json({ ok: false, msg: tr('notActiveGame', lang) });
         const myNum = game.p1 === username ? P1 : game.p2 === username ? P2 : 0;
-        if (!myNum) return res.json({ ok: false, msg: '참가자가 아닙니다' });
-        if (game.turn !== myNum) return res.json({ ok: false, msg: '내 차례가 아닙니다' });
+        if (!myNum) return res.json({ ok: false, msg: tr('notParticipant', lang) });
+        if (game.turn !== myNum) return res.json({ ok: false, msg: tr('notYourTurn', lang) });
         if (typeof r !== 'number' || typeof c !== 'number' || r < 0 || r >= N || c < 0 || c >= N)
-            return res.json({ ok: false, msg: '잘못된 좌표입니다' });
-        if (game.board[r][c] !== EMPTY) return res.json({ ok: false, msg: '이미 채워진 칸입니다' });
+            return res.json({ ok: false, msg: tr('invalidCoords', lang) });
+        if (game.board[r][c] !== EMPTY) return res.json({ ok: false, msg: tr('cellFilled', lang) });
 
         const board = game.board.map(row => [...row]);
         pts(board, r, c).forEach(([ar, ac]) => { board[ar][ac] = myNum; });
@@ -461,7 +545,7 @@ app.post('/api/daily/games/:id/move', async (req, res) => {
         const upd = await dailyCol.updateOne(
             { _id: req.params.id, status: 'active', turn: myNum },
             { $set: { board, turn: nextTurn, deadline: Date.now() + DAILY_TURN_MS, lastMoveAt: Date.now() } });
-        if (upd.matchedCount === 0) return res.json({ ok: false, msg: '이미 처리된 요청입니다. 새로고침 해주세요' });
+        if (upd.matchedCount === 0) return res.json({ ok: false, msg: tr('staleRequest', lang) });
 
         let finalDoc = await dailyCol.findOne({ _id: req.params.id });
         if (em === 0) {
@@ -470,20 +554,21 @@ app.post('/api/daily/games/:id/move', async (req, res) => {
             notifyDaily(myNum === P1 ? finalDoc.p2 : finalDoc.p1, req.params.id);
         }
         res.json({ ok: true, game: dailyFull(finalDoc), captured, r, c, player: myNum });
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.post('/api/daily/games/:id/forfeit', async (req, res) => {
+    const lang = reqLang(req);
     const { username } = req.body || {};
     try {
         await connectDB();
         const game = await dailyCol.findOne({ _id: req.params.id });
-        if (!game || game.status !== 'active') return res.json({ ok: false, msg: '진행 중인 게임이 아닙니다' });
+        if (!game || game.status !== 'active') return res.json({ ok: false, msg: tr('notActiveGame', lang) });
         const myNum = game.p1 === username ? P1 : game.p2 === username ? P2 : 0;
-        if (!myNum) return res.json({ ok: false, msg: '참가자가 아닙니다' });
+        if (!myNum) return res.json({ ok: false, msg: tr('notParticipant', lang) });
         const finalDoc = await endDailyGame(game, myNum === P1 ? 'p2' : 'p1', 'forfeit');
         res.json({ ok: true, game: dailyFull(finalDoc) });
-    } catch (e) { console.error(e); res.json({ ok: false, msg: '서버 오류가 발생했습니다' }); }
+    } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 function clearTimer(game) {
@@ -531,9 +616,8 @@ async function endGame(game, result, reason) {
 
 function startGame(p1ws, p2ws, mode) {
     if (p1ws.username === p2ws.username) {
-        const msg = { type: 'error', msg: '같은 계정끼리는 대전할 수 없습니다' };
-        send(p1ws, msg);
-        if (p2ws !== p1ws) send(p2ws, msg);
+        send(p1ws, { type: 'error', msg: tr('sameAccount', p1ws.lang) });
+        if (p2ws !== p1ws) send(p2ws, { type: 'error', msg: tr('sameAccount', p2ws.lang) });
         return;
     }
     [p1ws, p2ws].forEach(w => {
@@ -573,6 +657,7 @@ wss.on('connection', ws => {
     ws.username = null;
     ws.gameId   = null;
     ws.rating   = 1000;
+    ws.lang     = 'ko';
 
     ws.on('message', async raw => {
         let m; try { m = JSON.parse(raw); } catch { return; }
@@ -580,8 +665,13 @@ wss.on('connection', ws => {
         if (m.type === 'auth') {
             ws.username = m.username;
             ws.rating   = m.rating || 1000;
+            ws.lang     = m.lang === 'en' ? 'en' : 'ko';
             onlineUsers.set(m.username, ws);
             return send(ws, { type: 'auth_ok' });
+        }
+        if (m.type === 'set_lang') {
+            ws.lang = m.lang === 'en' ? 'en' : 'ko';
+            return;
         }
         if (!ws.username) return;
 
@@ -608,14 +698,14 @@ wss.on('connection', ws => {
 
         if (m.type === 'send_challenge') {
             if (ws.gameId)
-                return send(ws, { type: 'challenge_result', ok: false, msg: '게임 중에는 초대할 수 없습니다' });
+                return send(ws, { type: 'challenge_result', ok: false, msg: tr('inGameCannotInvite', ws.lang) });
             if (m.to === ws.username)
-                return send(ws, { type: 'challenge_result', ok: false, msg: '자기 자신에게는 초대할 수 없습니다' });
+                return send(ws, { type: 'challenge_result', ok: false, msg: tr('cannotInviteSelf', ws.lang) });
             const tws = onlineUsers.get(m.to);
             if (!tws)
-                return send(ws, { type: 'challenge_result', ok: false, msg: '해당 유저가 온라인 상태가 아닙니다' });
+                return send(ws, { type: 'challenge_result', ok: false, msg: tr('userNotOnline', ws.lang) });
             if (tws.gameId)
-                return send(ws, { type: 'challenge_result', ok: false, msg: '해당 유저가 현재 게임 중입니다' });
+                return send(ws, { type: 'challenge_result', ok: false, msg: tr('userInGame', ws.lang) });
 
             [...pendingChallenges.keys()]
                 .filter(k => k.startsWith(ws.username + '->'))
@@ -635,12 +725,12 @@ wss.on('connection', ws => {
         if (m.type === 'respond_challenge') {
             const key = `${m.from}->${ws.username}`;
             const ch  = pendingChallenges.get(key);
-            if (!ch) return send(ws, { type: 'error', msg: '초대가 만료되었습니다' });
+            if (!ch) return send(ws, { type: 'error', msg: tr('inviteExpired', ws.lang) });
             clearTimeout(ch.timer);
             pendingChallenges.delete(key);
             if (!m.accept) { send(ch.fromWs, { type: 'challenge_declined', by: ws.username }); return; }
             if (ws.gameId || ch.fromWs.gameId) {
-                send(ws, { type: 'error', msg: '이미 게임 중입니다' });
+                send(ws, { type: 'error', msg: tr('alreadyInGame', ws.lang) });
                 send(ch.fromWs, { type: 'challenge_declined', by: ws.username });
                 return;
             }
