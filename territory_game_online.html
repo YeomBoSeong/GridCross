@@ -371,6 +371,13 @@ body{
     border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;
     vertical-align:middle;margin-right:6px;}
 
+/* language toggle */
+#lang-toggle{position:fixed;top:14px;right:14px;z-index:300;padding:6px 14px;border-radius:20px;
+    border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:.8rem;font-weight:700;
+    cursor:pointer;letter-spacing:.5px;font-family:inherit;}
+#lang-toggle:hover{border-color:var(--blue);background:var(--bg3);}
+@media(max-width:540px){#lang-toggle{top:8px;right:8px;padding:5px 11px;font-size:.74rem;}}
+
 /* 광고 반응형 */
 .ad-desktop-left,.ad-desktop-right{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:10;}
 .ad-desktop-left{left:20px;}
@@ -383,6 +390,8 @@ body{
 </style>
 </head>
 <body>
+
+<button id="lang-toggle" onclick="toggleLang()">EN</button>
 
 <!-- ══ DESKTOP AD (160×600 고정 좌·우측) ══ -->
 <div class="ad-desktop-left">
@@ -435,8 +444,8 @@ body{
     <div class="ch-card">
         <div class="ch-title" id="ch-text"></div>
         <div class="row">
-            <button class="btn btn-success" onclick="sfx.click();respondChallenge(true)">✅ 수락</button>
-            <button class="btn btn-danger"  onclick="sfx.click();respondChallenge(false)">❌ 거절</button>
+            <button class="btn btn-success" onclick="sfx.click();respondChallenge(true)" data-i18n="ch.accept">✅ 수락</button>
+            <button class="btn btn-danger"  onclick="sfx.click();respondChallenge(false)" data-i18n="ch.decline">❌ 거절</button>
         </div>
     </div>
 </div>
@@ -444,11 +453,11 @@ body{
 <!-- ══ FORFEIT MODAL ══ -->
 <div id="forfeit-modal" class="modal-overlay">
     <div class="forfeit-card">
-        <h3>🏳️ 기권</h3>
-        <p>정말 기권하시겠습니까?<br>레이팅이 감소합니다.</p>
+        <h3 data-i18n="forfeit.title">🏳️ 기권</h3>
+        <p data-i18n-html="forfeit.body">정말 기권하시겠습니까?<br>레이팅이 감소합니다.</p>
         <div class="row">
-            <button class="btn btn-danger" onclick="sfx.click();confirmForfeit()">기권</button>
-            <button class="btn"            onclick="sfx.click();closeForfeitModal()">취소</button>
+            <button class="btn btn-danger" onclick="sfx.click();confirmForfeit()" data-i18n="forfeit.confirm">기권</button>
+            <button class="btn"            onclick="sfx.click();closeForfeitModal()" data-i18n="common.cancel">취소</button>
         </div>
     </div>
 </div>
@@ -486,7 +495,7 @@ body{
         <div id="result-score" class="result-score"></div>
         <div id="result-rating" class="result-rating-row" style="display:none"></div>
         <button class="btn btn-primary" style="margin-top:4px;padding:11px 24px"
-                onclick="sfx.click();goOnline()">↩ 로비로 돌아가기</button>
+                onclick="sfx.click();goOnline()" data-i18n="result.backToLobby">↩ 로비로 돌아가기</button>
     </div>
 </div>
 
@@ -499,20 +508,20 @@ body{
             <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-a)"/>
             <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-a)"/>
         </svg>
-        <h1>십자 땅따먹기</h1>
+        <h1 data-i18n="app.title">십자 땅따먹기</h1>
     </div>
     <div class="card" style="width:340px">
-        <div class="login-hint">
+        <div class="login-hint" data-i18n-html="login.hint">
             <b>처음 오셨나요?</b><br>
             원하는 유저네임과 비밀번호를 입력하면<br>
             <b>자동으로 계정이 만들어집니다.</b><br>
             기존 계정은 동일하게 입력해 로그인하세요.
         </div>
-        <input class="inp" type="text"     id="inp-user" placeholder="유저네임 (2~20자)"  maxlength="20" autocomplete="username">
-        <input class="inp" type="password" id="inp-pw"   placeholder="비밀번호 (4~20자)"   maxlength="20" autocomplete="current-password">
+        <input class="inp" type="text"     id="inp-user" placeholder="유저네임 (2~20자)"  maxlength="20" autocomplete="username" data-i18n-ph="login.userPh">
+        <input class="inp" type="password" id="inp-pw"   placeholder="비밀번호 (4~20자)"   maxlength="20" autocomplete="current-password" data-i18n-ph="login.pwPh">
         <button class="btn btn-primary" id="login-btn"
                 style="width:100%;padding:11px;font-size:1rem;border-radius:9px"
-                onclick="doLogin()">로그인 / 회원가입</button>
+                onclick="doLogin()" data-i18n="login.submit">로그인 / 회원가입</button>
         <div id="login-err"></div>
     </div>
 </div>
@@ -526,26 +535,26 @@ body{
             <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-b)"/>
             <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-b)"/>
         </svg>
-        <h1>십자 땅따먹기</h1>
+        <h1 data-i18n="app.title">십자 땅따먹기</h1>
     </div>
     <div class="user-chip">
         <span>👤</span><span class="uname" id="m-uname"></span><span class="urat" id="m-urat"></span>
     </div>
     <div class="col" style="margin-top:4px;gap:8px">
-        <button class="btn menu-btn btn-primary" onclick="sfx.click();goOnline()"><span class="icon">🌐</span> 온라인 대전</button>
-        <button class="btn menu-btn"             onclick="sfx.click();goLocal('pvai')"><span class="icon">🤖</span> AI 대전</button>
-        <button class="btn menu-btn"             onclick="sfx.click();goLocal('pvp')"><span class="icon">👥</span> 2인 대전 (로컬)</button>
-        <button class="btn menu-btn"             onclick="sfx.click();showScreen('s-rules')"><span class="icon">📖</span> 게임 설명</button>
-        <button class="btn menu-btn"             onclick="sfx.click();openLeaderboard()"><span class="icon">🏆</span> 리더보드</button>
-        <button class="btn menu-btn"             onclick="sfx.click();openHistory()"><span class="icon">📜</span> 게임 기록</button>
-        <button class="btn menu-btn btn-ghost"   onclick="sfx.click();doLogout()"><span class="icon">🚪</span> 로그아웃</button>
+        <button class="btn menu-btn btn-primary" onclick="sfx.click();goOnline()" data-i18n="menu.online">🌐 온라인 대전</button>
+        <button class="btn menu-btn"             onclick="sfx.click();goLocal('pvai')" data-i18n="menu.ai">🤖 AI 대전</button>
+        <button class="btn menu-btn"             onclick="sfx.click();goLocal('pvp')" data-i18n="menu.local">👥 2인 대전 (로컬)</button>
+        <button class="btn menu-btn"             onclick="sfx.click();showScreen('s-rules')" data-i18n="menu.rules">📖 게임 설명</button>
+        <button class="btn menu-btn"             onclick="sfx.click();openLeaderboard()" data-i18n="menu.leaderboard">🏆 리더보드</button>
+        <button class="btn menu-btn"             onclick="sfx.click();openHistory()" data-i18n="menu.history">📜 게임 기록</button>
+        <button class="btn menu-btn btn-ghost"   onclick="sfx.click();doLogout()" data-i18n="menu.logout">🚪 로그아웃</button>
     </div>
 </div>
 
 <!-- ══════════ RULES SCREEN ══════════ -->
 <div id="s-rules" class="screen">
     <div class="shead">
-        <button class="btn btn-ghost shead-back" onclick="sfx.click();showScreen('s-menu')">← 메뉴</button>
+        <button class="btn btn-ghost shead-back" onclick="sfx.click();showScreen('s-menu')" data-i18n="common.backMenu">← 메뉴</button>
         <div class="logo-title sm">
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-r" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
@@ -553,18 +562,18 @@ body{
                 <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-r)"/>
                 <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-r)"/>
             </svg>
-            <h1>게임 설명</h1>
+            <h1 data-i18n="rules.title">게임 설명</h1>
         </div>
     </div>
 
     <div class="rules-section">
-        <h3>🎯 목표</h3>
-        <p>12×12 보드의 모든 칸이 채워졌을 때, <b style="color:#c9d1d9">더 많은 칸</b>을 차지한 플레이어가 승리합니다.</p>
+        <h3 data-i18n="rules.goal.h">🎯 목표</h3>
+        <p data-i18n-html="rules.goal.p">12×12 보드의 모든 칸이 채워졌을 때, <b style="color:#c9d1d9">더 많은 칸</b>을 차지한 플레이어가 승리합니다.</p>
     </div>
 
     <div class="rules-section">
-        <h3>✚ 기본 규칙 — 십자 점령</h3>
-        <p style="margin-bottom:6px"><b>빈 칸</b>을 클릭하면 그 칸과 <b>위·아래·왼쪽·오른쪽</b>으로 1칸씩(최대 5칸)이 내 영역이 됩니다.<br>
+        <h3 data-i18n="rules.cross.h">✚ 기본 규칙 — 십자 점령</h3>
+        <p style="margin-bottom:6px" data-i18n-html="rules.cross.p"><b>빈 칸</b>을 클릭하면 그 칸과 <b>위·아래·왼쪽·오른쪽</b>으로 1칸씩(최대 5칸)이 내 영역이 됩니다.<br>
         십자 범위 밖 칸은 포함되지 않습니다.</p>
         <!-- 3×3 correct demo (5 cells) -->
         <div class="demo-grid-3">
@@ -572,76 +581,76 @@ body{
             <div class="dc left"></div> <div class="dc clicked"></div><div class="dc right"></div>
             <div class="dc empty"></div><div class="dc down"></div> <div class="dc empty"></div>
         </div>
-        <p class="demo-caption">★ = 클릭한 칸 &nbsp;|&nbsp; 파란 칸 = 점령되는 5칸 &nbsp;|&nbsp; 회색 = 포함 안 됨 (십자 범위 밖)</p>
+        <p class="demo-caption" data-i18n-html="rules.cross.caption">★ = 클릭한 칸 &nbsp;|&nbsp; 파란 칸 = 점령되는 5칸 &nbsp;|&nbsp; 회색 = 포함 안 됨 (십자 범위 밖)</p>
     </div>
 
     <div class="rules-section">
-        <h3>⚔️ 상대방 땅 빼앗기</h3>
-        <p style="margin-bottom:10px">
+        <h3 data-i18n="rules.capture.h">⚔️ 상대방 땅 빼앗기</h3>
+        <p style="margin-bottom:10px" data-i18n-html="rules.capture.p">
             상대방 칸에 <b>인접한 빈 칸</b>을 클릭하면, 십자 범위 안에 있는 상대방 칸이 <b>내 영역으로 바뀝니다.</b><br>
             단, <b>상대방 칸을 직접 클릭</b>할 수는 없습니다.
         </p>
         <!-- Before / After capture demo -->
         <div class="capture-demo">
             <div>
-                <p class="demo-caption" style="margin-bottom:6px">클릭 전</p>
+                <p class="demo-caption" style="margin-bottom:6px" data-i18n="rules.before">클릭 전</p>
                 <div class="demo-grid-cap">
                     <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
                     <div class="dc red"></div><div class="dc empty" style="box-shadow:inset 0 0 0 2px #fff;border-radius:3px"></div><div class="dc red"></div>
                     <div class="dc red"></div><div class="dc red"></div><div class="dc red"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">흰 테두리 = 클릭할 빈 칸<br>빨간 칸 = 상대방 영역</p>
+                <p class="demo-caption" style="margin-top:4px" data-i18n-html="rules.capture.cap1">흰 테두리 = 클릭할 빈 칸<br>빨간 칸 = 상대방 영역</p>
             </div>
             <div class="demo-arrow">→</div>
             <div>
-                <p class="demo-caption" style="margin-bottom:6px">클릭 후</p>
+                <p class="demo-caption" style="margin-bottom:6px" data-i18n="rules.after">클릭 후</p>
                 <div class="demo-grid-cap">
                     <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div>
                     <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
                     <div class="dc red"></div> <div class="dc blue"></div><div class="dc red"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">파란 칸 = 내 영역이 됨 (5칸)<br>십자 범위 밖은 그대로</p>
+                <p class="demo-caption" style="margin-top:4px" data-i18n-html="rules.capture.cap2">파란 칸 = 내 영역이 됨 (5칸)<br>십자 범위 밖은 그대로</p>
             </div>
         </div>
-        <p style="margin-top:4px;font-size:.82rem;color:var(--muted)">
+        <p style="margin-top:4px;font-size:.82rem;color:var(--muted)" data-i18n-html="rules.capture.note">
             ※ 이 예시에서 가운데 빈 칸을 클릭하면 상하좌우 각 1칸씩 총 4개의 빨간 칸이 모두 내 것이 됩니다.<br>
             십자 범위 밖 4칸은 그대로 상대방 영역으로 남습니다.
         </p>
     </div>
 
     <div class="rules-section">
-        <h3>⭐ 포위 포획</h3>
-        <p style="margin-bottom:6px">
+        <h3 data-i18n="rules.siege.h">⭐ 포위 포획</h3>
+        <p style="margin-bottom:6px" data-i18n-html="rules.siege.p">
             상대방 칸 덩어리를 <b>내 칸으로 완전히 둘러싸면</b>(빈 칸에 닿는 부분이 하나도 없으면) 그 덩어리 전체가 <b>통째로 내 영역</b>으로 바뀝니다.<br>
             단, 그 덩어리가 보드의 <b>위·아래·왼쪽·오른쪽 벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다.
         </p>
 
-        <p class="demo-caption" style="margin-bottom:2px">예시 1 — 포위 성공</p>
+        <p class="demo-caption" style="margin-bottom:2px" data-i18n="rules.siege.ex1">예시 1 — 포위 성공</p>
         <div class="capture-demo">
             <div>
-                <p class="demo-caption" style="margin-bottom:6px">클릭 전</p>
+                <p class="demo-caption" style="margin-bottom:6px" data-i18n="rules.before">클릭 전</p>
                 <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
                     <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
                     <div class="dc blue"></div><div class="dc red"></div><div class="dc red"></div><div class="dc empty" style="box-shadow:inset 0 0 0 2px #fff;border-radius:3px"></div>
                     <div class="dc blue"></div><div class="dc red"></div><div class="dc red"></div><div class="dc blue"></div>
                     <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">흰 테두리 = 마지막으로 클릭할 빈 칸<br>빨간 칸 = 상대방 덩어리<br>파란 칸 = 이미 둘러싼 내 영역</p>
+                <p class="demo-caption" style="margin-top:4px" data-i18n-html="rules.siege.cap1">흰 테두리 = 마지막으로 클릭할 빈 칸<br>빨간 칸 = 상대방 덩어리<br>파란 칸 = 이미 둘러싼 내 영역</p>
             </div>
             <div class="demo-arrow">→</div>
             <div>
-                <p class="demo-caption" style="margin-bottom:6px">클릭 후</p>
+                <p class="demo-caption" style="margin-bottom:6px" data-i18n="rules.after">클릭 후</p>
                 <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
                     <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
                     <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
                     <div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc blue"></div>
                     <div class="dc empty"></div><div class="dc blue"></div><div class="dc blue"></div><div class="dc empty"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">마지막 빈 칸을 클릭하는 순간<br>덩어리 전체가 한 번에 뒤집힙니다</p>
+                <p class="demo-caption" style="margin-top:4px" data-i18n-html="rules.siege.cap2">마지막 빈 칸을 클릭하는 순간<br>덩어리 전체가 한 번에 뒤집힙니다</p>
             </div>
         </div>
 
-        <p class="demo-caption" style="margin-top:14px;margin-bottom:2px">예시 2 — 벽에 닿아 포획 실패</p>
+        <p class="demo-caption" style="margin-top:14px;margin-bottom:2px" data-i18n="rules.siege.ex2">예시 2 — 벽에 닿아 포획 실패</p>
         <div class="capture-demo">
             <div>
                 <div class="demo-grid-cap" style="grid-template-columns:repeat(4,22px);grid-template-rows:repeat(4,22px)">
@@ -650,61 +659,61 @@ body{
                     <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
                     <div class="dc red"></div><div class="dc blue"></div><div class="dc empty"></div><div class="dc empty"></div>
                 </div>
-                <p class="demo-caption" style="margin-top:4px">빨간 덩어리가 <b>왼쪽·위·아래 벽 3개</b>에 닿아 있어<br>오른쪽을 파란 칸으로 완전히 막아도 <b>포획되지 않습니다</b> 🚫</p>
+                <p class="demo-caption" style="margin-top:4px" data-i18n-html="rules.siege.cap3">빨간 덩어리가 <b>왼쪽·위·아래 벽 3개</b>에 닿아 있어<br>오른쪽을 파란 칸으로 완전히 막아도 <b>포획되지 않습니다</b> 🚫</p>
             </div>
         </div>
     </div>
 
     <div class="rules-section">
-        <h3>🔍 미리보기</h3>
+        <h3 data-i18n="rules.preview.h">🔍 미리보기</h3>
         <ul>
-            <li>마우스를 올리면 클릭 시 영향받는 칸을 미리 확인할 수 있습니다.</li>
-            <li><b style="color:rgba(88,166,255,.7)">연한 파란색</b> = 새로 점령되는 빈 칸</li>
-            <li><b style="color:rgba(88,166,255,1)">진한 파란색 테두리</b> = 빼앗게 되는 상대 칸</li>
+            <li data-i18n="rules.preview.li1">마우스를 올리면 클릭 시 영향받는 칸을 미리 확인할 수 있습니다.</li>
+            <li data-i18n-html="rules.preview.li2"><b style="color:rgba(88,166,255,.7)">연한 파란색</b> = 새로 점령되는 빈 칸</li>
+            <li data-i18n-html="rules.preview.li3"><b style="color:rgba(88,166,255,1)">진한 파란색 테두리</b> = 빼앗게 되는 상대 칸</li>
         </ul>
     </div>
 
     <div class="rules-section">
-        <h3>🌐 온라인 대전</h3>
+        <h3 data-i18n="rules.online.h">🌐 온라인 대전</h3>
         <ul>
-            <li>랜덤 매치메이킹 또는 유저 이름으로 직접 초대</li>
-            <li>수당 <b>20초 제한</b> — 시간 초과 시 자동 패배</li>
-            <li>게임 도중 <b>기권</b> 가능 (레이팅 감소)</li>
-            <li>상대방 연결 끊김 시 부전승 처리</li>
+            <li data-i18n="rules.online.li1">랜덤 매치메이킹 또는 유저 이름으로 직접 초대</li>
+            <li data-i18n-html="rules.online.li2">수당 <b>20초 제한</b> — 시간 초과 시 자동 패배</li>
+            <li data-i18n-html="rules.online.li3">게임 도중 <b>기권</b> 가능 (레이팅 감소)</li>
+            <li data-i18n="rules.online.li4">상대방 연결 끊김 시 부전승 처리</li>
         </ul>
     </div>
 
     <div class="rules-section">
-        <h3>⚡ 레이팅 시스템 (ELO)</h3>
-        <p style="margin-bottom:10px">온라인 대전에서만 레이팅이 변동됩니다. 기본 <b>1000점</b>에서 시작합니다.</p>
+        <h3 data-i18n="rules.elo.h">⚡ 레이팅 시스템 (ELO)</h3>
+        <p style="margin-bottom:10px" data-i18n-html="rules.elo.p">온라인 대전에서만 레이팅이 변동됩니다. 기본 <b>1000점</b>에서 시작합니다.</p>
         <div class="elo-row">
-            <div class="elo-chip win"><div class="ec-val">+점수</div><div class="ec-lbl">승리</div></div>
-            <div class="elo-chip lose"><div class="ec-val">−점수</div><div class="ec-lbl">패배</div></div>
-            <div class="elo-chip draw"><div class="ec-val">±소량</div><div class="ec-lbl">무승부</div></div>
+            <div class="elo-chip win"><div class="ec-val" data-i18n="rules.elo.winVal">+점수</div><div class="ec-lbl" data-i18n="rules.elo.winLbl">승리</div></div>
+            <div class="elo-chip lose"><div class="ec-val" data-i18n="rules.elo.loseVal">−점수</div><div class="ec-lbl" data-i18n="rules.elo.loseLbl">패배</div></div>
+            <div class="elo-chip draw"><div class="ec-val" data-i18n="rules.elo.drawVal">±소량</div><div class="ec-lbl" data-i18n="rules.elo.drawLbl">무승부</div></div>
         </div>
-        <p style="margin-top:8px;font-size:.8rem">상대 레이팅이 높을수록 이겼을 때 더 많은 점수를 얻습니다.</p>
+        <p style="margin-top:8px;font-size:.8rem" data-i18n="rules.elo.note">상대 레이팅이 높을수록 이겼을 때 더 많은 점수를 얻습니다.</p>
     </div>
 
     <div class="rules-section">
-        <h3>💡 전략 팁</h3>
+        <h3 data-i18n="rules.tips.h">💡 전략 팁</h3>
         <ul>
-            <li>초반에는 중앙을 선점하면 더 넓은 공간을 확보할 수 있습니다.</li>
-            <li>상대 영역 <b>여러 칸에 인접한 빈 칸</b>을 노려 한 번에 많이 빼앗으세요.</li>
-            <li>한 수로 최대 <b>5칸</b>을 차지하거나 빼앗을 수 있습니다.</li>
-            <li>상대 칸 덩어리가 벽에서 멀리 떨어져 있다면 <b>포위 포획</b>을 노려보세요 — 한 번에 큰 덩어리를 뒤집을 수 있습니다.</li>
-            <li>내 덩어리가 포위당하지 않으려면 <b>벽(모서리)에 붙여서</b> 영역을 넓히는 것도 좋은 전략입니다.</li>
-            <li>끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.</li>
+            <li data-i18n="rules.tips.li1">초반에는 중앙을 선점하면 더 넓은 공간을 확보할 수 있습니다.</li>
+            <li data-i18n-html="rules.tips.li2">상대 영역 <b>여러 칸에 인접한 빈 칸</b>을 노려 한 번에 많이 빼앗으세요.</li>
+            <li data-i18n-html="rules.tips.li3">한 수로 최대 <b>5칸</b>을 차지하거나 빼앗을 수 있습니다.</li>
+            <li data-i18n-html="rules.tips.li4">상대 칸 덩어리가 벽에서 멀리 떨어져 있다면 <b>포위 포획</b>을 노려보세요 — 한 번에 큰 덩어리를 뒤집을 수 있습니다.</li>
+            <li data-i18n-html="rules.tips.li5">내 덩어리가 포위당하지 않으려면 <b>벽(모서리)에 붙여서</b> 영역을 넓히는 것도 좋은 전략입니다.</li>
+            <li data-i18n="rules.tips.li6">끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.</li>
         </ul>
     </div>
 
     <button class="btn btn-primary" style="padding:11px 32px;font-size:.95rem;margin-top:4px"
-            onclick="sfx.click();showScreen('s-menu')">← 메뉴로 돌아가기</button>
+            onclick="sfx.click();showScreen('s-menu')" data-i18n="rules.backBtn">← 메뉴로 돌아가기</button>
 </div>
 
 <!-- ══════════ LOCAL GAME ══════════ -->
 <div id="s-local" class="screen">
     <div class="shead">
-        <button class="btn btn-ghost shead-back" onclick="sfx.click();showScreen('s-menu')">← 메뉴</button>
+        <button class="btn btn-ghost shead-back" onclick="sfx.click();showScreen('s-menu')" data-i18n="common.backMenu">← 메뉴</button>
         <div class="logo-title sm">
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-c" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
@@ -712,13 +721,13 @@ body{
                 <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-c)"/>
                 <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-c)"/>
             </svg>
-            <h1>십자 땅따먹기</h1>
+            <h1 data-i18n="app.title">십자 땅따먹기</h1>
         </div>
     </div>
     <div class="row" id="ai-diff-row">
         <span id="local-mode-lbl" class="info-text"></span>
         <div class="sep" id="ai-diff-sep" style="display:none"></div>
-        <span class="info-text" id="ai-diff-lbl" style="display:none">AI 난이도</span>
+        <span class="info-text" id="ai-diff-lbl" style="display:none" data-i18n="local.aiDiffLbl">AI 난이도</span>
         <button class="btn df-btn"        data-df="1" onclick="sfx.click();setDiff(1)" id="df1" style="display:none;border-color:#8b5a2b;color:#8b5a2b">LV.1</button>
         <button class="btn df-btn"        data-df="2" onclick="sfx.click();setDiff(2)" id="df2" style="display:none;border-color:#d4b106;color:#d4b106">LV.2</button>
         <button class="btn df-btn active" data-df="3" onclick="sfx.click();setDiff(3)" id="df3" style="display:none;border-color:#ff8c00;color:#ff8c00">LV.3</button>
@@ -728,12 +737,12 @@ body{
         <button class="btn df-btn"        data-df="7" onclick="sfx.click();setDiff(7)" id="df7" style="display:none;border-color:#e74c3c;color:#e74c3c">LV.7</button>
     </div>
     <div class="row" style="justify-content:center">
-        <button class="btn" id="btn-ai-conq" onclick="sfx.click();openAiConquerors()" style="display:none;padding:6px 12px;font-size:.82rem">🏅 정복자 보기</button>
+        <button class="btn" id="btn-ai-conq" onclick="sfx.click();openAiConquerors()" style="display:none;padding:6px 12px;font-size:.82rem" data-i18n="local.viewConquerors">🏅 정복자 보기</button>
     </div>
     <div class="row" style="justify-content:center">
         <div class="ai-color-box" id="ai-color-info" style="display:none">
-            <div class="acb-title">💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다</div>
-            <div class="acb-legend">
+            <div class="acb-title" data-i18n="local.colorInfoTitle">💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다</div>
+            <div class="acb-legend" data-i18n-html="local.colorLegend">
                 기본: <b style="color:var(--text)">흰색</b>,
                 LV.1: <b style="color:#8b5a2b">갈색</b>,
                 LV.2: <b style="color:#d4b106">노란색</b>,
@@ -746,12 +755,12 @@ body{
         </div>
     </div>
     <div class="row" style="justify-content:center">
-        <button class="btn btn-success" onclick="sfx.click();initLocalGame()">🔄 새 게임</button>
+        <button class="btn btn-success" onclick="sfx.click();initLocalGame()" data-i18n="local.newGame">🔄 새 게임</button>
     </div>
     <div class="scoreboard">
-        <div class="sbox s1 on" id="lsb1"><div class="lbl" id="llbl1">🔵 플레이어 1</div><div class="num" id="lnum1">0</div><div class="cap" id="lcap1">포획 0칸</div></div>
-        <div class="turn-box" id="lturn">플레이어 1 차례</div>
-        <div class="sbox s2"  id="lsb2"><div class="lbl" id="llbl2">🔴 플레이어 2</div><div class="num" id="lnum2">0</div><div class="cap" id="lcap2">포획 0칸</div></div>
+        <div class="sbox s1 on" id="lsb1"><div class="lbl" id="llbl1" data-i18n="local.p1Label">🔵 플레이어 1</div><div class="num" id="lnum1">0</div><div class="cap" id="lcap1">포획 0칸</div></div>
+        <div class="turn-box" id="lturn" data-i18n="local.p1Turn">플레이어 1 차례</div>
+        <div class="sbox s2"  id="lsb2"><div class="lbl" id="llbl2" data-i18n="local.p2Label">🔴 플레이어 2</div><div class="num" id="lnum2">0</div><div class="cap" id="lcap2">포획 0칸</div></div>
     </div>
     <div class="bar-wrap" id="lbar-wrap" style="max-width:95vw">
         <div class="bar1" id="lbar1" style="width:0%"></div><div class="bar2" id="lbar2" style="width:0%"></div>
@@ -759,7 +768,7 @@ body{
     <div class="capture-msg" id="lcapmsg"></div>
     <div class="grid-wrap"><div class="grid" id="lgrid"></div></div>
     <div id="msg-l"></div>
-    <div class="rules-inline">
+    <div class="rules-inline" data-i18n-html="local.rulesInline">
         <b>게임 방법</b><br>
         • <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우 1칸씩(최대 5칸)이 내 영역으로 바뀝니다<br>
         • 마우스를 올리면 영향받는 칸을 미리 볼 수 있습니다<br>
@@ -772,7 +781,7 @@ body{
 <!-- ══════════ ONLINE LOBBY ══════════ -->
 <div id="s-online" class="screen">
     <div class="shead">
-        <button class="btn btn-ghost shead-back" onclick="sfx.click();leaveLobby()">← 메뉴</button>
+        <button class="btn btn-ghost shead-back" onclick="sfx.click();leaveLobby()" data-i18n="common.backMenu">← 메뉴</button>
         <div class="logo-title sm">
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-d" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
@@ -780,45 +789,45 @@ body{
                 <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-d)"/>
                 <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-d)"/>
             </svg>
-            <h1>온라인 대전</h1>
+            <h1 data-i18n="online.title">온라인 대전</h1>
         </div>
     </div>
     <div class="user-chip">
         <span>👤</span><span class="uname" id="ol-uname"></span><span class="urat" id="ol-urat"></span>
     </div>
     <div class="tabs">
-        <button class="tab-btn active" onclick="sfx.click();switchTab('tab-random',this)">🔀 랜덤 매치</button>
-        <button class="tab-btn"        onclick="sfx.click();switchTab('tab-invite',this)">📨 유저 초대</button>
-        <button class="tab-btn"        onclick="sfx.click();switchTab('tab-daily',this)">📅 일일 게임</button>
+        <button class="tab-btn active" onclick="sfx.click();switchTab('tab-random',this)" data-i18n="online.tabRandom">🔀 랜덤 매치</button>
+        <button class="tab-btn"        onclick="sfx.click();switchTab('tab-invite',this)" data-i18n="online.tabInvite">📨 유저 초대</button>
+        <button class="tab-btn"        onclick="sfx.click();switchTab('tab-daily',this)" data-i18n="online.tabDaily">📅 일일 게임</button>
     </div>
     <div class="tab-pane active" id="tab-random">
         <div class="lobby-box">
-            <div class="lobby-status" id="random-status">버튼을 눌러 상대를 찾으세요.</div>
-            <button class="btn btn-success" style="padding:12px 28px;font-size:.95rem" id="btn-find" onclick="sfx.click();findRandomMatch()">🔍 상대 찾기</button>
-            <button class="btn btn-danger" id="btn-cancel" onclick="sfx.click();cancelRandomMatch()" style="display:none">✕ 취소</button>
+            <div class="lobby-status" id="random-status" data-i18n="online.randomHint">버튼을 눌러 상대를 찾으세요.</div>
+            <button class="btn btn-success" style="padding:12px 28px;font-size:.95rem" id="btn-find" onclick="sfx.click();findRandomMatch()" data-i18n="online.findBtn">🔍 상대 찾기</button>
+            <button class="btn btn-danger" id="btn-cancel" onclick="sfx.click();cancelRandomMatch()" style="display:none" data-i18n="online.cancelFind">✕ 취소</button>
         </div>
     </div>
     <div class="tab-pane" id="tab-invite">
         <div class="lobby-box">
-            <p class="info-text">초대할 유저의 이름을 입력하세요.</p>
-            <input class="inp" type="text" id="invite-input" placeholder="유저네임" maxlength="20" autocomplete="off">
-            <button class="btn btn-primary" style="width:100%;padding:11px" id="btn-invite" onclick="sfx.click();sendChallenge()">📨 초대 보내기</button>
+            <p class="info-text" data-i18n="online.inviteHint">초대할 유저의 이름을 입력하세요.</p>
+            <input class="inp" type="text" id="invite-input" placeholder="유저네임" maxlength="20" autocomplete="off" data-i18n-ph="common.usernamePh">
+            <button class="btn btn-primary" style="width:100%;padding:11px" id="btn-invite" onclick="sfx.click();sendChallenge()" data-i18n="online.sendInvite">📨 초대 보내기</button>
             <div class="lobby-status" id="invite-status"></div>
         </div>
     </div>
     <div class="tab-pane" id="tab-daily">
         <div class="lobby-box" style="width:100%;max-width:420px">
-            <p class="info-text">수 제한 시간 <b style="color:#c9d1d9">1일</b>의 비동기 대전입니다. 결과에 따라 레이팅이 변동됩니다.</p>
+            <p class="info-text" data-i18n-html="online.dailyIntro">수 제한 시간 <b style="color:#c9d1d9">1일</b>의 비동기 대전입니다. 결과에 따라 레이팅이 변동됩니다.</p>
             <div class="row" style="width:100%">
-                <button class="btn btn-primary" style="flex:1" onclick="sfx.click();createDailyRoom()">➕ 방 만들기</button>
-                <button class="btn btn-success" style="flex:1" onclick="sfx.click();randomJoinDaily()">🎲 랜덤 참가</button>
+                <button class="btn btn-primary" style="flex:1" onclick="sfx.click();createDailyRoom()" data-i18n="online.createRoom">➕ 방 만들기</button>
+                <button class="btn btn-success" style="flex:1" onclick="sfx.click();randomJoinDaily()" data-i18n="online.randomJoin">🎲 랜덤 참가</button>
             </div>
             <div class="lobby-status" id="daily-status"></div>
         </div>
-        <div class="daily-section-title">내 일일 게임</div>
-        <div class="daily-list" id="daily-my-list"><div class="daily-empty">불러오는 중...</div></div>
-        <div class="daily-section-title">참가 대기 중인 방</div>
-        <div class="daily-list" id="daily-room-list"><div class="daily-empty">불러오는 중...</div></div>
+        <div class="daily-section-title" data-i18n="online.myDailyGames">내 일일 게임</div>
+        <div class="daily-list" id="daily-my-list"><div class="daily-empty" data-i18n="common.loading">불러오는 중...</div></div>
+        <div class="daily-section-title" data-i18n="online.waitingRooms">참가 대기 중인 방</div>
+        <div class="daily-list" id="daily-room-list"><div class="daily-empty" data-i18n="common.loading">불러오는 중...</div></div>
     </div>
 </div>
 
@@ -831,7 +840,7 @@ body{
             <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-e)"/>
             <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-e)"/>
         </svg>
-        <h1>십자 땅따먹기</h1>
+        <h1 data-i18n="app.title">십자 땅따먹기</h1>
     </div>
     <div class="online-header">
         <div class="player-badge blue" id="pb1"><span class="pb-name" id="pb1-name">P1</span><span class="pb-rat" id="pb1-rat">⚡1000</span></div>
@@ -842,14 +851,14 @@ body{
         <div id="timer-wrap">
             <div id="timer-num">20</div>
             <div id="timer-bar-outer"><div id="timer-bar-inner"></div></div>
-            <div id="timer-label">대기 중</div>
+            <div id="timer-label" data-i18n="common.waiting">대기 중</div>
         </div>
         <button class="btn btn-warn" id="forfeit-btn" style="padding:7px 14px;flex-shrink:0;margin-left:8px"
-                onclick="sfx.click();openForfeitModal()">🏳️ 기권</button>
+                onclick="sfx.click();openForfeitModal()" data-i18n="forfeit.title">🏳️ 기권</button>
     </div>
     <div class="scoreboard">
         <div class="sbox s1 on" id="osb1"><div class="lbl" id="olbl1">🔵 P1</div><div class="num" id="onum1">0</div><div class="cap" id="ocap1">포획 0칸</div></div>
-        <div class="turn-box" id="oturn">대기 중</div>
+        <div class="turn-box" id="oturn" data-i18n="common.waiting">대기 중</div>
         <div class="sbox s2"  id="osb2"><div class="lbl" id="olbl2">🔴 P2</div><div class="num" id="onum2">0</div><div class="cap" id="ocap2">포획 0칸</div></div>
     </div>
     <div class="bar-wrap" id="obar-wrap" style="max-width:95vw">
@@ -863,7 +872,7 @@ body{
 <!-- ══════════ DAILY GAME ══════════ -->
 <div id="s-daily-game" class="screen">
     <div class="shead">
-        <button class="btn btn-ghost shead-back" onclick="sfx.click();closeDailyGame()">← 목록</button>
+        <button class="btn btn-ghost shead-back" onclick="sfx.click();closeDailyGame()" data-i18n="daily.backToList">← 목록</button>
         <div class="logo-title sm">
             <svg class="logo-icon" viewBox="0 0 26 26" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
                 <defs><linearGradient id="lg-f" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
@@ -871,7 +880,7 @@ body{
                 <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-f)"/>
                 <rect x="0" y="9" width="26" height="8" rx="2" fill="url(#lg-f)"/>
             </svg>
-            <h1>일일 게임</h1>
+            <h1 data-i18n="daily.title">일일 게임</h1>
         </div>
     </div>
     <div class="online-header">
@@ -884,11 +893,11 @@ body{
             <span style="font-size:1.1rem">⏳</span>
             <div id="daily-deadline-txt" style="flex:1;font-size:.85rem;text-align:center">-</div>
         </div>
-        <button class="btn btn-warn" id="daily-forfeit-btn" style="padding:7px 14px;flex-shrink:0" onclick="sfx.click();openDailyForfeitModal()">🏳️ 기권</button>
+        <button class="btn btn-warn" id="daily-forfeit-btn" style="padding:7px 14px;flex-shrink:0" onclick="sfx.click();openDailyForfeitModal()" data-i18n="forfeit.title">🏳️ 기권</button>
     </div>
     <div class="scoreboard">
         <div class="sbox s1 on" id="dsb1"><div class="lbl" id="dlbl1">🔵 P1</div><div class="num" id="dnum1">0</div></div>
-        <div class="turn-box" id="dturn">대기 중</div>
+        <div class="turn-box" id="dturn" data-i18n="common.waiting">대기 중</div>
         <div class="sbox s2"  id="dsb2"><div class="lbl" id="dlbl2">🔴 P2</div><div class="num" id="dnum2">0</div></div>
     </div>
     <div class="bar-wrap" id="dbar-wrap" style="max-width:95vw">
@@ -902,7 +911,7 @@ body{
         <div id="dr-title" class="result-title"></div>
         <div id="dr-score" class="result-score"></div>
         <div id="dr-rating" class="result-rating-row" style="display:none"></div>
-        <button class="btn btn-primary" style="margin-top:4px;padding:11px 24px" onclick="sfx.click();closeDailyGame()">← 목록으로</button>
+        <button class="btn btn-primary" style="margin-top:4px;padding:11px 24px" onclick="sfx.click();closeDailyGame()" data-i18n="daily.backToList">← 목록으로</button>
     </div>
 </div>
 
@@ -910,21 +919,21 @@ body{
 <div id="lb-modal">
     <div class="lb-card">
         <div class="lb-header">
-            <span class="lb-title">🏆 리더보드</span>
+            <span class="lb-title" data-i18n="lb.title">🏆 리더보드</span>
             <button class="btn-close" onclick="closeLeaderboard()">✕</button>
         </div>
         <div class="lb-tabs" id="lb-tabs">
-            <button class="lb-tab active" id="lb-tab-online" onclick="sfx.click();switchLbTab('online')">온라인 레이팅</button>
-            <button class="lb-tab" id="lb-tab-ai" onclick="sfx.click();switchLbTab('ai')">🤖 AI 정복자</button>
+            <button class="lb-tab active" id="lb-tab-online" onclick="sfx.click();switchLbTab('online')" data-i18n="lb.tabOnline">온라인 레이팅</button>
+            <button class="lb-tab" id="lb-tab-ai" onclick="sfx.click();switchLbTab('ai')" data-i18n="lb.tabAi">🤖 AI 정복자</button>
         </div>
         <div id="lb-panel-online">
             <table class="lb-table">
                 <colgroup><col style="width:14%"><col style="width:28%"><col style="width:22%">
                     <col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>
                 <thead><tr>
-                    <th style="text-align:center">#</th><th>유저네임</th>
-                    <th style="text-align:right">레이팅</th>
-                    <th style="text-align:center">승</th><th style="text-align:center">패</th><th style="text-align:center">무</th>
+                    <th style="text-align:center">#</th><th data-i18n="lb.thUser">유저네임</th>
+                    <th style="text-align:right" data-i18n="lb.thRating">레이팅</th>
+                    <th style="text-align:center" data-i18n="lb.thWin">승</th><th style="text-align:center" data-i18n="lb.thLoss">패</th><th style="text-align:center" data-i18n="lb.thDraw">무</th>
                 </tr></thead>
                 <tbody id="lb-body"></tbody>
             </table>
@@ -934,8 +943,8 @@ body{
             <table class="lb-table">
                 <colgroup><col style="width:18%"><col style="width:52%"><col style="width:30%"></colgroup>
                 <thead><tr>
-                    <th style="text-align:center">#</th><th>유저네임</th>
-                    <th style="text-align:right">레이팅</th>
+                    <th style="text-align:center">#</th><th data-i18n="lb.thUser">유저네임</th>
+                    <th style="text-align:right" data-i18n="lb.thRating">레이팅</th>
                 </tr></thead>
                 <tbody id="lb-ai-body"></tbody>
             </table>
@@ -947,7 +956,7 @@ body{
 <div id="history-modal">
     <div class="lb-card">
         <div class="lb-header">
-            <span class="lb-title">📜 최근 게임 기록</span>
+            <span class="lb-title" data-i18n="hist.title">📜 최근 게임 기록</span>
             <button class="btn-close" onclick="closeHistory()">✕</button>
         </div>
         <div id="history-body" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -992,19 +1001,386 @@ const sfx = {
     urgentTick() { this._tone(1100,0.05,'square',0.11); },
 };
 
+// ── i18n ──────────────────────────────────────
+let LANG = localStorage.getItem('lang')==='en' ? 'en' : 'ko';
+const I18N = {
+ko:{
+    'app.title':'십자 땅따먹기',
+    'meta.title':'십자 땅따먹기 — 온라인 전략 보드게임',
+    'meta.desc':'12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임. AI 대전, 2인 로컬 대전, 온라인 매치메이킹을 즐겨보세요.',
+    'common.backMenu':'← 메뉴',
+    'common.cancel':'취소',
+    'common.join':'참가',
+    'common.view':'보기',
+    'common.loading':'불러오는 중...',
+    'common.usernamePh':'유저네임',
+    'common.me':'나',
+    'common.meShort':'나',
+    'common.meStar':'⭐ 내가',
+    'common.oppStar':'⭐ 상대가',
+    'common.myTurnStar':'⚡ 내 차례',
+    'common.oppTurnHour':'⏳ 상대 차례',
+    'common.myTurnPlain':'내 차례',
+    'common.oppTurnPlain':'상대 차례',
+    'common.waiting':'대기 중',
+    'common.gameOver':'게임 종료',
+    'common.draw':'무승부',
+    'common.winExcl':'승리!',
+    'common.lose':'패배',
+    'common.forfeitWord':'기권',
+    'common.genericError':'오류가 발생했습니다',
+    'common.moveFail':'이동 실패',
+    'ch.accept':'✅ 수락',
+    'ch.decline':'❌ 거절',
+    'login.hint':'<b>처음 오셨나요?</b><br>원하는 유저네임과 비밀번호를 입력하면<br><b>자동으로 계정이 만들어집니다.</b><br>기존 계정은 동일하게 입력해 로그인하세요.',
+    'login.userPh':'유저네임 (2~20자)',
+    'login.pwPh':'비밀번호 (4~20자)',
+    'login.submit':'로그인 / 회원가입',
+    'login.connecting':'연결 중...',
+    'login.needBoth':'유저네임과 비밀번호를 모두 입력해주세요',
+    'login.serverUnreachable':'서버에 연결할 수 없습니다',
+    'login.genericErr':'오류가 발생했습니다',
+    'login.created':'✅ 새 계정이 만들어졌습니다!',
+    'menu.online':'🌐 온라인 대전',
+    'menu.ai':'🤖 AI 대전',
+    'menu.local':'👥 2인 대전 (로컬)',
+    'menu.rules':'📖 게임 설명',
+    'menu.leaderboard':'🏆 리더보드',
+    'menu.history':'📜 게임 기록',
+    'menu.logout':'🚪 로그아웃',
+    'rules.title':'게임 설명',
+    'rules.goal.h':'🎯 목표',
+    'rules.goal.p':'12×12 보드의 모든 칸이 채워졌을 때, <b style="color:#c9d1d9">더 많은 칸</b>을 차지한 플레이어가 승리합니다.',
+    'rules.cross.h':'✚ 기본 규칙 — 십자 점령',
+    'rules.cross.p':'<b>빈 칸</b>을 클릭하면 그 칸과 <b>위·아래·왼쪽·오른쪽</b>으로 1칸씩(최대 5칸)이 내 영역이 됩니다.<br>십자 범위 밖 칸은 포함되지 않습니다.',
+    'rules.cross.caption':'★ = 클릭한 칸 &nbsp;|&nbsp; 파란 칸 = 점령되는 5칸 &nbsp;|&nbsp; 회색 = 포함 안 됨 (십자 범위 밖)',
+    'rules.capture.h':'⚔️ 상대방 땅 빼앗기',
+    'rules.capture.p':'상대방 칸에 <b>인접한 빈 칸</b>을 클릭하면, 십자 범위 안에 있는 상대방 칸이 <b>내 영역으로 바뀝니다.</b><br>단, <b>상대방 칸을 직접 클릭</b>할 수는 없습니다.',
+    'rules.before':'클릭 전',
+    'rules.after':'클릭 후',
+    'rules.capture.cap1':'흰 테두리 = 클릭할 빈 칸<br>빨간 칸 = 상대방 영역',
+    'rules.capture.cap2':'파란 칸 = 내 영역이 됨 (5칸)<br>십자 범위 밖은 그대로',
+    'rules.capture.note':'※ 이 예시에서 가운데 빈 칸을 클릭하면 상하좌우 각 1칸씩 총 4개의 빨간 칸이 모두 내 것이 됩니다.<br>십자 범위 밖 4칸은 그대로 상대방 영역으로 남습니다.',
+    'rules.siege.h':'⭐ 포위 포획',
+    'rules.siege.p':'상대방 칸 덩어리를 <b>내 칸으로 완전히 둘러싸면</b>(빈 칸에 닿는 부분이 하나도 없으면) 그 덩어리 전체가 <b>통째로 내 영역</b>으로 바뀝니다.<br>단, 그 덩어리가 보드의 <b>위·아래·왼쪽·오른쪽 벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다.',
+    'rules.siege.ex1':'예시 1 — 포위 성공',
+    'rules.siege.cap1':'흰 테두리 = 마지막으로 클릭할 빈 칸<br>빨간 칸 = 상대방 덩어리<br>파란 칸 = 이미 둘러싼 내 영역',
+    'rules.siege.cap2':'마지막 빈 칸을 클릭하는 순간<br>덩어리 전체가 한 번에 뒤집힙니다',
+    'rules.siege.ex2':'예시 2 — 벽에 닿아 포획 실패',
+    'rules.siege.cap3':'빨간 덩어리가 <b>왼쪽·위·아래 벽 3개</b>에 닿아 있어<br>오른쪽을 파란 칸으로 완전히 막아도 <b>포획되지 않습니다</b> 🚫',
+    'rules.preview.h':'🔍 미리보기',
+    'rules.preview.li1':'마우스를 올리면 클릭 시 영향받는 칸을 미리 확인할 수 있습니다.',
+    'rules.preview.li2':'<b style="color:rgba(88,166,255,.7)">연한 파란색</b> = 새로 점령되는 빈 칸',
+    'rules.preview.li3':'<b style="color:rgba(88,166,255,1)">진한 파란색 테두리</b> = 빼앗게 되는 상대 칸',
+    'rules.online.h':'🌐 온라인 대전',
+    'rules.online.li1':'랜덤 매치메이킹 또는 유저 이름으로 직접 초대',
+    'rules.online.li2':'수당 <b>20초 제한</b> — 시간 초과 시 자동 패배',
+    'rules.online.li3':'게임 도중 <b>기권</b> 가능 (레이팅 감소)',
+    'rules.online.li4':'상대방 연결 끊김 시 부전승 처리',
+    'rules.elo.h':'⚡ 레이팅 시스템 (ELO)',
+    'rules.elo.p':'온라인 대전에서만 레이팅이 변동됩니다. 기본 <b>1000점</b>에서 시작합니다.',
+    'rules.elo.winVal':'+점수','rules.elo.winLbl':'승리',
+    'rules.elo.loseVal':'−점수','rules.elo.loseLbl':'패배',
+    'rules.elo.drawVal':'±소량','rules.elo.drawLbl':'무승부',
+    'rules.elo.note':'상대 레이팅이 높을수록 이겼을 때 더 많은 점수를 얻습니다.',
+    'rules.tips.h':'💡 전략 팁',
+    'rules.tips.li1':'초반에는 중앙을 선점하면 더 넓은 공간을 확보할 수 있습니다.',
+    'rules.tips.li2':'상대 영역 <b>여러 칸에 인접한 빈 칸</b>을 노려 한 번에 많이 빼앗으세요.',
+    'rules.tips.li3':'한 수로 최대 <b>5칸</b>을 차지하거나 빼앗을 수 있습니다.',
+    'rules.tips.li4':'상대 칸 덩어리가 벽에서 멀리 떨어져 있다면 <b>포위 포획</b>을 노려보세요 — 한 번에 큰 덩어리를 뒤집을 수 있습니다.',
+    'rules.tips.li5':'내 덩어리가 포위당하지 않으려면 <b>벽(모서리)에 붙여서</b> 영역을 넓히는 것도 좋은 전략입니다.',
+    'rules.tips.li6':'끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.',
+    'rules.backBtn':'← 메뉴로 돌아가기',
+    'local.aiDiffLbl':'AI 난이도',
+    'local.viewConquerors':'🏅 정복자 보기',
+    'local.colorInfoTitle':'💡 난이도에서 처음 승리하면 유저네임이 해당 난이도 색으로 바뀝니다',
+    'local.colorLegend':'기본: <b style="color:var(--text)">흰색</b>, LV.1: <b style="color:#8b5a2b">갈색</b>, LV.2: <b style="color:#d4b106">노란색</b>, LV.3: <b style="color:#ff8c00">주황색</b>, LV.4: <b style="color:#2ea043">초록색</b>, LV.5: <b style="color:#3b82f6">파란색</b>, LV.6: <b style="color:#9b59b6">보라색</b>, LV.7: <b style="color:#e74c3c">빨간색</b>',
+    'local.newGame':'🔄 새 게임',
+    'local.p1Label':'🔵 플레이어 1',
+    'local.p2Label':'🔴 플레이어 2',
+    'local.aiLabel':'🤖 AI',
+    'local.p1Turn':'🔵 플레이어 1 차례',
+    'local.p2Turn':'🔴 플레이어 2 차례',
+    'local.aiTurn':'🤖 AI 차례',
+    'local.p1Win':'🔵 플레이어 1 승리!',
+    'local.p2Win':'🔴 플레이어 2 승리!',
+    'local.aiWin':'AI 승리!',
+    'local.drawExcl':'무승부!',
+    'local.rulesInline':'<b>게임 방법</b><br>• <b>빈 칸</b>을 클릭하면 해당 칸 + 상하좌우 1칸씩(최대 5칸)이 내 영역으로 바뀝니다<br>• 마우스를 올리면 영향받는 칸을 미리 볼 수 있습니다<br>• 상대방 칸은 직접 클릭할 수 없지만 범위 안에 들어오면 빼앗깁니다<br>• <b style="color:#e3b341">⭐ 포위 포획</b>: 상대 칸 덩어리를 내 칸으로 완전히 둘러싸면 통째로 뒤집힙니다<br>&nbsp;&nbsp;단, 덩어리가 보드 <b>벽 중 3개 이상</b>에 닿아 있으면 포획할 수 없습니다',
+    'online.title':'온라인 대전',
+    'online.tabRandom':'🔀 랜덤 매치',
+    'online.tabInvite':'📨 유저 초대',
+    'online.tabDaily':'📅 일일 게임',
+    'online.randomHint':'버튼을 눌러 상대를 찾으세요.',
+    'online.findBtn':'🔍 상대 찾기',
+    'online.cancelFind':'✕ 취소',
+    'online.searching':'상대를 찾는 중입니다...',
+    'online.inviteHint':'초대할 유저의 이름을 입력하세요.',
+    'online.sendInvite':'📨 초대 보내기',
+    'online.enterUsername':'유저네임을 입력하세요',
+    'online.inviteFail':'초대 실패',
+    'online.inviteExpired':'초대가 만료되었습니다.',
+    'online.dailyIntro':'수 제한 시간 <b style="color:#c9d1d9">1일</b>의 비동기 대전입니다. 결과에 따라 레이팅이 변동됩니다.',
+    'online.createRoom':'➕ 방 만들기',
+    'online.randomJoin':'🎲 랜덤 참가',
+    'online.myDailyGames':'내 일일 게임',
+    'online.waitingRooms':'참가 대기 중인 방',
+    'daily.title':'일일 게임',
+    'daily.backToList':'← 목록으로',
+    'daily.noRooms':'대기 중인 방이 없습니다',
+    'daily.noGames':'진행 중인 일일 게임이 없습니다',
+    'daily.myWaitingRoom':'내가 만든 방 (대기 중)',
+    'daily.roomCreated':'방을 만들었습니다. 다른 유저가 참가할 때까지 기다려주세요.',
+    'daily.roomCreateFail':'방 생성 실패',
+    'daily.joinFail':'참가 실패',
+    'daily.loadFail':'게임을 불러올 수 없습니다',
+    'daily.deadlinePassed':'마감됨 (처리 중...)',
+    'result.backToLobby':'↩ 로비로 돌아가기',
+    'result.lostTimeout':'시간 초과로 패배',
+    'result.wonTimeout':'상대방 시간 초과! 승리',
+    'result.wonForfeit':'상대방 기권! 승리',
+    'result.wonDisconnect':'상대방 연결 끊김! 승리',
+    'result.disconnected':'연결이 끊겼습니다',
+    'forfeit.title':'🏳️ 기권',
+    'forfeit.body':'정말 기권하시겠습니까?<br>레이팅이 감소합니다.',
+    'forfeit.confirm':'기권',
+    'lb.title':'🏆 리더보드',
+    'lb.tabOnline':'온라인 레이팅',
+    'lb.tabAi':'🤖 AI 정복자',
+    'lb.thUser':'유저네임',
+    'lb.thRating':'레이팅',
+    'lb.thWin':'승',
+    'lb.thLoss':'패',
+    'lb.thDraw':'무',
+    'lb.noOnlineRecords':'아직 온라인 대전 기록이 없습니다',
+    'hist.title':'📜 최근 게임 기록',
+    'hist.win':'승','hist.loss':'패','hist.draw':'무',
+    'hist.timeout':'시간초과','hist.forfeitReason':'기권','hist.disconnect':'연결끊김',
+    'hist.noRecords':'아직 게임 기록이 없습니다',
+},
+en:{
+    'app.title':'GridCross',
+    'meta.title':'GridCross — Online Strategy Board Game',
+    'meta.desc':'An online strategy game where you claim territory in cross shapes on a 12×12 board. Play vs AI, local 2-player, or online matchmaking.',
+    'common.backMenu':'← Menu',
+    'common.cancel':'Cancel',
+    'common.join':'Join',
+    'common.view':'View',
+    'common.loading':'Loading...',
+    'common.usernamePh':'Username',
+    'common.me':'me',
+    'common.meShort':'Me',
+    'common.meStar':'⭐ I',
+    'common.oppStar':'⭐ Opponent',
+    'common.myTurnStar':'⚡ My turn',
+    'common.oppTurnHour':"⏳ Opponent's turn",
+    'common.myTurnPlain':'My turn',
+    'common.oppTurnPlain':"Opponent's turn",
+    'common.waiting':'Waiting',
+    'common.gameOver':'Game over',
+    'common.draw':'Draw',
+    'common.winExcl':'Victory!',
+    'common.lose':'Defeat',
+    'common.forfeitWord':'Forfeit',
+    'common.genericError':'An error occurred',
+    'common.moveFail':'Move failed',
+    'ch.accept':'✅ Accept',
+    'ch.decline':'❌ Decline',
+    'login.hint':'<b>First time here?</b><br>Enter a username and password you like and<br><b>an account will be created automatically.</b><br>Existing accounts can log in with the same info.',
+    'login.userPh':'Username (2-20 chars)',
+    'login.pwPh':'Password (4-20 chars)',
+    'login.submit':'Log in / Sign up',
+    'login.connecting':'Connecting...',
+    'login.needBoth':'Please enter both a username and password',
+    'login.serverUnreachable':'Could not connect to the server',
+    'login.genericErr':'An error occurred',
+    'login.created':'✅ New account created!',
+    'menu.online':'🌐 Online Match',
+    'menu.ai':'🤖 VS AI',
+    'menu.local':'👥 2-Player (Local)',
+    'menu.rules':'📖 How to Play',
+    'menu.leaderboard':'🏆 Leaderboard',
+    'menu.history':'📜 Game History',
+    'menu.logout':'🚪 Log Out',
+    'rules.title':'How to Play',
+    'rules.goal.h':'🎯 Goal',
+    'rules.goal.p':'When every cell on the 12×12 board is filled, the player who claimed <b style="color:#c9d1d9">more cells</b> wins.',
+    'rules.cross.h':'✚ Basic Rule — Cross Claim',
+    'rules.cross.p':'Clicking an <b>empty cell</b> claims that cell plus <b>up/down/left/right</b> neighbors (up to 5 cells) as your territory.<br>Cells outside the cross shape are not included.',
+    'rules.cross.caption':'★ = clicked cell &nbsp;|&nbsp; Blue = the 5 claimed cells &nbsp;|&nbsp; Gray = not included (outside the cross)',
+    'rules.capture.h':'⚔️ Taking Opponent Territory',
+    'rules.capture.p':'Clicking an <b>empty cell adjacent to an opponent cell</b> turns any opponent cells within the cross range <b>into your territory.</b><br>Note: you <b>cannot click an opponent cell</b> directly.',
+    'rules.before':'Before click',
+    'rules.after':'After click',
+    'rules.capture.cap1':'White border = empty cell to click<br>Red cells = opponent territory',
+    'rules.capture.cap2':'Blue cells = now your territory (5 cells)<br>Cells outside the cross stay as they were',
+    'rules.capture.note':'※ In this example, clicking the center empty cell converts all 4 red cells (one in each direction) to yours.<br>The 4 cells outside the cross range remain the opponent\'s.',
+    'rules.siege.h':'⭐ Siege Capture',
+    'rules.siege.p':'If you <b>completely surround</b> an opponent group with your own cells (no side touches an empty cell), the <b>entire group flips</b> to your territory.<br>Exception: if that group touches <b>3 or more of the board\'s walls</b>, it cannot be captured.',
+    'rules.siege.ex1':'Example 1 — Successful siege',
+    'rules.siege.cap1':'White border = last empty cell to click<br>Red cells = opponent group<br>Blue cells = your territory already surrounding it',
+    'rules.siege.cap2':'The moment you click the last empty cell,<br>the whole group flips at once',
+    'rules.siege.ex2':'Example 2 — Blocked by a wall',
+    'rules.siege.cap3':'The red group touches <b>3 walls (left, top, bottom)</b>,<br>so even fully blocking the right side with blue <b>cannot capture it</b> 🚫',
+    'rules.preview.h':'🔍 Preview',
+    'rules.preview.li1':'Hover your mouse to preview which cells a click would affect.',
+    'rules.preview.li2':'<b style="color:rgba(88,166,255,.7)">Light blue</b> = empty cell you would newly claim',
+    'rules.preview.li3':'<b style="color:rgba(88,166,255,1)">Solid blue border</b> = opponent cell you would take',
+    'rules.online.h':'🌐 Online Match',
+    'rules.online.li1':'Random matchmaking or invite a user directly by name',
+    'rules.online.li2':'<b>20-second limit</b> per move — timing out is an automatic loss',
+    'rules.online.li3':'You can <b>forfeit</b> mid-game (lowers your rating)',
+    'rules.online.li4':'If your opponent disconnects, you win by default',
+    'rules.elo.h':'⚡ Rating System (ELO)',
+    'rules.elo.p':'Rating only changes in online matches. Everyone starts at <b>1000</b>.',
+    'rules.elo.winVal':'+points','rules.elo.winLbl':'Win',
+    'rules.elo.loseVal':'−points','rules.elo.loseLbl':'Loss',
+    'rules.elo.drawVal':'±small','rules.elo.drawLbl':'Draw',
+    'rules.elo.note':'The higher your opponent\'s rating, the more points you gain from a win.',
+    'rules.tips.h':'💡 Strategy Tips',
+    'rules.tips.li1':'Taking the center early secures more open space.',
+    'rules.tips.li2':'Aim for an empty cell <b>adjacent to several opponent cells</b> to take many at once.',
+    'rules.tips.li3':'A single move can claim or take at most <b>5 cells</b>.',
+    'rules.tips.li4':'If an opponent group is far from the walls, look for a <b>siege capture</b> — you can flip a huge group at once.',
+    'rules.tips.li5':'Keeping your own groups from being sieged is easier if you expand <b>along the walls (edges)</b>.',
+    'rules.tips.li6':'The position of the last remaining empty cells matters a lot — calculate carefully.',
+    'rules.backBtn':'← Back to Menu',
+    'local.aiDiffLbl':'AI Difficulty',
+    'local.viewConquerors':'🏅 View Conquerors',
+    'local.colorInfoTitle':'💡 Your first win at a difficulty changes your username to that difficulty\'s color',
+    'local.colorLegend':'Default: <b style="color:var(--text)">White</b>, LV.1: <b style="color:#8b5a2b">Brown</b>, LV.2: <b style="color:#d4b106">Yellow</b>, LV.3: <b style="color:#ff8c00">Orange</b>, LV.4: <b style="color:#2ea043">Green</b>, LV.5: <b style="color:#3b82f6">Blue</b>, LV.6: <b style="color:#9b59b6">Purple</b>, LV.7: <b style="color:#e74c3c">Red</b>',
+    'local.newGame':'🔄 New Game',
+    'local.p1Label':'🔵 Player 1',
+    'local.p2Label':'🔴 Player 2',
+    'local.aiLabel':'🤖 AI',
+    'local.p1Turn':"🔵 Player 1's turn",
+    'local.p2Turn':"🔴 Player 2's turn",
+    'local.aiTurn':"🤖 AI's turn",
+    'local.p1Win':'🔵 Player 1 wins!',
+    'local.p2Win':'🔴 Player 2 wins!',
+    'local.aiWin':'AI wins!',
+    'local.drawExcl':'Draw!',
+    'local.rulesInline':'<b>How to Play</b><br>• Click an <b>empty cell</b> to claim it + up/down/left/right neighbors (up to 5 cells)<br>• Hover your mouse to preview affected cells<br>• You can\'t click an opponent cell directly, but it\'s taken if in range<br>• <b style="color:#e3b341">⭐ Siege Capture</b>: fully surround an opponent group with your cells to flip it all at once<br>&nbsp;&nbsp;Exception: a group touching <b>3+ walls</b> cannot be captured',
+    'online.title':'Online Match',
+    'online.tabRandom':'🔀 Random Match',
+    'online.tabInvite':'📨 Invite User',
+    'online.tabDaily':'📅 Daily Game',
+    'online.randomHint':'Press the button to find an opponent.',
+    'online.findBtn':'🔍 Find Opponent',
+    'online.cancelFind':'✕ Cancel',
+    'online.searching':'Searching for an opponent...',
+    'online.inviteHint':'Enter the username of the player to invite.',
+    'online.sendInvite':'📨 Send Invite',
+    'online.enterUsername':'Please enter a username',
+    'online.inviteFail':'Invite failed',
+    'online.inviteExpired':'The invite has expired.',
+    'online.dailyIntro':'An asynchronous match with a <b style="color:#c9d1d9">1-day</b> move limit. Your rating changes based on the result.',
+    'online.createRoom':'➕ Create Room',
+    'online.randomJoin':'🎲 Random Join',
+    'online.myDailyGames':'My Daily Games',
+    'online.waitingRooms':'Rooms Waiting for Players',
+    'daily.title':'Daily Game',
+    'daily.backToList':'← Back to List',
+    'daily.noRooms':'No rooms waiting',
+    'daily.noGames':'No daily games in progress',
+    'daily.myWaitingRoom':'Room I created (waiting)',
+    'daily.roomCreated':'Room created. Waiting for another user to join.',
+    'daily.roomCreateFail':'Failed to create room',
+    'daily.joinFail':'Failed to join',
+    'daily.loadFail':'Could not load the game',
+    'daily.deadlinePassed':'Deadline passed (processing...)',
+    'result.backToLobby':'↩ Back to Lobby',
+    'result.lostTimeout':'Lost by timeout',
+    'result.wonTimeout':'Opponent timed out! You win',
+    'result.wonForfeit':'Opponent forfeited! You win',
+    'result.wonDisconnect':'Opponent disconnected! You win',
+    'result.disconnected':'Connection lost',
+    'forfeit.title':'🏳️ Forfeit',
+    'forfeit.body':'Are you sure you want to forfeit?<br>Your rating will decrease.',
+    'forfeit.confirm':'Forfeit',
+    'lb.title':'🏆 Leaderboard',
+    'lb.tabOnline':'Online Rating',
+    'lb.tabAi':'🤖 AI Conquerors',
+    'lb.thUser':'Username',
+    'lb.thRating':'Rating',
+    'lb.thWin':'W',
+    'lb.thLoss':'L',
+    'lb.thDraw':'D',
+    'lb.noOnlineRecords':'No online match records yet',
+    'hist.title':'📜 Recent Game History',
+    'hist.win':'W','hist.loss':'L','hist.draw':'D',
+    'hist.timeout':'Timeout','hist.forfeitReason':'Forfeit','hist.disconnect':'Disconnected',
+    'hist.noRecords':'No game history yet',
+},
+};
+function t(key){const v=I18N[LANG][key];return v!=null?v:I18N.ko[key];}
+function applyI18n(){
+    document.documentElement.lang=LANG;
+    document.title=t('meta.title');
+    const md=document.querySelector('meta[name="description"]');if(md)md.setAttribute('content',t('meta.desc'));
+    document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{el.innerHTML=t(el.dataset.i18nHtml);});
+    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+    $e('lang-toggle').textContent=LANG==='ko'?'EN':'한국어';
+    refreshDynamicScreens();
+}
+function refreshDynamicScreens(){
+    if(currentUser)updateMenuHeader();
+    if($e('s-local').classList.contains('active')&&lBoard){
+        $e('local-mode-lbl').textContent=lMode==='pvp'?t('menu.local'):t('menu.ai');
+        syncLocalUI();
+    }
+    if($e('s-online-game').classList.contains('active')&&oBoard)syncOnlineUI(...(()=>{let p1=0,p2=0,em=0;oBoard.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;else em++;}));return[p1,p2,em];})());
+    if($e('s-daily-game').classList.contains('active')&&dGame)syncDailyUI();
+    if($e('s-online').classList.contains('active')&&$e('tab-daily').classList.contains('active'))loadDailyLobby();
+    if($e('lb-modal').classList.contains('show')){
+        if($e('lb-panel-online').style.display!=='none')loadOnlineLb();else selectAiLevel(lbAiLevel);
+    }
+    if($e('history-modal').classList.contains('show'))openHistory();
+}
+function toggleLang(){
+    LANG=LANG==='ko'?'en':'ko';
+    localStorage.setItem('lang',LANG);
+    applyI18n();
+}
+// 변수가 섞인 동적 문구는 사전 대신 언어별 템플릿 함수로 처리
+function capturedLabel(n){return LANG==='ko'?`포획 ${n}칸`:`Captured ${n}`;}
+function challengeReceivedHtml(from,rating){return LANG==='ko'?`<b>${from}</b>님 (레이팅 ${rating})이<br>대전을 신청했습니다!`:`<b>${from}</b> (rating ${rating})<br>has challenged you!`;}
+function inviteSentText(to){return LANG==='ko'?`${to}님께 초대를 보냈습니다. 응답 대기 중...`:`Invite sent to ${to}. Waiting for response...`;}
+function inviteDeclinedText(by){return LANG==='ko'?`${by}님이 초대를 거절했습니다.`:`${by} declined your invite.`;}
+function siegeMsgText(who,n){return LANG==='ko'?`${who} 포위 포획! ${n}칸을 뒤집었습니다`:`${who} sieged and flipped ${n} cells!`;}
+function scoreVsText(a,b){return LANG==='ko'?`${a}칸 vs ${b}칸`:`${a} vs ${b} cells`;}
+function ratingDeltaText(delta){return LANG==='ko'?`${delta>0?'+':''}${delta} 레이팅`:`${delta>0?'+':''}${delta} rating`;}
+function deadlineText(who,h,m){return LANG==='ko'?`${who} · ${h}시간 ${m}분 남음`:`${who} · ${h}h ${m}m left`;}
+function totalOutOfText(tot){return LANG==='ko'?`총 ${tot}칸 중`:`out of ${tot} cells`;}
+function cellsCountText(n){return LANG==='ko'?`${n}칸`:`${n} cells`;}
+function conquerFirstWinHtml(level,color,name){return LANG==='ko'?`🎉 LV.${level} 최초 정복! 앞으로 유저네임이 <b style="color:${color}">${name}</b>으로 표시됩니다`:`🎉 First to conquer LV.${level}! Your username will now show in <b style="color:${color}">${name}</b>`;}
+function noConquerorsYetText(level){return LANG==='ko'?`아직 LV.${level}을 정복한 유저가 없습니다`:`No one has conquered LV.${level} yet`;}
+function timeAgoText(ts){
+    const diff=Date.now()-ts,m=Math.floor(diff/60000);
+    if(LANG==='ko'){
+        if(m<1)return'방금 전';if(m<60)return`${m}분 전`;
+        const h=Math.floor(m/60);if(h<24)return`${h}시간 전`;
+        return`${Math.floor(h/24)}일 전`;
+    }
+    if(m<1)return'just now';if(m<60)return`${m}m ago`;
+    const h=Math.floor(m/60);if(h<24)return`${h}h ago`;
+    return`${Math.floor(h/24)}d ago`;
+}
+
 // ── Constants & state ────────────────────────
 const EMPTY=0,P1=1,P2=2,BOARD_N=12,TURN_TIME=20;
 let currentUser=null, ws=null;
 let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff=3;
 const AI_LEVEL_CFG={
-    1:{depth:1,beam:12,color:'#8b5a2b',name:'갈색'},
-    2:{depth:2,beam:6, color:'#d4b106',name:'노란색'},
-    3:{depth:2,beam:12,color:'#ff8c00',name:'주황색'},
-    4:{depth:3,beam:12,color:'#2ea043',name:'초록색'},
-    5:{depth:4,beam:12,color:'#3b82f6',name:'파란색'},
-    6:{depth:5,beam:12,color:'#9b59b6',name:'보라색'},
-    7:{depth:6,beam:12,color:'#e74c3c',name:'빨간색'},
+    1:{depth:1,beam:12,color:'#8b5a2b',name:'갈색',nameEn:'Brown'},
+    2:{depth:2,beam:6, color:'#d4b106',name:'노란색',nameEn:'Yellow'},
+    3:{depth:2,beam:12,color:'#ff8c00',name:'주황색',nameEn:'Orange'},
+    4:{depth:3,beam:12,color:'#2ea043',name:'초록색',nameEn:'Green'},
+    5:{depth:4,beam:12,color:'#3b82f6',name:'파란색',nameEn:'Blue'},
+    6:{depth:5,beam:12,color:'#9b59b6',name:'보라색',nameEn:'Purple'},
+    7:{depth:6,beam:12,color:'#e74c3c',name:'빨간색',nameEn:'Red'},
 };
 function nameColor(aiWins){
     if(!aiWins||!aiWins.length)return 'var(--text)';
@@ -1030,15 +1406,15 @@ async function doLogin(){
     const username=$e('inp-user').value.trim(),password=$e('inp-pw').value;
     const errEl=$e('login-err');
     errEl.style.color='#f85149';errEl.textContent='';
-    if(!username||!password){errEl.textContent='유저네임과 비밀번호를 모두 입력해주세요';return;}
-    $e('login-btn').disabled=true;$e('login-btn').textContent='연결 중...';
+    if(!username||!password){errEl.textContent=t('login.needBoth');return;}
+    $e('login-btn').disabled=true;$e('login-btn').textContent=t('login.connecting');
     const res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({username,password})}).then(r=>r.json())
-        .catch(()=>({ok:false,msg:'서버에 연결할 수 없습니다'}));
-    $e('login-btn').disabled=false;$e('login-btn').textContent='로그인 / 회원가입';
-    if(!res.ok){errEl.textContent=res.msg||'오류가 발생했습니다';return;}
+        .catch(()=>({ok:false,msg:t('login.serverUnreachable')}));
+    $e('login-btn').disabled=false;$e('login-btn').textContent=t('login.submit');
+    if(!res.ok){errEl.textContent=res.msg||t('login.genericErr');return;}
     currentUser=res.user;
-    if(res.created){errEl.style.color='#3fb950';errEl.textContent='✅ 새 계정이 만들어졌습니다!';
+    if(res.created){errEl.style.color='#3fb950';errEl.textContent=t('login.created');
         await new Promise(r=>setTimeout(r,900));}
     sfx.click();connectWS();goMenu();
 }
@@ -1059,7 +1435,7 @@ function updateMenuHeader(){
 function goMenu(){updateMenuHeader();showScreen('s-menu');}
 function goLocal(mode){
     lMode=mode;
-    $e('local-mode-lbl').textContent=mode==='pvp'?'👥 2인 대전 (로컬)':'🤖 AI 대전';
+    $e('local-mode-lbl').textContent=mode==='pvp'?t('menu.local'):t('menu.ai');
     const ai=mode==='pvai';
     ['ai-diff-sep','ai-diff-lbl','df1','df2','df3','df4','df5','df6','df7','btn-ai-conq','ai-color-info'].forEach(id=>$e(id).style.display=ai?'':'none');
     initLocalGame();showScreen('s-local');
@@ -1067,7 +1443,7 @@ function goLocal(mode){
 function goOnline(){$e('result-modal').classList.remove('show');updateMenuHeader();resetLobbyUI();showScreen('s-online');}
 function leaveLobby(){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave_queue'}));resetLobbyUI();goMenu();}
 function resetLobbyUI(){
-    $e('random-status').textContent='버튼을 눌러 상대를 찾으세요.';
+    $e('random-status').textContent=t('online.randomHint');
     $e('btn-find').style.display='';$e('btn-cancel').style.display='none';
     $e('invite-status').textContent='';$e('btn-invite').disabled=false;$e('invite-input').value='';
 }
@@ -1086,7 +1462,7 @@ function handleWS(msg){
     switch(msg.type){
         case 'auth_ok':break;
         case 'waiting':
-            $e('random-status').innerHTML='<span class="spinner"></span>상대를 찾는 중입니다...';
+            $e('random-status').innerHTML=`<span class="spinner"></span>${t('online.searching')}`;
             $e('btn-find').style.display='none';$e('btn-cancel').style.display='';break;
         case 'match_found':startOnlineGame(msg);break;
         case 'move_made':
@@ -1095,7 +1471,7 @@ function handleWS(msg){
             if(msg.captured&&msg.captured.length){
                 animateOnlineCapture(msg.captured,msg.player);
                 oCapCounts[msg.player-1]+=msg.captured.length;
-                $e('ocap1').textContent=`포획 ${oCapCounts[0]}칸`;$e('ocap2').textContent=`포획 ${oCapCounts[1]}칸`;
+                $e('ocap1').textContent=capturedLabel(oCapCounts[0]);$e('ocap2').textContent=capturedLabel(oCapCounts[1]);
                 showOnlineCaptureMsg(msg.player,msg.captured.length);
             }
             syncOnlineUI(msg.p1,msg.p2,msg.em);
@@ -1105,19 +1481,19 @@ function handleWS(msg){
         case 'game_over':oEnded=true;stopTimer();showOnlineResult(msg);break;
         case 'challenge_received':
             pendingChallengeFrom=msg.from;
-            $e('ch-text').innerHTML=`<b>${msg.from}</b>님 (레이팅 ${msg.fromRating})이<br>대전을 신청했습니다!`;
+            $e('ch-text').innerHTML=challengeReceivedHtml(msg.from,msg.fromRating);
             $e('challenge-notif').classList.add('show');break;
         case 'challenge_result':
-            if(msg.ok){$e('invite-status').textContent=`${msg.to}님께 초대를 보냈습니다. 응답 대기 중...`;$e('btn-invite').disabled=true;}
-            else{$e('invite-status').textContent=msg.msg||'초대 실패';$e('btn-invite').disabled=false;}break;
-        case 'challenge_declined':$e('invite-status').textContent=`${msg.by}님이 초대를 거절했습니다.`;$e('btn-invite').disabled=false;break;
-        case 'challenge_expired':$e('invite-status').textContent='초대가 만료되었습니다.';$e('btn-invite').disabled=false;break;
+            if(msg.ok){$e('invite-status').textContent=inviteSentText(msg.to);$e('btn-invite').disabled=true;}
+            else{$e('invite-status').textContent=msg.msg||t('online.inviteFail');$e('btn-invite').disabled=false;}break;
+        case 'challenge_declined':$e('invite-status').textContent=inviteDeclinedText(msg.by);$e('btn-invite').disabled=false;break;
+        case 'challenge_expired':$e('invite-status').textContent=t('online.inviteExpired');$e('btn-invite').disabled=false;break;
         case 'daily_notify':
             if(dGameId===msg.gameId&&$e('s-daily-game').classList.contains('active'))openDailyGame(dGameId);
             if($e('s-online').classList.contains('active')&&$e('tab-daily').classList.contains('active'))loadDailyLobby();
             break;
         case 'error':
-            alert(msg.msg||'오류가 발생했습니다');
+            alert(msg.msg||t('common.genericError'));
             resetLobbyUI();
             break;
     }
@@ -1125,8 +1501,8 @@ function handleWS(msg){
 
 // ── Online lobby ──────────────────────────────
 function findRandomMatch(){if(!ws||ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(findRandomMatch,600);return;}ws.send(JSON.stringify({type:'join_queue'}));}
-function cancelRandomMatch(){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave_queue'}));$e('random-status').textContent='버튼을 눌러 상대를 찾으세요.';$e('btn-find').style.display='';$e('btn-cancel').style.display='none';}
-function sendChallenge(){const to=$e('invite-input').value.trim();if(!to){$e('invite-status').textContent='유저네임을 입력하세요';return;}if(!ws||ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(sendChallenge,600);return;}ws.send(JSON.stringify({type:'send_challenge',to}));}
+function cancelRandomMatch(){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave_queue'}));$e('random-status').textContent=t('online.randomHint');$e('btn-find').style.display='';$e('btn-cancel').style.display='none';}
+function sendChallenge(){const to=$e('invite-input').value.trim();if(!to){$e('invite-status').textContent=t('online.enterUsername');return;}if(!ws||ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(sendChallenge,600);return;}ws.send(JSON.stringify({type:'send_challenge',to}));}
 function respondChallenge(accept){$e('challenge-notif').classList.remove('show');if(!pendingChallengeFrom)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'respond_challenge',from:pendingChallengeFrom,accept}));pendingChallengeFrom=null;}
 function switchTab(tabId,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));$e(tabId).classList.add('active');btn.classList.add('active');if(tabId==='tab-daily')loadDailyLobby();}
 function switchTabById(tabId){const idx=tabId==='tab-random'?0:tabId==='tab-invite'?1:2;switchTab(tabId,document.querySelectorAll('.tab-btn')[idx]);}
@@ -1134,11 +1510,11 @@ function switchTabById(tabId){const idx=tabId==='tab-random'?0:tabId==='tab-invi
 // ── Online game ───────────────────────────────
 function startOnlineGame(msg){
     myNum=msg.playerNum;oBoard=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
-    oTurn=P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent='포획 0칸';$e('ocap2').textContent='포획 0칸';$e('ocapmsg').classList.remove('show');
+    oTurn=P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
     $e('challenge-notif').classList.remove('show');$e('result-modal').classList.remove('show');pendingChallengeFrom=null;
     const myN=currentUser.username,oppN=msg.opponent,myR=currentUser.rating,opR=msg.opponentRating;
-    if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (나)`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent='🔵 나';$e('olbl2').textContent=`🔴 ${oppN}`;}
-    else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (나)`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent='🔴 나';}
+    if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (${t('common.me')})`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent=`🔵 ${t('common.meShort')}`;$e('olbl2').textContent=`🔴 ${oppN}`;}
+    else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (${t('common.me')})`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent=`🔴 ${t('common.meShort')}`;}
     $e('msg-o').textContent='';$e('forfeit-btn').style.display='';
     buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),'online');
     syncOnlineUI(0,0,BOARD_N*BOARD_N);showScreen('s-online-game');
@@ -1179,26 +1555,26 @@ function animateOnlineCells(r,c,player){const g=$e('ogrid');pattern(r,c).forEach
 function animateOnlineCapture(cells,player){const g=$e('ogrid');cells.forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('cap-anim');});}
 let oCapTimer=null;
 function showOnlineCaptureMsg(player,n){
-    const who=player===myNum?'⭐ 내가':'⭐ 상대가';
-    const el=$e('ocapmsg');el.textContent=`${who} 포위 포획! ${n}칸을 뒤집었습니다`;el.classList.add('show');
+    const who=player===myNum?t('common.meStar'):t('common.oppStar');
+    const el=$e('ocapmsg');el.textContent=siegeMsgText(who,n);el.classList.add('show');
     clearTimeout(oCapTimer);oCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
 }
-function syncOnlineUI(p1,p2,em){const tot=BOARD_N*BOARD_N;$e('onum1').textContent=p1;$e('onum2').textContent=p2;$e('obar1').style.width=(p1/tot*100)+'%';$e('obar2').style.width=(p2/tot*100)+'%';if(!oEnded){$e('oturn').textContent=oTurn===myNum?'⚡ 내 차례':'⏳ 상대 차례';$e('osb1').classList.toggle('on',oTurn===P1);$e('osb2').classList.toggle('on',oTurn===P2);}}
+function syncOnlineUI(p1,p2,em){const tot=BOARD_N*BOARD_N;$e('onum1').textContent=p1;$e('onum2').textContent=p2;$e('obar1').style.width=(p1/tot*100)+'%';$e('obar2').style.width=(p2/tot*100)+'%';if(!oEnded){$e('oturn').textContent=oTurn===myNum?t('common.myTurnStar'):t('common.oppTurnHour');$e('osb1').classList.toggle('on',oTurn===P1);$e('osb2').classList.toggle('on',oTurn===P2);}}
 function hoverInOnline(r,c){clearHoverOnline();if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;const g=$e('ogrid'),enemy=opp(oTurn);const[prv,prvSt]=oTurn===P1?['prv1','prv1-st']:['prv2','prv2-st'];pattern(r,c).forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(el)el.classList.add(oBoard[ar][ac]===enemy?prvSt:prv);});}
 function clearHoverOnline(){$e('ogrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
 
 function showOnlineResult(msg){
     const{result,reason,p1,p2,ratings}=msg;let emoji,txt;
-    if(reason==='timeout'){const iLost=(result==='p2'&&myNum===1)||(result==='p1'&&myNum===2);emoji=iLost?'⏰':'🏆';txt=iLost?'시간 초과로 패배':'상대방 시간 초과! 승리';}
-    else if(reason==='forfeit'){const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'🏳️';txt=w===myNum?'상대방 기권! 승리':'기권';}
-    else if(reason==='disconnect'){const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'🔌';txt=w===myNum?'상대방 연결 끊김! 승리':'연결이 끊겼습니다';}
-    else{if(result==='draw'){emoji='🤝';txt='무승부';}else{const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'😢';txt=w===myNum?'승리!':'패배';}}
-    $e('result-emoji').textContent=emoji;$e('result-title').textContent=txt;$e('result-score').textContent=`${p1}칸 vs ${p2}칸`;
+    if(reason==='timeout'){const iLost=(result==='p2'&&myNum===1)||(result==='p1'&&myNum===2);emoji=iLost?'⏰':'🏆';txt=iLost?t('result.lostTimeout'):t('result.wonTimeout');}
+    else if(reason==='forfeit'){const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'🏳️';txt=w===myNum?t('result.wonForfeit'):t('common.forfeitWord');}
+    else if(reason==='disconnect'){const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'🔌';txt=w===myNum?t('result.wonDisconnect'):t('result.disconnected');}
+    else{if(result==='draw'){emoji='🤝';txt=t('common.draw');}else{const w=result==='p1'?P1:P2;emoji=w===myNum?'🏆':'😢';txt=w===myNum?t('common.winExcl'):t('common.lose');}}
+    $e('result-emoji').textContent=emoji;$e('result-title').textContent=txt;$e('result-score').textContent=scoreVsText(p1,p2);
     const rr=$e('result-rating');rr.style.display='none';
     if(ratings&&ratings.r1new!==undefined){
         const myOld=myNum===1?ratings.r1old:ratings.r2old,myNew=myNum===1?ratings.r1new:ratings.r2new,delta=myNew-myOld;
         const cls=delta>0?'rc-pos':delta<0?'rc-neg':'rc-zero';
-        rr.innerHTML=`<div class="${cls}">${delta>0?'+':''}${delta} 레이팅</div><div style="color:var(--muted);font-size:.82rem">${myOld} → <b style="color:var(--yellow)">${myNew}</b></div>`;
+        rr.innerHTML=`<div class="${cls}">${ratingDeltaText(delta)}</div><div style="color:var(--muted);font-size:.82rem">${myOld} → <b style="color:var(--yellow)">${myNew}</b></div>`;
         rr.style.display='';currentUser.rating=myNew;updateMenuHeader();
     }
     // Play win/lose sound
@@ -1218,45 +1594,40 @@ function confirmForfeit(){closeForfeitModal();if(forfeitMode==='daily'){dailyFor
 let dGame=null,dGameId=null,dMyNum=0,dDeadlineInterval=null;
 
 function cntBoard(b){let p1=0,p2=0;b.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));return{p1,p2};}
-function timeAgo(ts){
-    const diff=Date.now()-ts,m=Math.floor(diff/60000);
-    if(m<1)return'방금 전';if(m<60)return`${m}분 전`;
-    const h=Math.floor(m/60);if(h<24)return`${h}시간 전`;
-    return`${Math.floor(h/24)}일 전`;
-}
+function timeAgo(ts){return timeAgoText(ts);}
 
 async function loadDailyLobby(){loadDailyRoomList();loadDailyMyList();}
 async function loadDailyRoomList(){
     const el=$e('daily-room-list');
     const data=await fetch('/api/daily/rooms').then(r=>r.json()).catch(()=>[]);
-    if(!data.length){el.innerHTML='<div class="daily-empty">대기 중인 방이 없습니다</div>';return;}
+    if(!data.length){el.innerHTML=`<div class="daily-empty">${t('daily.noRooms')}</div>`;return;}
     el.innerHTML=data.map(r=>`
         <div class="daily-row">
             <div class="dr-info">
                 <div class="dr-name">${r.creator}</div>
                 <div class="dr-sub">⚡${r.creatorRating} · ${timeAgo(r.createdAt)}</div>
             </div>
-            <button class="btn btn-success" onclick="sfx.click();joinDailyRoom('${r.id}')">참가</button>
+            <button class="btn btn-success" onclick="sfx.click();joinDailyRoom('${r.id}')">${t('common.join')}</button>
         </div>`).join('');
 }
 async function loadDailyMyList(){
     const el=$e('daily-my-list');
     if(!currentUser){el.innerHTML='';return;}
     const data=await fetch(`/api/daily/games?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).catch(()=>[]);
-    if(!data.length){el.innerHTML='<div class="daily-empty">진행 중인 일일 게임이 없습니다</div>';return;}
+    if(!data.length){el.innerHTML=`<div class="daily-empty">${t('daily.noGames')}</div>`;return;}
     el.innerHTML=data.map(g=>{
         if(g.status==='waiting')return`
             <div class="daily-row">
-                <div class="dr-info"><div class="dr-name">내가 만든 방 (대기 중)</div>
+                <div class="dr-info"><div class="dr-name">${t('daily.myWaitingRoom')}</div>
                 <div class="dr-sub">${timeAgo(g.createdAt)}</div></div>
-                <button class="btn btn-danger" onclick="sfx.click();cancelDailyRoom('${g.id}')">취소</button>
+                <button class="btn btn-danger" onclick="sfx.click();cancelDailyRoom('${g.id}')">${t('common.cancel')}</button>
             </div>`;
-        const turnTxt=g.myTurn?'<span class="dr-turn">⚡ 내 차례</span>':'⏳ 상대 차례';
+        const turnTxt=g.myTurn?`<span class="dr-turn">${t('common.myTurnStar')}</span>`:t('common.oppTurnHour');
         return`
             <div class="daily-row" style="cursor:pointer" onclick="sfx.click();openDailyGame('${g.id}')">
                 <div class="dr-info"><div class="dr-name">vs ${g.opponent} (⚡${g.opponentRating})</div>
                 <div class="dr-sub">${g.p1Score}:${g.p2Score} · ${turnTxt}</div></div>
-                <button class="btn">보기</button>
+                <button class="btn">${t('common.view')}</button>
             </div>`;
     }).join('');
 }
@@ -1264,23 +1635,23 @@ async function loadDailyMyList(){
 async function createDailyRoom(){
     if(!currentUser)return;
     const res=await fetch('/api/daily/rooms',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
-    $e('daily-status').textContent=res.ok?'방을 만들었습니다. 다른 유저가 참가할 때까지 기다려주세요.':(res.msg||'방 생성 실패');
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+    $e('daily-status').textContent=res.ok?t('daily.roomCreated'):(res.msg||t('daily.roomCreateFail'));
     if(res.ok)loadDailyLobby();
 }
 async function randomJoinDaily(){
     if(!currentUser)return;
     const res=await fetch('/api/daily/rooms/random-join',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
-    if(!res.ok){$e('daily-status').textContent=res.msg||'참가 실패';return;}
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+    if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');return;}
     $e('daily-status').textContent='';
     openDailyGameFromData(res.game);
 }
 async function joinDailyRoom(id){
     if(!currentUser)return;
     const res=await fetch(`/api/daily/rooms/${id}/join`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
-    if(!res.ok){$e('daily-status').textContent=res.msg||'참가 실패';loadDailyLobby();return;}
+        body:JSON.stringify({username:currentUser.username})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+    if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');loadDailyLobby();return;}
     openDailyGameFromData(res.game);
 }
 async function cancelDailyRoom(id){
@@ -1293,7 +1664,7 @@ async function cancelDailyRoom(id){
 async function openDailyGame(id){
     if(!currentUser)return;
     const res=await fetch(`/api/daily/games/${id}?username=${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).catch(()=>({ok:false}));
-    if(!res.ok){alert(res.msg||'게임을 불러올 수 없습니다');return;}
+    if(!res.ok){alert(res.msg||t('daily.loadFail'));return;}
     openDailyGameFromData(res.game);
 }
 function openDailyGameFromData(game){
@@ -1308,13 +1679,13 @@ function closeDailyGame(){
 function renderDailyGame(){
     const g=dGame;
     if(dMyNum===P1){
-        $e('dpb1-name').textContent=`🔵 ${currentUser.username} (나)`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
+        $e('dpb1-name').textContent=`🔵 ${currentUser.username} (${t('common.me')})`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
         $e('dpb2-name').textContent=`🔴 ${g.p2}`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
-        $e('dlbl1').textContent='🔵 나';$e('dlbl2').textContent=`🔴 ${g.p2}`;
+        $e('dlbl1').textContent=`🔵 ${t('common.meShort')}`;$e('dlbl2').textContent=`🔴 ${g.p2}`;
     }else{
         $e('dpb1-name').textContent=`🔵 ${g.p1}`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
-        $e('dpb2-name').textContent=`🔴 ${currentUser.username} (나)`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
-        $e('dlbl1').textContent=`🔵 ${g.p1}`;$e('dlbl2').textContent='🔴 나';
+        $e('dpb2-name').textContent=`🔴 ${currentUser.username} (${t('common.me')})`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
+        $e('dlbl1').textContent=`🔵 ${g.p1}`;$e('dlbl2').textContent=`🔴 ${t('common.meShort')}`;
     }
     $e('msg-d').textContent='';$e('dcapmsg').classList.remove('show');
     $e('daily-result-box').style.display='none';$e('daily-forfeit-btn').style.display=g.status==='active'?'':'none';
@@ -1336,10 +1707,10 @@ function syncDailyUI(){
     $e('dnum1').textContent=p1;$e('dnum2').textContent=p2;
     $e('dbar1').style.width=(p1/tot*100)+'%';$e('dbar2').style.width=(p2/tot*100)+'%';
     if(dGame.status==='active'){
-        $e('dturn').textContent=dGame.turn===dMyNum?'⚡ 내 차례':'⏳ 상대 차례';
+        $e('dturn').textContent=dGame.turn===dMyNum?t('common.myTurnStar'):t('common.oppTurnHour');
         $e('dsb1').classList.toggle('on',dGame.turn===P1);$e('dsb2').classList.toggle('on',dGame.turn===P2);
     }else{
-        $e('dturn').textContent='게임 종료';$e('dsb1').classList.remove('on');$e('dsb2').classList.remove('on');
+        $e('dturn').textContent=t('common.gameOver');$e('dsb1').classList.remove('on');$e('dsb2').classList.remove('on');
     }
 }
 async function dailyTick(){
@@ -1354,12 +1725,12 @@ async function dailyTick(){
     }catch(e){}
 }
 function updateDailyDeadline(){
-    if(!dGame||dGame.status!=='active'||!dGame.deadline){$e('daily-deadline-txt').textContent=dGame&&dGame.status==='finished'?'게임 종료':'-';return;}
+    if(!dGame||dGame.status!=='active'||!dGame.deadline){$e('daily-deadline-txt').textContent=dGame&&dGame.status==='finished'?t('common.gameOver'):'-';return;}
     const diff=dGame.deadline-Date.now();
-    if(diff<=0){$e('daily-deadline-txt').textContent='마감됨 (처리 중...)';return;}
+    if(diff<=0){$e('daily-deadline-txt').textContent=t('daily.deadlinePassed');return;}
     const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
-    const who=dGame.turn===dMyNum?'내 차례':'상대 차례';
-    $e('daily-deadline-txt').textContent=`${who} · ${h}시간 ${m}분 남음`;
+    const who=dGame.turn===dMyNum?t('common.myTurnPlain'):t('common.oppTurnPlain');
+    $e('daily-deadline-txt').textContent=deadlineText(who,h,m);
 }
 async function dailyClick(r,c){
     if(!dGame||dGame.status!=='active'||dGame.turn!==dMyNum||dGame.board[r][c]!==EMPTY)return;
@@ -1375,8 +1746,8 @@ async function dailyClick(r,c){
     syncDailyUI();sfx.myMove();
 
     const res=await fetch(`/api/daily/games/${dGameId}/move`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username,r,c})}).then(r=>r.json()).catch(()=>({ok:false,msg:'서버 오류가 발생했습니다'}));
-    if(!res.ok){alert(res.msg||'이동 실패');openDailyGame(dGameId);return;}
+        body:JSON.stringify({username:currentUser.username,r,c})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+    if(!res.ok){alert(res.msg||t('common.moveFail'));openDailyGame(dGameId);return;}
     dGame=res.game;
     renderDailyBoard();syncDailyUI();updateDailyDeadline();
     if(dGame.status==='finished'){clearInterval(dDeadlineInterval);showDailyResult();}
@@ -1386,8 +1757,8 @@ let dCapTimer=null;
 function animateDailyCapture(cells,player){
     const g=$e('dgrid');
     cells.forEach(([ar,ac])=>{const el=qrc(g,ar,ac);if(!el)return;el.className='cell '+(player===P1?'p1':'p2');void el.offsetWidth;el.classList.add('cap-anim');});
-    const who=player===dMyNum?'⭐ 내가':'⭐ 상대가';
-    const el=$e('dcapmsg');el.textContent=`${who} 포위 포획! ${cells.length}칸을 뒤집었습니다`;el.classList.add('show');
+    const who=player===dMyNum?t('common.meStar'):t('common.oppStar');
+    const el=$e('dcapmsg');el.textContent=siegeMsgText(who,cells.length);el.classList.add('show');
     clearTimeout(dCapTimer);dCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
 }
 function hoverInDaily(r,c){
@@ -1408,24 +1779,24 @@ function showDailyResult(){
     const g=dGame,{result,reason}=g;
     const iWon=(result==='p1'&&dMyNum===P1)||(result==='p2'&&dMyNum===P2);
     let emoji,txt;
-    if(reason==='timeout'){txt=iWon?'상대방 시간 초과! 승리':'시간 초과로 패배';emoji=iWon?'🏆':'⏰';}
-    else if(reason==='forfeit'){txt=iWon?'상대방 기권! 승리':'기권';emoji=iWon?'🏆':'🏳️';}
-    else if(result==='draw'){txt='무승부';emoji='🤝';}
-    else{txt=iWon?'승리!':'패배';emoji=iWon?'🏆':'😢';}
+    if(reason==='timeout'){txt=iWon?t('result.wonTimeout'):t('result.lostTimeout');emoji=iWon?'🏆':'⏰';}
+    else if(reason==='forfeit'){txt=iWon?t('result.wonForfeit'):t('common.forfeitWord');emoji=iWon?'🏆':'🏳️';}
+    else if(result==='draw'){txt=t('common.draw');emoji='🤝';}
+    else{txt=iWon?t('common.winExcl'):t('common.lose');emoji=iWon?'🏆':'😢';}
     const{p1,p2}=cntBoard(g.board);
-    $e('dr-emoji').textContent=emoji;$e('dr-title').textContent=txt;$e('dr-score').textContent=`${p1}칸 vs ${p2}칸`;
+    $e('dr-emoji').textContent=emoji;$e('dr-title').textContent=txt;$e('dr-score').textContent=scoreVsText(p1,p2);
     const rr=$e('dr-rating');rr.style.display='none';
     if(g.ratings&&g.ratings.r1new!==undefined){
         const myOld=dMyNum===P1?g.ratings.r1old:g.ratings.r2old,myNew=dMyNum===P1?g.ratings.r1new:g.ratings.r2new,delta=myNew-myOld;
         const cls=delta>0?'rc-pos':delta<0?'rc-neg':'rc-zero';
-        rr.innerHTML=`<div class="${cls}">${delta>0?'+':''}${delta} 레이팅</div><div style="color:var(--muted);font-size:.82rem">${myOld} → <b style="color:var(--yellow)">${myNew}</b></div>`;
+        rr.innerHTML=`<div class="${cls}">${ratingDeltaText(delta)}</div><div style="color:var(--muted);font-size:.82rem">${myOld} → <b style="color:var(--yellow)">${myNew}</b></div>`;
         rr.style.display='';
         if(currentUser.username===g.p1||currentUser.username===g.p2){currentUser.rating=myNew;updateMenuHeader();}
     }
     if(result==='draw')sfx._tone(440,.3,'sine',.12);else if(iWon)sfx.win();else sfx.lose();
     $e('daily-forfeit-btn').style.display='none';
     $e('daily-result-box').style.display='flex';
-    $e('dturn').textContent='게임 종료';
+    $e('dturn').textContent=t('common.gameOver');
 }
 
 // ── Timer ─────────────────────────────────────
@@ -1444,7 +1815,7 @@ function updateTimerUI(){
     $e('timer-num').textContent=timerSecs;$e('timer-num').style.color=col;
     $e('timer-bar-inner').style.width=pct+'%';$e('timer-bar-inner').style.background=col;
     const my=timerFor===myNum;
-    $e('timer-label').textContent=my?'⚡ 내 차례':'⏳ 상대 차례';
+    $e('timer-label').textContent=my?t('common.myTurnStar'):t('common.oppTurnHour');
     $e('timer-label').style.color=my?'var(--blue)':'var(--muted)';
     // Tick sounds — only when seconds decrease
     if(timerSecs<timerPrevSecs&&timerSecs>0){
@@ -1457,8 +1828,8 @@ function updateTimerUI(){
 function initLocalGame(){
     lBoard=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
     lTurn=P1;lEnded=false;lCapCounts=[0,0];$e('msg-l').textContent='';
-    $e('lcap1').textContent='포획 0칸';$e('lcap2').textContent='포획 0칸';$e('lcapmsg').classList.remove('show');
-    $e('llbl1').textContent='🔵 플레이어 1';$e('llbl2').textContent=lMode==='pvai'?'🤖 AI':'🔴 플레이어 2';
+    $e('lcap1').textContent=capturedLabel(0);$e('lcap2').textContent=capturedLabel(0);$e('lcapmsg').classList.remove('show');
+    $e('llbl1').textContent=t('local.p1Label');$e('llbl2').textContent=lMode==='pvai'?t('local.aiLabel'):t('local.p2Label');
     buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),'local');syncLocalUI();
 }
 function localClick(r,c){if(lEnded||lBoard[r][c]!==EMPTY)return;if(lMode==='pvai'&&lTurn===P2)return;doLocalMove(r,c,lTurn);}
@@ -1477,37 +1848,37 @@ function doLocalMove(r,c,p){
 }
 let lCapTimer=null;
 function showLocalCaptureMsg(p,n){
-    const name=p===P1?'🔵 플레이어 1':(lMode==='pvai'?'🤖 AI':'🔴 플레이어 2');
-    const el=$e('lcapmsg');el.textContent=`⭐ 포위 포획! ${name}이 ${n}칸을 뒤집었습니다`;el.classList.add('show');
+    const name=p===P1?t('local.p1Label'):(lMode==='pvai'?t('local.aiLabel'):t('local.p2Label'));
+    const el=$e('lcapmsg');el.textContent=siegeMsgText(`⭐ ${name}`,n);el.classList.add('show');
     clearTimeout(lCapTimer);lCapTimer=setTimeout(()=>el.classList.remove('show'),2200);
 }
 function syncLocalUI(){
     let p1=0,p2=0;lBoard.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;}));
     const tot=BOARD_N*BOARD_N;$e('lnum1').textContent=p1;$e('lnum2').textContent=p2;
-    $e('lcap1').textContent=`포획 ${lCapCounts[0]}칸`;$e('lcap2').textContent=`포획 ${lCapCounts[1]}칸`;
+    $e('lcap1').textContent=capturedLabel(lCapCounts[0]);$e('lcap2').textContent=capturedLabel(lCapCounts[1]);
     $e('lbar1').style.width=(p1/tot*100)+'%';$e('lbar2').style.width=(p2/tot*100)+'%';
-    if(!lEnded){$e('lturn').textContent=lTurn===P1?'🔵 플레이어 1 차례':(lMode==='pvai'?'🤖 AI 차례':'🔴 플레이어 2 차례');
+    if(!lEnded){$e('lturn').textContent=lTurn===P1?t('local.p1Turn'):(lMode==='pvai'?t('local.aiTurn'):t('local.p2Turn'));
         $e('lsb1').classList.toggle('on',lTurn===P1);$e('lsb2').classList.toggle('on',lTurn===P2);}
 }
 function checkLocalEnd(){
     let p1=0,p2=0,em=0;lBoard.forEach(row=>row.forEach(v=>{if(v===P1)p1++;else if(v===P2)p2++;else em++;}));
     if(em>0)return false;lEnded=true;
     const p1wins=p1>p2,p2wins=p2>p1;
-    const p2Lbl=lMode==='pvai'?'🤖 AI':'🔴 플레이어 2';
+    const p2Lbl=lMode==='pvai'?t('local.aiLabel'):t('local.p2Label');
     let emoji,title;
-    if(p1wins){emoji='🏆';title='🔵 플레이어 1 승리!';}
-    else if(p2wins){emoji=lMode==='pvai'?'🤖':'🏆';title=lMode==='pvai'?'AI 승리!':'🔴 플레이어 2 승리!';}
-    else{emoji='🤝';title='무승부!';}
-    $e('msg-l').textContent=title+`  (${p1}칸 vs ${p2}칸)`;
-    $e('lturn').textContent='게임 종료';
+    if(p1wins){emoji='🏆';title=t('local.p1Win');}
+    else if(p2wins){emoji=lMode==='pvai'?'🤖':'🏆';title=lMode==='pvai'?t('local.aiWin'):t('local.p2Win');}
+    else{emoji='🤝';title=t('local.drawExcl');}
+    $e('msg-l').textContent=title+`  (${scoreVsText(p1,p2)})`;
+    $e('lturn').textContent=t('common.gameOver');
     if(lMode==='pvai'){if(p1wins)sfx.win();else if(p2wins)sfx.lose();}else sfx.win();
     $e('lr-conquer').style.display='none';
     if(lMode==='pvai'&&p1wins)recordAiWin(lDiff);
     const tot=BOARD_N*BOARD_N;
     $e('lr-emoji').textContent=emoji;$e('lr-title').textContent=title;
-    $e('lr-score').textContent=`총 ${tot}칸 중`;
-    $e('lr-lbl1').textContent='🔵 플레이어 1';$e('lr-lbl2').textContent=p2Lbl;
-    $e('lr-num1').textContent=p1+'칸';$e('lr-num2').textContent=p2+'칸';
+    $e('lr-score').textContent=totalOutOfText(tot);
+    $e('lr-lbl1').textContent=t('local.p1Label');$e('lr-lbl2').textContent=p2Lbl;
+    $e('lr-num1').textContent=cellsCountText(p1);$e('lr-num2').textContent=cellsCountText(p2);
     $e('lr-bar1').style.width='0%';$e('lr-bar2').style.width='0%';
     setTimeout(()=>{$e('lr-bar1').style.width=(p1/tot*100)+'%';$e('lr-bar2').style.width=(p2/tot*100)+'%';},80);
     $e('local-result-modal').classList.add('show');
@@ -1529,9 +1900,9 @@ async function recordAiWin(level){
     updateMenuHeader();
     if(!already){
         const cfg=AI_LEVEL_CFG[level]||{};
-        const c=cfg.color||'var(--text)',n=cfg.name||'특별한 색';
+        const c=cfg.color||'var(--text)',n=(LANG==='ko'?cfg.name:cfg.nameEn)||(LANG==='ko'?'특별한 색':'a special color');
         const el=$e('lr-conquer');
-        el.innerHTML=`🎉 LV.${level} 최초 정복! 앞으로 유저네임이 <b style="color:${c}">${n}</b>으로 표시됩니다`;
+        el.innerHTML=conquerFirstWinHtml(level,c,n);
         el.style.display='';
     }
 }
@@ -1715,53 +2086,55 @@ function switchLbTab(tab){
     else selectAiLevel(lbAiLevel);
 }
 async function loadOnlineLb(){
-    $e('lb-body').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">불러오는 중...</td></tr>';
+    $e('lb-body').innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">${t('common.loading')}</td></tr>`;
     const data=await fetch('/api/leaderboard').then(r=>r.json()).catch(()=>[]);
-    if(!data.length){$e('lb-body').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">아직 온라인 대전 기록이 없습니다</td></tr>';return;}
+    if(!data.length){$e('lb-body').innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">${t('lb.noOnlineRecords')}</td></tr>`;return;}
     const sym=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
     const rc=i=>`rank${i<3?' t'+(i+1):''}`;
-    $e('lb-body').innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?' (나)':''}</td><td class="rating-cell">${u.rating}</td><td class="stat">${u.wins}</td><td class="stat">${u.losses}</td><td class="stat">${u.draws}</td></tr>`).join('');
+    $e('lb-body').innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td><td class="stat">${u.wins}</td><td class="stat">${u.losses}</td><td class="stat">${u.draws}</td></tr>`).join('');
 }
 async function selectAiLevel(level){
     lbAiLevel=Number(level);
     document.querySelectorAll('.lvsel-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.lv)===lbAiLevel));
     const body=$e('lb-ai-body');
-    body.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">불러오는 중...</td></tr>';
+    body.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">${t('common.loading')}</td></tr>`;
     const data=await fetch(`/api/ai/conquerors?level=${lbAiLevel}`).then(r=>r.json()).catch(()=>[]);
-    if(!data.length){body.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">아직 LV.${lbAiLevel}을 정복한 유저가 없습니다</td></tr>`;return;}
+    if(!data.length){body.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">${noConquerorsYetText(lbAiLevel)}</td></tr>`;return;}
     const sym=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
     const rc=i=>`rank${i<3?' t'+(i+1):''}`;
-    body.innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?' (나)':''}</td><td class="rating-cell">${u.rating}</td></tr>`).join('');
+    body.innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td></tr>`).join('');
 }
 function closeLeaderboard(){$e('lb-modal').classList.remove('show');}
 $e('lb-modal').addEventListener('click',e=>{if(e.target===$e('lb-modal'))closeLeaderboard();});
 
 // ── History ───────────────────────────────────
-const HIST_MODE_LBL={random:'🔀 랜덤 매치',invite:'📨 유저 초대',daily:'📅 일일 게임'};
+function histModeLbl(mode){return{random:t('online.tabRandom'),invite:t('online.tabInvite'),daily:t('online.tabDaily')}[mode];}
 const HIST_MODE_CLS={random:'mode-random',invite:'mode-invite',daily:'mode-daily'};
-const HIST_RES_LBL={win:'승',loss:'패',draw:'무'};
+function histResLbl(result){return{win:t('hist.win'),loss:t('hist.loss'),draw:t('hist.draw')}[result];}
 const HIST_RES_CLS={win:'res-win',loss:'res-loss',draw:'res-draw'};
-const HIST_REASON_LBL={timeout:'시간초과',forfeit:'기권',disconnect:'연결끊김'};
+function histReasonLbl(reason){return{timeout:t('hist.timeout'),forfeit:t('hist.forfeitReason'),disconnect:t('hist.disconnect')}[reason];}
 async function openHistory(){
     $e('history-modal').classList.add('show');
-    $e('history-body').innerHTML='<div class="daily-empty">불러오는 중...</div>';
+    $e('history-body').innerHTML=`<div class="daily-empty">${t('common.loading')}</div>`;
     const data=await fetch(`/api/history?username=${encodeURIComponent(currentUser.username)}&limit=20`).then(r=>r.json()).catch(()=>[]);
-    if(!data.length){$e('history-body').innerHTML='<div class="daily-empty">아직 게임 기록이 없습니다</div>';return;}
+    if(!data.length){$e('history-body').innerHTML=`<div class="daily-empty">${t('hist.noRecords')}</div>`;return;}
     $e('history-body').innerHTML=data.map(h=>{
         const deltaTxt=h.delta==null?'':` · ${h.delta>0?'+':''}${h.delta}`;
-        const reasonTxt=h.reason&&HIST_REASON_LBL[h.reason]?` · ${HIST_REASON_LBL[h.reason]}`:'';
+        const reasonTxt=h.reason&&histReasonLbl(h.reason)?` · ${histReasonLbl(h.reason)}`:'';
         return`<div class="hist-row">
             <div class="hist-top">
-                <span class="hist-badge ${HIST_MODE_CLS[h.mode]||'mode-random'}">${HIST_MODE_LBL[h.mode]||h.mode}</span>
-                <span class="hist-badge ${HIST_RES_CLS[h.result]||''}">${HIST_RES_LBL[h.result]||h.result}</span>
+                <span class="hist-badge ${HIST_MODE_CLS[h.mode]||'mode-random'}">${histModeLbl(h.mode)||h.mode}</span>
+                <span class="hist-badge ${HIST_RES_CLS[h.result]||''}">${histResLbl(h.result)||h.result}</span>
                 <span class="hist-opp">vs ${h.opponent}</span>
             </div>
-            <div class="hist-sub">${h.myScore}칸 vs ${h.oppScore}칸${deltaTxt}${reasonTxt} · ${timeAgo(h.createdAt)}</div>
+            <div class="hist-sub">${scoreVsText(h.myScore,h.oppScore)}${deltaTxt}${reasonTxt} · ${timeAgo(h.createdAt)}</div>
         </div>`;
     }).join('');
 }
 function closeHistory(){$e('history-modal').classList.remove('show');}
 $e('history-modal').addEventListener('click',e=>{if(e.target===$e('history-modal'))closeHistory();});
+
+applyI18n();
 </script>
 </body>
 </html>
