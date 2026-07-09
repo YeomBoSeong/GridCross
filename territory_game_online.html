@@ -129,6 +129,32 @@ body{
 .login-hint b{color:#79c0ff;}
 #login-err{font-size:.85rem;color:var(--red);text-align:center;min-height:1.2em;}
 
+/* login — cross-block decoration */
+.login-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.login-deco .lcross{position:absolute;animation:loginFloat 8s ease-in-out infinite;
+    animation-delay:var(--d,0s);opacity:var(--o,.1);}
+.login-deco .lcross rect{fill:var(--c,#58a6ff);}
+@keyframes loginFloat{
+    0%,100%{transform:translateY(0) rotate(var(--r,0deg));}
+    50%{transform:translateY(-16px) rotate(var(--r,0deg));}
+}
+.login-logo-icon{animation:loginGlow 2.8s ease-in-out infinite;}
+@keyframes loginGlow{
+    0%,100%{filter:drop-shadow(0 0 7px rgba(88,166,255,.4));}
+    50%{filter:drop-shadow(0 0 15px rgba(248,81,73,.45));}
+}
+.login-card{position:relative;overflow:hidden;z-index:1;}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--blue),var(--red));}
+.login-board{display:grid;grid-template-columns:repeat(5,16px);grid-template-rows:repeat(5,16px);
+    gap:3px;margin:0 auto;position:relative;z-index:1;}
+.login-board .lb{border-radius:3px;background:var(--bg3);}
+.login-board .lb.p1{background:#1f6feb;animation:lbPop .5s ease-out both;}
+.login-board .lb.p2{background:#da3633;animation:lbPop .5s ease-out both;}
+.login-board .lb.p1,.login-board .lb.p2{animation-delay:var(--pd,0s);}
+@keyframes lbPop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+#s-login .logo-title{position:relative;z-index:1;}
+
 /* chip */
 .user-chip{display:flex;align-items:center;gap:7px;background:var(--bg2);
     border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:.88rem;}
@@ -510,8 +536,16 @@ body{
 
 <!-- ══════════ LOGIN ══════════ -->
 <div id="s-login" class="screen active">
+    <div class="login-deco" aria-hidden="true">
+        <svg class="lcross" style="top:6%;left:7%;width:34px;height:34px;--o:.09;--r:14deg;--c:#58a6ff;--d:0s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+        <svg class="lcross" style="bottom:10%;left:12%;width:26px;height:26px;--o:.1;--r:-18deg;--c:#f85149;--d:1.2s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+        <svg class="lcross" style="top:14%;right:9%;width:44px;height:44px;--o:.07;--r:8deg;--c:#f85149;--d:.6s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+        <svg class="lcross" style="bottom:8%;right:8%;width:30px;height:30px;--o:.09;--r:-10deg;--c:#58a6ff;--d:1.8s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+        <svg class="lcross" style="top:46%;left:3%;width:20px;height:20px;--o:.08;--r:24deg;--c:#f85149;--d:2.4s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+        <svg class="lcross" style="top:40%;right:4%;width:22px;height:22px;--o:.08;--r:-26deg;--c:#58a6ff;--d:.9s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
+    </div>
     <div class="logo-title" style="margin-bottom:4px">
-        <svg class="logo-icon" viewBox="0 0 26 26" width="42" height="42" xmlns="http://www.w3.org/2000/svg">
+        <svg class="logo-icon login-logo-icon" viewBox="0 0 26 26" width="50" height="50" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="lg-a" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#58a6ff"/><stop offset="100%" stop-color="#f85149"/></linearGradient></defs>
             <rect x="9" y="0" width="8" height="26" rx="2" fill="url(#lg-a)"/>
@@ -519,7 +553,14 @@ body{
         </svg>
         <h1 data-i18n="app.title">십자 땅따먹기</h1>
     </div>
-    <div class="card" style="width:340px">
+    <div class="login-board" aria-hidden="true">
+        <div class="lb"></div><div class="lb p1" style="--pd:.1s"></div><div class="lb"></div><div class="lb"></div><div class="lb"></div>
+        <div class="lb p1" style="--pd:.2s"></div><div class="lb p1" style="--pd:0s"></div><div class="lb p1" style="--pd:.3s"></div><div class="lb"></div><div class="lb"></div>
+        <div class="lb"></div><div class="lb p1" style="--pd:.4s"></div><div class="lb"></div><div class="lb p2" style="--pd:.6s"></div><div class="lb"></div>
+        <div class="lb"></div><div class="lb"></div><div class="lb p2" style="--pd:.7s"></div><div class="lb p2" style="--pd:.5s"></div><div class="lb p2" style="--pd:.8s"></div>
+        <div class="lb"></div><div class="lb"></div><div class="lb"></div><div class="lb p2" style="--pd:.9s"></div><div class="lb"></div>
+    </div>
+    <div class="card login-card" style="width:340px">
         <div class="login-hint" data-i18n-html="login.hint">
             <b>처음 오셨나요?</b><br>
             원하는 유저네임과 비밀번호를 입력하면<br>
