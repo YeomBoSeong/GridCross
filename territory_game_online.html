@@ -130,7 +130,9 @@ body{
 #login-err{font-size:.85rem;color:var(--red);text-align:center;min-height:1.2em;}
 
 /* login — cross-block decoration */
-.login-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.login-stage{position:relative;width:100%;max-width:760px;
+    display:flex;flex-direction:column;align-items:center;gap:20px;}
+.login-deco{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:0;}
 .login-deco .lcross{position:absolute;animation:loginFloat 8s ease-in-out infinite;
     animation-delay:var(--d,0s);opacity:var(--o,.22);filter:drop-shadow(0 0 6px var(--c,#58a6ff));}
 .login-deco .lcross rect{fill:var(--c,#58a6ff);}
@@ -547,6 +549,7 @@ body{
 
 <!-- ══════════ LOGIN ══════════ -->
 <div id="s-login" class="screen active">
+  <div class="login-stage">
     <div class="login-deco" aria-hidden="true">
         <svg class="lcross" style="top:6%;left:7%;width:36px;height:36px;--o:.32;--r:14deg;--c:#58a6ff;--d:0s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
         <svg class="lcross" style="bottom:10%;left:12%;width:28px;height:28px;--o:.34;--r:-18deg;--c:#f85149;--d:1.2s" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="0" width="8" height="26" rx="2"/><rect x="0" y="9" width="26" height="8" rx="2"/></svg>
@@ -592,6 +595,7 @@ body{
                 onclick="doLogin()" data-i18n="login.submit">로그인 / 회원가입</button>
         <div id="login-err"></div>
     </div>
+  </div>
 </div>
 
 <!-- ══════════ MENU ══════════ -->
