@@ -146,11 +146,13 @@ body{
 .login-card{position:relative;overflow:hidden;z-index:1;}
 .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
     background:linear-gradient(90deg,var(--blue),var(--red));}
-.login-board{display:grid;grid-template-columns:repeat(5,16px);grid-template-rows:repeat(5,16px);
-    gap:3px;margin:0 auto;position:relative;z-index:1;}
+.login-board{position:absolute;top:8%;left:50%;
+    transform:translateX(-50%) rotate(-3deg) scale(1.7);
+    display:grid;grid-template-columns:repeat(5,16px);grid-template-rows:repeat(5,16px);
+    gap:3px;opacity:.16;z-index:0;}
 .login-board .lb{border-radius:3px;background:var(--bg3);}
-.login-board .lb.p1{background:#1f6feb;animation:lbPop .5s ease-out both;}
-.login-board .lb.p2{background:#da3633;animation:lbPop .5s ease-out both;}
+.login-board .lb.p1{background:#1f6feb;animation:lbPop 1.2s ease-out both;}
+.login-board .lb.p2{background:#da3633;animation:lbPop 1.2s ease-out both;}
 .login-board .lb.p1,.login-board .lb.p2{animation-delay:var(--pd,0s);}
 @keyframes lbPop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
 #s-login .logo-title{position:relative;z-index:1;}
