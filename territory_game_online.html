@@ -405,20 +405,26 @@ body{
 #lang-toggle:active{transform:scale(.96);}
 @media(max-width:540px){#lang-toggle{top:8px;right:8px;padding:5px 10px;border-radius:14px;font-size:.66rem;gap:3px;}
     #lang-toggle span:first-child{font-size:.78rem;}
-    body{padding-top:100px;}}
+    body{padding-top:0;}}
 
 /* 광고 반응형 */
 .ad-desktop-left,.ad-desktop-right{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:10;width:160px;min-height:250px;}
 .ad-desktop-left{left:20px;}
 .ad-desktop-right{right:20px;}
 #ad-horiz{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:10;width:320px;min-height:50px;}
-#ad-horiz-top{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:10;width:320px;min-height:50px;}
+/* 상단 광고는 fixed로 띄우지 않고 문서 흐름에 그대로 둠 — 카카오 애드핏이 fixed 배치에서
+   스크롤 후 가시성 추적을 놓쳐 광고가 사라지는 문제를 피하기 위함 */
+#ad-horiz-top{width:320px;max-width:100%;min-height:50px;margin:0 0 76px;}
 @media(min-width:980px){
     .ad-desktop-left,.ad-desktop-right{display:block;}
     #ad-horiz,#ad-horiz-top{display:none;}
 }
-@media(max-width:540px){
-    #ad-horiz-top{top:38px;}
+/* 모바일에서는 상단 광고가 언어 토글보다 위에 오도록 토글을 광고 아래로 내림 */
+@media(max-width:979px){
+    #lang-toggle{top:64px;}
+}
+@media(min-width:541px) and (max-width:979px){
+    body{padding-top:0;}
 }
 </style>
 </head>
