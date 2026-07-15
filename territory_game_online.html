@@ -414,7 +414,7 @@ body{
 #ad-horiz{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:10;width:320px;min-height:50px;}
 /* 상단 광고는 fixed로 띄우지 않고 문서 흐름에 그대로 둠 — 카카오 애드핏이 fixed 배치에서
    스크롤 후 가시성 추적을 놓쳐 광고가 사라지는 문제를 피하기 위함 */
-#ad-horiz-top{width:320px;max-width:100%;min-height:50px;margin:0 0 76px;}
+#ad-horiz-top{width:320px;max-width:100%;min-height:50px;margin:0 auto 76px;overflow:hidden;}
 @media(min-width:980px){
     .ad-desktop-left,.ad-desktop-right{display:block;}
     #ad-horiz,#ad-horiz-top{display:none;}
@@ -422,6 +422,11 @@ body{
 /* 모바일에서는 상단 광고가 언어 토글보다 위에 오도록 토글을 광고 아래로 내림 */
 @media(max-width:979px){
     #lang-toggle{top:64px;}
+}
+/* 로그인 화면은 광고가 보이지 않으므로(전체화면 오버레이) 토글을 원래 위치로 유지 */
+body:has(#s-login.active) #lang-toggle{top:14px;}
+@media(max-width:540px){
+    body:has(#s-login.active) #lang-toggle{top:8px;}
 }
 @media(min-width:541px) and (max-width:979px){
     body{padding-top:0;}
