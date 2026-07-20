@@ -20,8 +20,6 @@
 <meta name="twitter:description" content="12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임.">
 <meta name="google-site-verification" content="sSqqsEQFi1CN6Pg4jk9VRVl2XeRWoBjt08-SDUUYcJE" />
 <meta name="naver-site-verification" content="1505adfe6ccf0760a5747c6c216c0b5176bbc29f" />
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4921016092440788"
-     crossorigin="anonymous"></script>
 <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
 <style>
 :root {
@@ -411,13 +409,12 @@ body{
 .ad-desktop-left,.ad-desktop-right{display:none;position:fixed;top:50%;transform:translateY(-50%);z-index:10;width:160px;min-height:250px;}
 .ad-desktop-left{left:20px;}
 .ad-desktop-right{right:20px;}
-#ad-horiz{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:10;width:320px;min-height:50px;}
 /* 상단 광고는 fixed로 띄우지 않고 문서 흐름에 그대로 둠 — 카카오 애드핏이 fixed 배치에서
    스크롤 후 가시성 추적을 놓쳐 광고가 사라지는 문제를 피하기 위함 */
 #ad-horiz-top{width:320px;max-width:100%;min-height:50px;margin:0 auto 76px;overflow:hidden;}
 @media(min-width:980px){
     .ad-desktop-left,.ad-desktop-right{display:block;}
-    #ad-horiz,#ad-horiz-top{display:none;}
+    #ad-horiz-top{display:none;}
 }
 /* 모바일에서는 상단 광고가 언어 토글보다 위에 오도록 토글을 광고 아래로 내림 */
 @media(max-width:979px){
@@ -441,10 +438,11 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 
 <!-- ══ DESKTOP AD (160×600 고정 좌·우측) ══ -->
 <div class="ad-desktop-left">
-    <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px"
-        data-ad-client="ca-pub-4921016092440788"
-        data-ad-slot="7727085386"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <!-- TODO: 카카오 애드핏에서 160×600 광고 단위를 발급받아 data-ad-unit 값을 채워주세요 -->
+    <ins class="kakao_ad_area" style="display:none;"
+        data-ad-unit=""
+        data-ad-width="160"
+        data-ad-height="600"></ins>
 </div>
 <div class="ad-desktop-right">
     <ins class="kakao_ad_area" style="display:none;"
@@ -1025,14 +1023,6 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
         </div>
         <div id="history-body" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
-</div>
-
-<!-- ══ MOBILE HORIZONTAL AD (320×50) ══ -->
-<div id="ad-horiz">
-    <ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px"
-        data-ad-client="ca-pub-4921016092440788"
-        data-ad-slot="8336469798"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
 
 <script>
