@@ -22,8 +22,11 @@ const EMAIL_RE           = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 let mailer = null;
 if (GMAIL_USER && GMAIL_APP_PASSWORD) {
     mailer = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+        family: 4, // Render 등 일부 클라우드 환경의 아웃바운드 IPv6 차단으로 인한 연결 타임아웃 방지
     });
 } else {
     console.warn('⚠️ GMAIL_USER/GMAIL_APP_PASSWORD 미설정 — 일일 게임 이메일 알림 비활성화');
