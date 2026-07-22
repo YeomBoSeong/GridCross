@@ -513,6 +513,19 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
     </div>
 </div>
 
+<!-- ══ DAILY JOIN EMAIL MODAL ══ -->
+<div id="daily-join-modal" class="modal-overlay">
+    <div class="forfeit-card" style="border-color:var(--border)">
+        <h3 style="color:var(--text)" data-i18n="daily.joinModalTitle">📧 알림 이메일 (선택)</h3>
+        <p data-i18n="daily.joinModalBody">내 차례가 되면 이메일로 알려드립니다. 입력하지 않아도 참가할 수 있어요.</p>
+        <input class="inp" type="email" id="daily-join-email-input" placeholder="이메일 (선택)" maxlength="100" autocomplete="off" data-i18n-ph="daily.emailPh">
+        <div class="row">
+            <button class="btn btn-success" onclick="sfx.click();confirmJoinDailyRoom()" data-i18n="common.join">참가</button>
+            <button class="btn"             onclick="sfx.click();closeDailyJoinModal()" data-i18n="common.cancel">취소</button>
+        </div>
+    </div>
+</div>
+
 <!-- ══ LOCAL RESULT MODAL ══ -->
 <div id="local-result-modal" class="modal-overlay" onclick="sfx.click();closeLocalResult()">
     <div class="result-card" style="position:relative" onclick="event.stopPropagation()">
@@ -883,6 +896,7 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
                 <button class="btn btn-primary" style="flex:1" onclick="sfx.click();createDailyRoom()" data-i18n="online.createRoom">➕ 방 만들기</button>
                 <button class="btn btn-success" style="flex:1" onclick="sfx.click();randomJoinDaily()" data-i18n="online.randomJoin">🎲 랜덤 참가</button>
             </div>
+            <input class="inp" type="email" id="daily-email-input" placeholder="이메일 (선택, 내 차례 알림 수신)" maxlength="100" autocomplete="off" data-i18n-ph="daily.emailPh">
             <div class="lobby-status" id="daily-status"></div>
         </div>
         <div class="daily-section-title" data-i18n="online.myDailyGames">내 일일 게임</div>
@@ -1195,6 +1209,9 @@ ko:{
     'daily.joinFail':'참가 실패',
     'daily.loadFail':'게임을 불러올 수 없습니다',
     'daily.deadlinePassed':'마감됨 (처리 중...)',
+    'daily.emailPh':'이메일 (선택, 내 차례 알림 수신)',
+    'daily.joinModalTitle':'📧 알림 이메일 (선택)',
+    'daily.joinModalBody':'내 차례가 되면 이메일로 알려드립니다. 입력하지 않아도 참가할 수 있어요.',
     'result.backToLobby':'↩ 로비로 돌아가기',
     'result.lostTimeout':'시간 초과로 패배',
     'result.wonTimeout':'상대방 시간 초과! 승리',
@@ -1349,6 +1366,9 @@ en:{
     'daily.joinFail':'Failed to join',
     'daily.loadFail':'Could not load the game',
     'daily.deadlinePassed':'Deadline passed (processing...)',
+    'daily.emailPh':'Email (optional, turn notifications)',
+    'daily.joinModalTitle':'📧 Notification Email (optional)',
+    'daily.joinModalBody':"We'll email you when it's your turn. You can join without entering one.",
     'result.backToLobby':'↩ Back to Lobby',
     'result.lostTimeout':'Lost by timeout',
     'result.wonTimeout':'Opponent timed out! You win',
@@ -1695,23 +1715,39 @@ async function loadDailyMyList(){
 
 async function createDailyRoom(){
     if(!currentUser)return;
+    const email=$e('daily-email-input').value.trim();
     const res=await fetch('/api/daily/rooms',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG,email})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     $e('daily-status').textContent=res.ok?t('daily.roomCreated'):(res.msg||t('daily.roomCreateFail'));
     if(res.ok)loadDailyLobby();
 }
 async function randomJoinDaily(){
     if(!currentUser)return;
+    const email=$e('daily-email-input').value.trim();
     const res=await fetch('/api/daily/rooms/random-join',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG,email})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');return;}
     $e('daily-status').textContent='';
     openDailyGameFromData(res.game);
 }
-async function joinDailyRoom(id){
+let pendingJoinRoomId=null;
+function joinDailyRoom(id){
     if(!currentUser)return;
+    pendingJoinRoomId=id;
+    $e('daily-join-email-input').value='';
+    $e('daily-join-modal').classList.add('show');
+}
+function closeDailyJoinModal(){
+    $e('daily-join-modal').classList.remove('show');
+    pendingJoinRoomId=null;
+}
+async function confirmJoinDailyRoom(){
+    if(!currentUser||!pendingJoinRoomId)return;
+    const id=pendingJoinRoomId;
+    const email=$e('daily-join-email-input').value.trim();
+    closeDailyJoinModal();
     const res=await fetch(`/api/daily/rooms/${id}/join`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser.username,lang:LANG})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
+        body:JSON.stringify({username:currentUser.username,lang:LANG,email})}).then(r=>r.json()).catch(()=>({ok:false,msg:t('common.genericError')}));
     if(!res.ok){$e('daily-status').textContent=res.msg||t('daily.joinFail');loadDailyLobby();return;}
     openDailyGameFromData(res.game);
 }

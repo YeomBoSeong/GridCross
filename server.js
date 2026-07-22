@@ -3,6 +3,7 @@ const http      = require('http');
 const WebSocket = require('ws');
 const crypto    = require('crypto');
 const path      = require('path');
+const nodemailer = require('nodemailer');
 const { MongoClient } = require('mongodb');
 
 const app    = express();
@@ -11,6 +12,42 @@ const wss    = new WebSocket.Server({ server });
 
 const PORT      = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI;       // Render 환경변수로 주입
+
+// ── 이메일 알림 (일일 게임 차례 알림, Render 환경변수로 주입) ──
+const GMAIL_USER         = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const SITE_URL           = 'https://gridcrossgame.onrender.com/';
+const EMAIL_RE           = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+let mailer = null;
+if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+    mailer = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+    });
+} else {
+    console.warn('⚠️ GMAIL_USER/GMAIL_APP_PASSWORD 미설정 — 일일 게임 이메일 알림 비활성화');
+}
+
+function normalizeEmail(email) {
+    if (typeof email !== 'string') return null;
+    const trimmed = email.trim();
+    return EMAIL_RE.test(trimmed) ? trimmed : null;
+}
+
+async function sendTurnEmail(to, opponent) {
+    if (!mailer || !to) return;
+    try {
+        await mailer.sendMail({
+            from: `십자 땅따먹기 <${GMAIL_USER}>`,
+            to,
+            subject: '⏳ 십자 땅따먹기 - 일일 게임 내 차례입니다',
+            text: `${opponent}님과의 일일 게임에서 당신의 차례가 되었습니다.\n\n게임 확인하기: ${SITE_URL}`,
+        });
+    } catch (e) {
+        console.error('sendTurnEmail error:', e.message);
+    }
+}
 
 // ── MongoDB 연결 ──────────────────────────────
 let usersCol   = null;   // users 컬렉션
@@ -394,7 +431,7 @@ async function endDailyGame(doc, result, reason) {
     return { ...doc, ...update };
 }
 
-async function joinDailyRoom(roomId, username, res, lang) {
+async function joinDailyRoom(roomId, username, email, res, lang) {
     const room = await dailyCol.findOne({ _id: roomId });
     if (!room || room.status !== 'waiting')
         return res.json({ ok: false, msg: tr('cannotJoinRoom', lang) });
@@ -412,7 +449,9 @@ async function joinDailyRoom(roomId, username, res, lang) {
     const now = Date.now();
     const update = {
         status: 'active', p1: room.creator, p1Rating: room.creatorRating,
+        p1Email: room.creatorEmail || null,
         p2: username, p2Rating: user.rating || 1000,
+        p2Email: normalizeEmail(email),
         board: emptyBoard(), turn: P1, deadline: now + DAILY_TURN_MS, startedAt: now,
     };
     const upd = await dailyCol.updateOne({ _id: roomId, status: 'waiting' }, { $set: update });
@@ -422,12 +461,13 @@ async function joinDailyRoom(roomId, username, res, lang) {
     const full = { ...room, ...update };
     notifyDaily(full.creator, roomId);
     notifyDaily(username, roomId);
+    if (full.p1Email) sendTurnEmail(full.p1Email, full.p2); // 방장(p1) 차례로 시작됨
     res.json({ ok: true, game: dailyFull(full) });
 }
 
 app.post('/api/daily/rooms', async (req, res) => {
     const lang = reqLang(req);
-    const { username } = req.body || {};
+    const { username, email } = req.body || {};
     if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
@@ -444,6 +484,7 @@ app.post('/api/daily/rooms', async (req, res) => {
 
         const room = {
             _id: genId(), creator: username, creatorRating: user.rating || 1000,
+            creatorEmail: normalizeEmail(email),
             status: 'waiting', createdAt: Date.now(),
         };
         await dailyCol.insertOne(room);
@@ -476,22 +517,22 @@ app.post('/api/daily/rooms/:id/cancel', async (req, res) => {
 
 app.post('/api/daily/rooms/:id/join', async (req, res) => {
     const lang = reqLang(req);
-    const { username } = req.body || {};
+    const { username, email } = req.body || {};
     if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
-    try { await connectDB(); await joinDailyRoom(req.params.id, username, res, lang); }
+    try { await connectDB(); await joinDailyRoom(req.params.id, username, email, res, lang); }
     catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
 app.post('/api/daily/rooms/random-join', async (req, res) => {
     const lang = reqLang(req);
-    const { username } = req.body || {};
+    const { username, email } = req.body || {};
     if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
         const rooms = await dailyCol.find({ status: 'waiting', creator: { $ne: username } }).toArray();
         if (!rooms.length) return res.json({ ok: false, msg: tr('noJoinableRooms', lang) });
         const room = rooms[Math.floor(Math.random() * rooms.length)];
-        await joinDailyRoom(room._id, username, res, lang);
+        await joinDailyRoom(room._id, username, email, res, lang);
     } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
@@ -551,7 +592,10 @@ app.post('/api/daily/games/:id/move', async (req, res) => {
         if (em === 0) {
             finalDoc = await endDailyGame(finalDoc, p1 > p2 ? 'p1' : p2 > p1 ? 'p2' : 'draw', 'normal');
         } else {
-            notifyDaily(myNum === P1 ? finalDoc.p2 : finalDoc.p1, req.params.id);
+            const nextUsername = myNum === P1 ? finalDoc.p2 : finalDoc.p1;
+            const nextEmail    = myNum === P1 ? finalDoc.p2Email : finalDoc.p1Email;
+            notifyDaily(nextUsername, req.params.id);
+            if (nextEmail) sendTurnEmail(nextEmail, username);
         }
         res.json({ ok: true, game: dailyFull(finalDoc), captured, r, c, player: myNum });
     } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
