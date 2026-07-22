@@ -3,7 +3,6 @@ const http      = require('http');
 const WebSocket = require('ws');
 const crypto    = require('crypto');
 const path      = require('path');
-const nodemailer = require('nodemailer');
 const { MongoClient } = require('mongodb');
 
 const app    = express();
@@ -13,23 +12,16 @@ const wss    = new WebSocket.Server({ server });
 const PORT      = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI;       // Render 환경변수로 주입
 
-// ── 이메일 알림 (일일 게임 차례 알림, Render 환경변수로 주입) ──
-const GMAIL_USER         = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-const SITE_URL           = 'https://gridcrossgame.onrender.com/';
-const EMAIL_RE           = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// ── 이메일 알림 (일일 게임 차례 알림) ──
+// Render 무료 플랜은 아웃바운드 SMTP 포트(25/465/587)를 차단하므로 Brevo HTTP API(HTTPS) 사용
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const SENDER_EMAIL  = 'byeom059@gmail.com';
+const SENDER_NAME   = '십자 땅따먹기';
+const SITE_URL      = 'https://gridcrossgame.onrender.com/';
+const EMAIL_RE      = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-let mailer = null;
-if (GMAIL_USER && GMAIL_APP_PASSWORD) {
-    mailer = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-        family: 4, // Render 등 일부 클라우드 환경의 아웃바운드 IPv6 차단으로 인한 연결 타임아웃 방지
-    });
-} else {
-    console.warn('⚠️ GMAIL_USER/GMAIL_APP_PASSWORD 미설정 — 일일 게임 이메일 알림 비활성화');
+if (!BREVO_API_KEY) {
+    console.warn('⚠️ BREVO_API_KEY 미설정 — 일일 게임 이메일 알림 비활성화');
 }
 
 function normalizeEmail(email) {
@@ -39,14 +31,23 @@ function normalizeEmail(email) {
 }
 
 async function sendTurnEmail(to, opponent) {
-    if (!mailer || !to) return;
+    if (!BREVO_API_KEY || !to) return;
     try {
-        await mailer.sendMail({
-            from: `십자 땅따먹기 <${GMAIL_USER}>`,
-            to,
-            subject: '⏳ 십자 땅따먹기 - 일일 게임 내 차례입니다',
-            text: `${opponent}님과의 일일 게임에서 당신의 차례가 되었습니다.\n\n게임 확인하기: ${SITE_URL}`,
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'api-key': BREVO_API_KEY,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                sender: { name: SENDER_NAME, email: SENDER_EMAIL },
+                to: [{ email: to }],
+                subject: '⏳ 십자 땅따먹기 - 일일 게임 내 차례입니다',
+                textContent: `${opponent}님과의 일일 게임에서 당신의 차례가 되었습니다.\n\n게임 확인하기: ${SITE_URL}`,
+            }),
         });
+        if (!res.ok) console.error('sendTurnEmail error:', res.status, await res.text());
     } catch (e) {
         console.error('sendTurnEmail error:', e.message);
     }
