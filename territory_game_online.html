@@ -1104,6 +1104,7 @@ ko:{
     'common.forfeitWord':'기권',
     'common.genericError':'오류가 발생했습니다',
     'common.moveFail':'이동 실패',
+    'online.connectionLostEnded':'연결이 끊겨 게임이 종료되었습니다',
     'ch.accept':'✅ 수락',
     'ch.decline':'❌ 거절',
     'login.hint':'<b>처음 오셨나요?</b><br>원하는 유저네임과 비밀번호를 입력하면<br><b>자동으로 계정이 만들어집니다.</b><br>기존 계정은 동일하게 입력해 로그인하세요.',
@@ -1261,6 +1262,7 @@ en:{
     'common.forfeitWord':'Forfeit',
     'common.genericError':'An error occurred',
     'common.moveFail':'Move failed',
+    'online.connectionLostEnded':'The connection was lost and the game has ended',
     'ch.accept':'✅ Accept',
     'ch.decline':'❌ Decline',
     'login.hint':'<b>First time here?</b><br>Enter a username and password you like and<br><b>an account will be created automatically.</b><br>Existing accounts can log in with the same info.',
@@ -1550,7 +1552,16 @@ function handleWS(msg){
             break;
         }
         case 'rejoin_ok':startOnlineGame(msg);break;
-        case 'rejoin_failed':clearSavedGameId();break;
+        case 'rejoin_failed':
+            clearSavedGameId();
+            // 재접속 유예(60초)까지 지나 서버가 결과조차 못 찾는 드문 경우 —
+            // 게임 화면에 그대로 멈춰있지 않도록 정리하고 로비로 안내
+            if($e('s-online-game').classList.contains('active')){
+                oEnded=true;stopTimer();
+                alert(t('online.connectionLostEnded'));
+                goOnline();
+            }
+            break;
         case 'waiting':
             $e('random-status').innerHTML=`<span class="spinner"></span>${t('online.searching')}`;
             $e('btn-find').style.display='none';$e('btn-cancel').style.display='';break;
@@ -1577,7 +1588,10 @@ function handleWS(msg){
             if(msg.player===myNum) sfx.myMove(); else sfx.oppMove();
             break;
         case 'turn_timer':startTimer(msg.seconds,msg.forPlayer);break;
-        case 'game_over':oEnded=true;stopTimer();clearSavedGameId();showOnlineResult(msg);break;
+        case 'game_over':
+            // 재접속(특히 새로고침 후)으로 뒤늦게 결과를 받는 경우를 대비해 playerNum이 오면 반영
+            if(msg.playerNum)myNum=msg.playerNum;
+            oEnded=true;stopTimer();clearSavedGameId();showOnlineResult(msg);break;
         case 'challenge_received':
             pendingChallengeFrom=msg.from;
             $e('ch-text').innerHTML=challengeReceivedHtml(msg.from,msg.fromRating);

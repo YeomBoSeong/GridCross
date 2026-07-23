@@ -258,10 +258,11 @@ const EMPTY = 0, P1 = 1, P2 = 2;
 const N          = 12;
 const TURN_TIME  = 20;
 
-const waitingQueue      = [];
-const games             = new Map();
-const onlineUsers       = new Map();   // username → ws
-const pendingChallenges = new Map();   // `${from}->${to}` → { fromWs, timer }
+const waitingQueue        = [];
+const games               = new Map();
+const onlineUsers         = new Map();   // username → ws
+const pendingChallenges   = new Map();   // `${from}->${to}` → { fromWs, timer }
+const recentlyEndedGames  = new Map();   // gameId → { msg, p1name, p2name } (60초간 재접속 결과 조회용)
 
 function send(ws, data) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
@@ -661,6 +662,10 @@ async function endGame(game, result, reason) {
     game.p1ws.gameId = null;
     game.p2ws.gameId = null;
     games.delete(game.id);
+
+    // 끊긴 동안 게임이 끝나버린 경우, 뒤늦게 재접속한 쪽도 결과를 볼 수 있도록 잠시 보관
+    recentlyEndedGames.set(game.id, { msg, p1name: game.p1name, p2name: game.p2name });
+    setTimeout(() => recentlyEndedGames.delete(game.id), 60000);
 }
 
 function startGame(p1ws, p2ws, mode) {
@@ -728,8 +733,14 @@ wss.on('connection', ws => {
 
         if (m.type === 'rejoin_game') {
             const game = games.get(m.gameId);
-            if (!game || game.ended || (game.p1name !== ws.username && game.p2name !== ws.username))
+            if (!game || game.ended || (game.p1name !== ws.username && game.p2name !== ws.username)) {
+                const ended = recentlyEndedGames.get(m.gameId);
+                if (ended && (ended.p1name === ws.username || ended.p2name === ws.username)) {
+                    const endedPlayerNum = ended.p1name === ws.username ? P1 : P2;
+                    return send(ws, { ...ended.msg, playerNum: endedPlayerNum });
+                }
                 return send(ws, { type: 'rejoin_failed' });
+            }
 
             const myNum = game.p1name === ws.username ? P1 : P2;
             if (myNum === P1) game.p1ws = ws; else game.p2ws = ws;
