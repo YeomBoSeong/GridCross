@@ -1452,7 +1452,7 @@ function timeAgoText(ts){
 // ── Constants & state ────────────────────────
 const EMPTY=0,P1=1,P2=2,BOARD_N=12,TURN_TIME=20;
 let currentUser=null, ws=null;
-let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null,oGameId=null;
+let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null,oGameId=null,oOptimisticMove=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff=3;
 const AI_LEVEL_CFG={
     1:{depth:1,beam:12,color:'#8b5a2b',name:'갈색',nameEn:'Brown'},
@@ -1556,6 +1556,15 @@ function handleWS(msg){
             $e('btn-find').style.display='none';$e('btn-cancel').style.display='';break;
         case 'match_found':startOnlineGame(msg);break;
         case 'move_made':
+            if(oOptimisticMove&&msg.player===myNum&&msg.r===oOptimisticMove.r&&msg.c===oOptimisticMove.c){
+                // 이미 낙관적으로 반영해둔 내 수 — 서버 권위 상태로 조용히 재동기화만 하고 애니메이션/사운드는 재생하지 않음
+                oOptimisticMove=null;
+                oBoard=msg.board;oTurn=msg.turn;
+                renderOnlineBoard();
+                syncOnlineUI(msg.p1,msg.p2,msg.em);
+                break;
+            }
+            oOptimisticMove=null;
             oBoard=msg.board;oTurn=msg.turn;
             renderOnlineBoard();animateOnlineCells(msg.r,msg.c,msg.player);
             if(msg.captured&&msg.captured.length){
@@ -1602,7 +1611,7 @@ function startOnlineGame(msg){
     myNum=msg.playerNum;
     oGameId=msg.gameId;try{localStorage.setItem('oGameId',oGameId);}catch{}
     oBoard=msg.board?msg.board.map(row=>[...row]):Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
-    oTurn=msg.turn||P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
+    oTurn=msg.turn||P1;oEnded=false;oCapCounts=[0,0];oOptimisticMove=null;$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
     $e('challenge-notif').classList.remove('show');$e('result-modal').classList.remove('show');pendingChallengeFrom=null;
     const myN=currentUser.username,oppN=msg.opponent,myR=currentUser.rating,opR=msg.opponentRating;
     if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (${t('common.me')})`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent=`🔵 ${t('common.meShort')}`;$e('olbl2').textContent=`🔴 ${oppN}`;}
@@ -1613,7 +1622,27 @@ function startOnlineGame(msg){
     const p1=msg.p1||0,p2=msg.p2||0;
     syncOnlineUI(p1,p2,BOARD_N*BOARD_N-p1-p2);showScreen('s-online-game');
 }
-function onlineClick(r,c){if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'make_move',r,c}));}
+function onlineClick(r,c){
+    if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;
+    if(!(ws&&ws.readyState===WebSocket.OPEN))return;
+    ws.send(JSON.stringify({type:'make_move',r,c}));
+    // 낙관적 렌더링: 서버 응답(네트워크 왕복)을 기다리지 않고 즉시 반영해
+    // 온라인도 로컬(AI) 대전처럼 탭에 바로 반응하게 함. 서버의 move_made가 오면 조용히 재동기화됨.
+    oOptimisticMove={r,c};
+    pattern(r,c).forEach(([ar,ac])=>{oBoard[ar][ac]=myNum;});
+    const captured=applyEnclosures(oBoard,myNum);
+    oTurn=opp(myNum);
+    renderOnlineBoard();animateOnlineCells(r,c,myNum);
+    if(captured.length){
+        animateOnlineCapture(captured,myNum);
+        oCapCounts[myNum-1]+=captured.length;
+        $e('ocap1').textContent=capturedLabel(oCapCounts[0]);$e('ocap2').textContent=capturedLabel(oCapCounts[1]);
+        showOnlineCaptureMsg(myNum,captured.length);
+    }
+    const{p1,p2}=cntBoard(oBoard);
+    syncOnlineUI(p1,p2,BOARD_N*BOARD_N-p1-p2);
+    sfx.myMove();
+}
 function pattern(r,c){return[[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<BOARD_N&&nc>=0&&nc<BOARD_N).concat([[r,c]]);}
 
 // ── 포위 포획 (siege capture) ───────────────────
