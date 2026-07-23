@@ -625,6 +625,7 @@ function clearTimer(game) {
 
 function startTimer(game) {
     clearTimer(game);
+    game.turnDeadline = Date.now() + TURN_TIME * 1000;
     game.turnTimer = setTimeout(() => {
         if (!game.ended) endGame(game, game.turn === P1 ? 'p2' : 'p1', 'timeout');
     }, TURN_TIME * 1000);
@@ -706,6 +707,8 @@ wss.on('connection', ws => {
     ws.gameId   = null;
     ws.rating   = 1000;
     ws.lang     = 'ko';
+    ws.isAlive  = true;
+    ws.on('pong', () => { ws.isAlive = true; });
 
     ws.on('message', async raw => {
         let m; try { m = JSON.parse(raw); } catch { return; }
@@ -722,6 +725,26 @@ wss.on('connection', ws => {
             return;
         }
         if (!ws.username) return;
+
+        if (m.type === 'rejoin_game') {
+            const game = games.get(m.gameId);
+            if (!game || game.ended || (game.p1name !== ws.username && game.p2name !== ws.username))
+                return send(ws, { type: 'rejoin_failed' });
+
+            const myNum = game.p1name === ws.username ? P1 : P2;
+            if (myNum === P1) game.p1ws = ws; else game.p2ws = ws;
+            ws.gameId = game.id;
+
+            const { p1, p2 } = cnt(game.board);
+            send(ws, { type: 'rejoin_ok', gameId: game.id, playerNum: myNum, N,
+                opponent: myNum === P1 ? game.p2name : game.p1name,
+                opponentRating: myNum === P1 ? game.p2ws.rating : game.p1ws.rating,
+                board: game.board, turn: game.turn, p1, p2 });
+
+            const remainMs = game.turnDeadline ? Math.max(1000, game.turnDeadline - Date.now()) : TURN_TIME * 1000;
+            send(ws, { type: 'turn_timer', seconds: Math.ceil(remainMs / 1000), forPlayer: game.turn });
+            return;
+        }
 
         if (m.type === 'join_queue') {
             if (ws.gameId) return;
@@ -824,7 +847,7 @@ wss.on('connection', ws => {
     });
 
     ws.on('close', () => {
-        if (ws.username) {
+        if (ws.username && onlineUsers.get(ws.username) === ws) {
             onlineUsers.delete(ws.username);
             cleanChallengesFor(ws.username);
         }
@@ -833,13 +856,25 @@ wss.on('connection', ws => {
 
         if (ws.gameId) {
             const game = games.get(ws.gameId);
-            if (game && !game.ended) {
+            // rejoin_game으로 이미 다른 소켓이 이 게임을 대체했다면 무시
+            // (재접속 전 죽은 소켓의 close 이벤트가 뒤늦게 도착하는 경우)
+            if (game && !game.ended && (game.p1ws === ws || game.p2ws === ws)) {
                 const myNum = game.p1ws === ws ? P1 : P2;
                 endGame(game, myNum === P1 ? 'p2' : 'p1', 'disconnect');
             }
         }
     });
 });
+
+// ── 하트비트: 응답 없는 소켓을 감지해 정리 (모바일 네트워크 전환 등으로 인한
+//    "좀비 연결"을 빠르게 걸러내 재접속/종료 처리가 지연 없이 이뤄지게 함) ──
+const heartbeatTimer = setInterval(() => {
+    wss.clients.forEach(ws => {
+        if (ws.isAlive === false) return ws.terminate();
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 10000);
 
 // ── 일일 게임 타임아웃 정리 (5분마다 마감 지난 게임 자동 처리) ──
 setInterval(async () => {

@@ -204,7 +204,7 @@ body{
     .df-btn{padding:6px 10px;font-size:.82rem;}
     .vs-text{flex-shrink:0;}
 }
-.cell:hover{transform:scale(1.1);z-index:5;}
+@media(hover:hover)and(pointer:fine){.cell:hover{transform:scale(1.1);z-index:5;}}
 .cell.p1{background:#1f6feb;background-image:linear-gradient(#1f6feb,#1f6feb);}
 .cell.p2{background:#da3633;background-image:linear-gradient(#da3633,#da3633);}
 .samsung-browser .cell.p1{background:#58a6ff;background-image:linear-gradient(#58a6ff,#58a6ff);}
@@ -1452,7 +1452,7 @@ function timeAgoText(ts){
 // ── Constants & state ────────────────────────
 const EMPTY=0,P1=1,P2=2,BOARD_N=12,TURN_TIME=20;
 let currentUser=null, ws=null;
-let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null;
+let myNum=0,oBoard=null,oTurn=P1,oEnded=false,pendingChallengeFrom=null,oGameId=null;
 let lBoard=null,lTurn=P1,lEnded=false,lMode='pvp',lDiff=3;
 const AI_LEVEL_CFG={
     1:{depth:1,beam:12,color:'#8b5a2b',name:'갈색',nameEn:'Brown'},
@@ -1502,7 +1502,10 @@ async function doLogin(){
 function doLogout(){
     currentUser=null;if(ws){ws.close();ws=null;}stopTimer();showScreen('s-login');
     $e('inp-user').value='';$e('inp-pw').value='';$e('login-err').textContent='';
+    clearSavedGameId();
 }
+function clearSavedGameId(){oGameId=null;try{localStorage.removeItem('oGameId');}catch{}}
+function getSavedGameId(){try{return oGameId||localStorage.getItem('oGameId');}catch{return oGameId;}}
 function updateMenuHeader(){
     if(!currentUser)return;
     const col=nameColor(currentUser.aiWins);
@@ -1541,7 +1544,13 @@ function connectWS(){
 }
 function handleWS(msg){
     switch(msg.type){
-        case 'auth_ok':break;
+        case 'auth_ok':{
+            const gid=getSavedGameId();
+            if(gid&&ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'rejoin_game',gameId:gid}));
+            break;
+        }
+        case 'rejoin_ok':startOnlineGame(msg);break;
+        case 'rejoin_failed':clearSavedGameId();break;
         case 'waiting':
             $e('random-status').innerHTML=`<span class="spinner"></span>${t('online.searching')}`;
             $e('btn-find').style.display='none';$e('btn-cancel').style.display='';break;
@@ -1559,7 +1568,7 @@ function handleWS(msg){
             if(msg.player===myNum) sfx.myMove(); else sfx.oppMove();
             break;
         case 'turn_timer':startTimer(msg.seconds,msg.forPlayer);break;
-        case 'game_over':oEnded=true;stopTimer();showOnlineResult(msg);break;
+        case 'game_over':oEnded=true;stopTimer();clearSavedGameId();showOnlineResult(msg);break;
         case 'challenge_received':
             pendingChallengeFrom=msg.from;
             $e('ch-text').innerHTML=challengeReceivedHtml(msg.from,msg.fromRating);
@@ -1590,15 +1599,19 @@ function switchTabById(tabId){const idx=tabId==='tab-random'?0:tabId==='tab-invi
 
 // ── Online game ───────────────────────────────
 function startOnlineGame(msg){
-    myNum=msg.playerNum;oBoard=Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
-    oTurn=P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
+    myNum=msg.playerNum;
+    oGameId=msg.gameId;try{localStorage.setItem('oGameId',oGameId);}catch{}
+    oBoard=msg.board?msg.board.map(row=>[...row]):Array.from({length:BOARD_N},()=>new Array(BOARD_N).fill(EMPTY));
+    oTurn=msg.turn||P1;oEnded=false;oCapCounts=[0,0];$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
     $e('challenge-notif').classList.remove('show');$e('result-modal').classList.remove('show');pendingChallengeFrom=null;
     const myN=currentUser.username,oppN=msg.opponent,myR=currentUser.rating,opR=msg.opponentRating;
     if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (${t('common.me')})`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent=`🔵 ${t('common.meShort')}`;$e('olbl2').textContent=`🔴 ${oppN}`;}
     else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (${t('common.me')})`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent=`🔴 ${t('common.meShort')}`;}
     $e('msg-o').textContent='';$e('forfeit-btn').style.display='';
     buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),'online');
-    syncOnlineUI(0,0,BOARD_N*BOARD_N);showScreen('s-online-game');
+    renderOnlineBoard();
+    const p1=msg.p1||0,p2=msg.p2||0;
+    syncOnlineUI(p1,p2,BOARD_N*BOARD_N-p1-p2);showScreen('s-online-game');
 }
 function onlineClick(r,c){if(oEnded||oTurn!==myNum||oBoard[r][c]!==EMPTY)return;if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'make_move',r,c}));}
 function pattern(r,c){return[[-1,0],[1,0],[0,-1],[0,1]].map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<BOARD_N&&nc>=0&&nc<BOARD_N).concat([[r,c]]);}
