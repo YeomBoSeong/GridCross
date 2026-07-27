@@ -2058,7 +2058,7 @@ function hoverInLocal(r,c){clearHoverLocal();if(lEnded||lBoard[r][c]!==EMPTY)ret
 function clearHoverLocal(){$e('lgrid').querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st'));}
 
 // ── AI (minimax + alpha-beta, 포위 포획까지 완전 시뮬레이션) ──
-function setDiff(d){lDiff=Number(d);document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.df-btn[data-df="${lDiff}"]`).classList.add('active');}
+function setDiff(d){lDiff=Number(d);document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.df-btn[data-df="${lDiff}"]`).classList.add('active');initLocalGame();}
 async function recordAiWin(level){
     if(!currentUser)return;
     const already=(currentUser.aiWins||[]).includes(level);
