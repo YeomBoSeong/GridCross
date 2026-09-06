@@ -1505,12 +1505,14 @@ async function doLogin(){
     $e('login-btn').disabled=false;$e('login-btn').textContent=t('login.submit');
     if(!res.ok){errEl.textContent=res.msg||t('login.genericErr');return;}
     currentUser=res.user;
+    if(res.token){try{localStorage.setItem('authToken',res.token);}catch{}}
     if(res.created){errEl.style.color='#3fb950';errEl.textContent=t('login.created');
         await new Promise(r=>setTimeout(r,900));}
     sfx.click();connectWS();goMenu();
 }
 function doLogout(){
     currentUser=null;if(ws){ws.close();ws=null;}stopTimer();showScreen('s-login');
+    try{localStorage.removeItem('authToken');}catch{}
     $e('inp-user').value='';$e('inp-pw').value='';$e('login-err').textContent='';
     clearSavedGameId();
 }
@@ -2304,6 +2306,16 @@ function closeHistory(){$e('history-modal').classList.remove('show');}
 $e('history-modal').addEventListener('click',e=>{if(e.target===$e('history-modal'))closeHistory();});
 
 applyI18n();
+
+// ── 로그인 유지: 저장된 토큰이 있으면 로그인 화면 없이 바로 메뉴로 ──
+(async function tryResumeSession(){
+    let token; try{ token=localStorage.getItem('authToken'); }catch{ return; }
+    if(!token) return;
+    const res=await fetch('/api/session/resume',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token})}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok){ currentUser=res.user; connectWS(); goMenu(); }
+    else { try{ localStorage.removeItem('authToken'); }catch{} }
+})();
 </script>
 </body>
 </html>

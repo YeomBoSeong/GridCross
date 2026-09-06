@@ -4,6 +4,9 @@ const WebSocket = require('ws');
 const crypto    = require('crypto');
 const path      = require('path');
 const { MongoClient } = require('mongodb');
+const { EMPTY, P1, P2, N, pts, cnt, applyEnclosures, emptyBoard } = require('./gameCore');
+const bots   = require('./bots');
+const botAI  = require('./botAI');
 
 const app    = express();
 const server = http.createServer(app);
@@ -70,7 +73,32 @@ async function connectDB() {
     await dailyCol.createIndex({ status: 1 });
     await historyCol.createIndex({ username: 1, createdAt: -1 });
     console.log('✅ MongoDB 연결 성공');
+    await seedBots();
     return usersCol;
+}
+
+// ── 봇 계정 시딩 ──────────────────────────────
+// 기존 유저 데이터를 절대 건드리지 않도록 $setOnInsert로만 최초 생성 시 채움
+async function seedBots() {
+    try {
+        for (const bot of bots.ALL_BOTS) {
+            await usersCol.updateOne(
+                { username: bot.username },
+                {
+                    $setOnInsert: {
+                        password: hashPw(crypto.randomBytes(16).toString('hex')),
+                        rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [],
+                    },
+                    $set: {
+                        isBot: true,
+                        botMode: bots.BOT_MODE_MAP.get(bot.username),
+                        botLevel: bot.level,
+                    },
+                },
+                { upsert: true }
+            );
+        }
+    } catch (e) { console.error('seedBots error', e); }
 }
 
 app.use(express.json());
@@ -86,6 +114,10 @@ app.get('/ping', (req, res) => {
 
 function hashPw(pw) {
     return crypto.createHash('sha256').update(pw + 'xgame_십자').digest('hex');
+}
+
+function genToken() {
+    return crypto.randomBytes(24).toString('hex');
 }
 
 // ── 서버 메시지 i18n ───────────────────────────
@@ -182,16 +214,26 @@ app.post('/api/auth', async (req, res) => {
         const existing = await col.findOne({ username });
 
         if (!existing) {
-            const newUser = { username, password: hash, rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [] };
+            const token = genToken();
+            const newUser = { username, password: hash, rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [], sessionToken: token };
             await col.insertOne(newUser);
-            return res.json({ ok: true, created: true,
+            return res.json({ ok: true, created: true, token,
                 user: { username, rating: 1000, wins: 0, losses: 0, draws: 0, aiWins: [] } });
         }
+
+        if (existing.isBot)
+            return res.json({ ok: false, msg: tr('wrongCreds', lang) });
 
         if (existing.password !== hash)
             return res.json({ ok: false, msg: tr('wrongCreds', lang) });
 
-        return res.json({ ok: true, created: false,
+        let token = existing.sessionToken;
+        if (!token) {
+            token = genToken();
+            await col.updateOne({ username }, { $set: { sessionToken: token } });
+        }
+
+        return res.json({ ok: true, created: false, token,
             user: { username, rating: existing.rating, wins: existing.wins,
                     losses: existing.losses, draws: existing.draws, aiWins: existing.aiWins || [] } });
     } catch (e) {
@@ -200,11 +242,26 @@ app.post('/api/auth', async (req, res) => {
     }
 });
 
+app.post('/api/session/resume', async (req, res) => {
+    const { token } = req.body || {};
+    if (!token) return res.json({ ok: false });
+    try {
+        const col = await connectDB();
+        const u = await col.findOne({ sessionToken: token, isBot: { $ne: true } });
+        if (!u) return res.json({ ok: false });
+        res.json({ ok: true,
+            user: { username: u.username, rating: u.rating, wins: u.wins,
+                    losses: u.losses, draws: u.draws, aiWins: u.aiWins || [] } });
+    } catch (e) {
+        res.json({ ok: false });
+    }
+});
+
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const col  = await connectDB();
         const list = await col
-            .find({}, { projection: { password: 0, _id: 0 } })
+            .find({}, { projection: { password: 0, _id: 0, sessionToken: 0 } })
             .sort({ rating: -1 })
             .toArray();
         res.json(list);
@@ -241,7 +298,7 @@ app.get('/api/ai/conquerors', async (req, res) => {
     try {
         const col  = await connectDB();
         const list = await col
-            .find({ aiWins: lv }, { projection: { password: 0, _id: 0 } })
+            .find({ aiWins: lv }, { projection: { password: 0, _id: 0, sessionToken: 0 } })
             .sort({ rating: -1 })
             .toArray();
         // 유저가 정복한 가장 높은 난이도에서만 표시 (낮은 난이도 목록에는 중복 노출 안 함)
@@ -254,15 +311,35 @@ app.get('/api/ai/conquerors', async (req, res) => {
 
 // ── WebSocket 게임 서버 ───────────────────────
 
-const EMPTY = 0, P1 = 1, P2 = 2;
-const N          = 12;
 const TURN_TIME  = 20;
+const REALTIME_BOT_MIN_DELAY_MS = 2000;
+const REALTIME_BOT_MAX_DELAY_MS = 18000;
+const QUEUE_BOT_FALLBACK_MS     = 10000;
 
 const waitingQueue        = [];
 const games               = new Map();
 const onlineUsers         = new Map();   // username → ws
 const pendingChallenges   = new Map();   // `${from}->${to}` → { fromWs, timer }
 const recentlyEndedGames  = new Map();   // gameId → { msg, p1name, p2name } (60초간 재접속 결과 조회용)
+const busyBots            = new Set();   // 현재 실시간 대전 중인 봇 유저네임 (중복 매칭 방지)
+
+function makeBotPseudoWs(username, rating, level) {
+    return { username, rating, isBot: true, botLevel: level, gameId: null, lang: 'ko', readyState: null };
+}
+
+// 사용 가능한(대전 중이 아닌) 실시간 봇 하나를 무작위로 골라 최신 레이팅과 함께 반환
+async function pickFreeBot() {
+    const free = bots.REALTIME_BOTS.filter(b => !busyBots.has(b.username));
+    if (!free.length) return null;
+    const pick = free[Math.floor(Math.random() * free.length)];
+    try {
+        const col  = await connectDB();
+        const user = await col.findOne({ username: pick.username });
+        return { username: pick.username, level: pick.level, rating: (user && user.rating) || 1000 };
+    } catch (e) {
+        return { username: pick.username, level: pick.level, rating: 1000 };
+    }
+}
 
 function send(ws, data) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
@@ -273,70 +350,12 @@ function notifyDaily(username, gameId, ended) {
     if (tws) send(tws, { type: 'daily_notify', gameId, ended: !!ended });
 }
 
-function pts(board, r, c) {
-    return [[-1,0],[1,0],[0,-1],[0,1]]
-        .map(([dr,dc]) => [r+dr, c+dc])
-        .filter(([nr,nc]) => nr >= 0 && nr < N && nc >= 0 && nc < N)
-        .concat([[r, c]]);
-}
-
-function cnt(board) {
-    let p1=0, p2=0, em=0;
-    board.forEach(row => row.forEach(v => { if(v===P1)p1++; else if(v===P2)p2++; else em++; }));
-    return { p1, p2, em };
-}
-
-// ── 포위 포획 (siege capture) ───────────────────
-// board를 직접 변형하며, 뒤집힌 [r,c] 좌표 배열을 반환
-function applyEnclosures(board, p) {
-    const enemy = p === P1 ? P2 : P1;
-    const visited = Array.from({ length: N }, () => new Array(N).fill(false));
-    const toFlip = [];
-
-    for (let r = 0; r < N; r++) {
-        for (let c = 0; c < N; c++) {
-            if (board[r][c] !== enemy || visited[r][c]) continue;
-
-            const group = [];
-            const queue = [[r, c]];
-            let enclosed = true;
-            const wallsHit = new Set();
-
-            while (queue.length) {
-                const [cr, cc] = queue.shift();
-                if (visited[cr][cc]) continue;
-                visited[cr][cc] = true;
-                group.push([cr, cc]);
-
-                for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
-                    const nr = cr+dr, nc = cc+dc;
-                    if (nr < 0)  { wallsHit.add('top');    continue; }
-                    if (nr >= N) { wallsHit.add('bottom'); continue; }
-                    if (nc < 0)  { wallsHit.add('left');   continue; }
-                    if (nc >= N) { wallsHit.add('right');  continue; }
-                    if (board[nr][nc] === EMPTY) enclosed = false;
-                    if (board[nr][nc] === enemy && !visited[nr][nc]) queue.push([nr, nc]);
-                }
-            }
-
-            if (enclosed && wallsHit.size <= 2) group.forEach(cell => toFlip.push(cell));
-        }
-    }
-
-    toFlip.forEach(([fr, fc]) => { board[fr][fc] = p; });
-    return toFlip;
-}
-
 function eloCalc(ra, rb, s) {
     return Math.round(ra + 32 * (s - 1 / (1 + Math.pow(10, (rb - ra) / 400))));
 }
 
 function genId() {
     return Math.random().toString(36).substr(2, 8);
-}
-
-function emptyBoard() {
-    return Array.from({ length: N }, () => new Array(N).fill(EMPTY));
 }
 
 async function applyEloResult(p1name, p2name, result) {
@@ -395,6 +414,12 @@ app.get('/api/history', async (req, res) => {
 // ── 일일 게임 (Daily Game: 수 제한 1일, 비동기, 방 목록) ──────
 const DAILY_TURN_MS      = 24 * 60 * 60 * 1000;
 const MAX_DAILY_PER_USER = 5;
+const DAILY_BOT_DELAY_MIN_MS = 5 * 60 * 1000;
+const DAILY_BOT_DELAY_MAX_MS = 120 * 60 * 1000;
+
+function randomDailyDelay() {
+    return DAILY_BOT_DELAY_MIN_MS + Math.random() * (DAILY_BOT_DELAY_MAX_MS - DAILY_BOT_DELAY_MIN_MS);
+}
 
 function dailySummary(doc, username) {
     const isP1 = doc.p1 === username;
@@ -458,6 +483,8 @@ async function joinDailyRoom(roomId, username, email, res, lang) {
         p2: username, p2Rating: user.rating || 1000,
         p2Email: normalizeEmail(email),
         board: emptyBoard(), turn: P1, deadline: now + DAILY_TURN_MS, startedAt: now,
+        // P1(창설자)이 항상 먼저 두므로, 창설자가 봇이면 첫 수를 지연 예약
+        botTurnAt: bots.isBotUsername(room.creator) ? now + randomDailyDelay() : null,
     };
     const upd = await dailyCol.updateOne({ _id: roomId, status: 'waiting' }, { $set: update });
     if (upd.matchedCount === 0)
@@ -567,42 +594,51 @@ app.get('/api/daily/games/:id', async (req, res) => {
     } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
+// 사람(HTTP 핸들러)과 봇(sweepBotDailyMoves) 공용 착수 처리
+async function performDailyMove(gameId, username, r, c) {
+    const game = await dailyCol.findOne({ _id: gameId });
+    if (!game || game.status !== 'active') return { ok: false, code: 'notActiveGame' };
+    const myNum = game.p1 === username ? P1 : game.p2 === username ? P2 : 0;
+    if (!myNum) return { ok: false, code: 'notParticipant' };
+    if (game.turn !== myNum) return { ok: false, code: 'notYourTurn' };
+    if (typeof r !== 'number' || typeof c !== 'number' || r < 0 || r >= N || c < 0 || c >= N)
+        return { ok: false, code: 'invalidCoords' };
+    if (game.board[r][c] !== EMPTY) return { ok: false, code: 'cellFilled' };
+
+    const board = game.board.map(row => [...row]);
+    pts(board, r, c).forEach(([ar, ac]) => { board[ar][ac] = myNum; });
+    const captured  = applyEnclosures(board, myNum);
+    const nextTurn  = myNum === P1 ? P2 : P1;
+    const { p1, p2, em } = cnt(board);
+    const nextUsername = nextTurn === P1 ? game.p1 : game.p2;
+    const botTurnAt = em > 0 && bots.isBotUsername(nextUsername) ? Date.now() + randomDailyDelay() : null;
+
+    const upd = await dailyCol.updateOne(
+        { _id: gameId, status: 'active', turn: myNum },
+        { $set: { board, turn: nextTurn, deadline: Date.now() + DAILY_TURN_MS, lastMoveAt: Date.now(), botTurnAt } });
+    if (upd.matchedCount === 0) return { ok: false, code: 'staleRequest' };
+
+    let finalDoc = await dailyCol.findOne({ _id: gameId });
+    if (em === 0) {
+        finalDoc = await endDailyGame(finalDoc, p1 > p2 ? 'p1' : p2 > p1 ? 'p2' : 'draw', 'normal');
+    } else {
+        const nextEmail = myNum === P1 ? finalDoc.p2Email : finalDoc.p1Email;
+        notifyDaily(nextUsername, gameId);
+        if (nextEmail) sendTurnEmail(nextEmail, username);
+    }
+    return { ok: true, game: finalDoc, captured, r, c, player: myNum };
+}
+
 app.post('/api/daily/games/:id/move', async (req, res) => {
     const lang = reqLang(req);
     const { username, r, c } = req.body || {};
     if (!username) return res.json({ ok: false, msg: tr('loginRequired', lang) });
     try {
         await connectDB();
-        const game = await dailyCol.findOne({ _id: req.params.id });
-        if (!game || game.status !== 'active') return res.json({ ok: false, msg: tr('notActiveGame', lang) });
-        const myNum = game.p1 === username ? P1 : game.p2 === username ? P2 : 0;
-        if (!myNum) return res.json({ ok: false, msg: tr('notParticipant', lang) });
-        if (game.turn !== myNum) return res.json({ ok: false, msg: tr('notYourTurn', lang) });
-        if (typeof r !== 'number' || typeof c !== 'number' || r < 0 || r >= N || c < 0 || c >= N)
-            return res.json({ ok: false, msg: tr('invalidCoords', lang) });
-        if (game.board[r][c] !== EMPTY) return res.json({ ok: false, msg: tr('cellFilled', lang) });
-
-        const board = game.board.map(row => [...row]);
-        pts(board, r, c).forEach(([ar, ac]) => { board[ar][ac] = myNum; });
-        const captured  = applyEnclosures(board, myNum);
-        const nextTurn  = myNum === P1 ? P2 : P1;
-        const { p1, p2, em } = cnt(board);
-
-        const upd = await dailyCol.updateOne(
-            { _id: req.params.id, status: 'active', turn: myNum },
-            { $set: { board, turn: nextTurn, deadline: Date.now() + DAILY_TURN_MS, lastMoveAt: Date.now() } });
-        if (upd.matchedCount === 0) return res.json({ ok: false, msg: tr('staleRequest', lang) });
-
-        let finalDoc = await dailyCol.findOne({ _id: req.params.id });
-        if (em === 0) {
-            finalDoc = await endDailyGame(finalDoc, p1 > p2 ? 'p1' : p2 > p1 ? 'p2' : 'draw', 'normal');
-        } else {
-            const nextUsername = myNum === P1 ? finalDoc.p2 : finalDoc.p1;
-            const nextEmail    = myNum === P1 ? finalDoc.p2Email : finalDoc.p1Email;
-            notifyDaily(nextUsername, req.params.id);
-            if (nextEmail) sendTurnEmail(nextEmail, username);
-        }
-        res.json({ ok: true, game: dailyFull(finalDoc), captured, r, c, player: myNum });
+        const result = await performDailyMove(req.params.id, username, r, c);
+        if (!result.ok) return res.json({ ok: false, msg: tr(result.code, lang) });
+        res.json({ ok: true, game: dailyFull(result.game), captured: result.captured,
+            r: result.r, c: result.c, player: result.player });
     } catch (e) { console.error(e); res.json({ ok: false, msg: tr('serverError', lang) }); }
 });
 
@@ -638,10 +674,51 @@ function broadcastTimer(game) {
     send(game.p2ws, msg);
 }
 
+// 현재 턴 보유자가 봇이면 2~18초 랜덤 지연 후 봇의 수를 자동으로 둠
+function maybeScheduleBotMove(game) {
+    const botWs = game.turn === P1 ? game.p1ws : game.p2ws;
+    if (!botWs || !botWs.isBot) return;
+    const delay = REALTIME_BOT_MIN_DELAY_MS + Math.random() * (REALTIME_BOT_MAX_DELAY_MS - REALTIME_BOT_MIN_DELAY_MS);
+    setTimeout(() => {
+        if (game.ended || games.get(game.id) !== game) return;
+        if (game.turn !== (botWs === game.p1ws ? P1 : P2)) return;
+        const move = botAI.chooseMove(game.board, game.turn, botWs.botLevel);
+        if (!move) return;
+        applyMoveOnGame(game, game.turn, move[0], move[1]);
+    }, delay);
+}
+
+// 사람(make_move 메시지)과 봇(maybeScheduleBotMove) 공용 착수 처리
+async function applyMoveOnGame(game, myNum, r, c) {
+    if (!game || game.ended) return;
+    if (game.turn !== myNum) return;
+    if (typeof r !== 'number' || r < 0 || r >= N || c < 0 || c >= N) return;
+    if (game.board[r][c] !== EMPTY) return;
+
+    pts(game.board, r, c).forEach(([ar,ac]) => { game.board[ar][ac] = myNum; });
+    const captured = applyEnclosures(game.board, myNum);
+    game.turn = myNum === P1 ? P2 : P1;
+
+    const { p1, p2, em } = cnt(game.board);
+    const mv = { type: 'move_made', r, c, player: myNum,
+        board: game.board, turn: game.turn, p1, p2, em, captured };
+    send(game.p1ws, mv);
+    send(game.p2ws, mv);
+
+    if (em === 0) {
+        await endGame(game, p1 > p2 ? 'p1' : p2 > p1 ? 'p2' : 'draw', 'normal');
+    } else {
+        startTimer(game);
+        broadcastTimer(game);
+        maybeScheduleBotMove(game);
+    }
+}
+
 async function endGame(game, result, reason) {
     if (game.ended) return;
     game.ended = true;
     clearTimer(game);
+    [game.p1ws, game.p2ws].forEach(w => { if (w.isBot) busyBots.delete(w.username); });
 
     const { p1, p2 } = cnt(game.board);
     let ratings = {};
@@ -677,6 +754,8 @@ function startGame(p1ws, p2ws, mode) {
     [p1ws, p2ws].forEach(w => {
         const i = waitingQueue.indexOf(w);
         if (i !== -1) waitingQueue.splice(i, 1);
+        clearTimeout(w._botFallbackTimer);
+        if (w.isBot) busyBots.add(w.username);
     });
 
     const gid   = genId();
@@ -694,6 +773,21 @@ function startGame(p1ws, p2ws, mode) {
 
     startTimer(game);
     broadcastTimer(game);
+    maybeScheduleBotMove(game);
+}
+
+// 매칭 큐에서 10초간 사람 상대를 못 찾으면 대기 중인 실시간 봇과 자동 매칭
+function scheduleBotFallback(ws) {
+    ws._botFallbackTimer = setTimeout(async () => {
+        if (ws.gameId || !waitingQueue.includes(ws)) return;
+        const bot = await pickFreeBot();
+        if (!bot) { scheduleBotFallback(ws); return; } // 봇이 전부 사용 중이면 재시도
+        const idx = waitingQueue.indexOf(ws);
+        if (idx === -1 || ws.gameId) return; // 그 사이 다른 곳에서 매칭/이탈됨
+        waitingQueue.splice(idx, 1);
+        const botWs = makeBotPseudoWs(bot.username, bot.rating, bot.level);
+        startGame(ws, botWs, 'bot');
+    }, QUEUE_BOT_FALLBACK_MS);
 }
 
 function cleanChallengesFor(username) {
@@ -759,20 +853,24 @@ wss.on('connection', ws => {
 
         if (m.type === 'join_queue') {
             if (ws.gameId) return;
+            clearTimeout(ws._botFallbackTimer);
             const i = waitingQueue.indexOf(ws);
             if (i !== -1) waitingQueue.splice(i, 1);
             const oppIdx = waitingQueue.findIndex(w => w.username !== ws.username);
             if (oppIdx !== -1) {
                 const opp = waitingQueue.splice(oppIdx, 1)[0];
+                clearTimeout(opp._botFallbackTimer);
                 startGame(ws, opp, 'random');
             } else {
                 waitingQueue.push(ws);
                 send(ws, { type: 'waiting' });
+                scheduleBotFallback(ws);
             }
             return;
         }
 
         if (m.type === 'leave_queue') {
+            clearTimeout(ws._botFallbackTimer);
             const i = waitingQueue.indexOf(ws);
             if (i !== -1) waitingQueue.splice(i, 1);
             return;
@@ -824,27 +922,7 @@ wss.on('connection', ws => {
             const game = games.get(ws.gameId);
             if (!game || game.ended) return;
             const myNum = game.p1ws === ws ? P1 : P2;
-            if (game.turn !== myNum) return;
-            const { r, c } = m;
-            if (typeof r !== 'number' || r < 0 || r >= N || c < 0 || c >= N) return;
-            if (game.board[r][c] !== EMPTY) return;
-
-            pts(game.board, r, c).forEach(([ar,ac]) => { game.board[ar][ac] = myNum; });
-            const captured = applyEnclosures(game.board, myNum);
-            game.turn = myNum === P1 ? P2 : P1;
-
-            const { p1, p2, em } = cnt(game.board);
-            const mv = { type: 'move_made', r, c, player: myNum,
-                board: game.board, turn: game.turn, p1, p2, em, captured };
-            send(game.p1ws, mv);
-            send(game.p2ws, mv);
-
-            if (em === 0) {
-                await endGame(game, p1 > p2 ? 'p1' : p2 > p1 ? 'p2' : 'draw', 'normal');
-            } else {
-                startTimer(game);
-                broadcastTimer(game);
-            }
+            await applyMoveOnGame(game, myNum, m.r, m.c);
             return;
         }
 
@@ -858,6 +936,7 @@ wss.on('connection', ws => {
     });
 
     ws.on('close', () => {
+        clearTimeout(ws._botFallbackTimer);
         if (ws.username && onlineUsers.get(ws.username) === ws) {
             onlineUsers.delete(ws.username);
             cleanChallengesFor(ws.username);
@@ -898,7 +977,47 @@ setInterval(async () => {
     } catch (e) { console.error('daily sweep error', e); }
 }, 5 * 60 * 1000);
 
+// ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 ──
+async function ensureBotDailyRooms() {
+    try {
+        await connectDB();
+        for (const bot of bots.DAILY_BOTS) {
+            const existing = await dailyCol.findOne({ creator: bot.username, status: 'waiting' });
+            if (existing) continue;
+            const activeCount = await dailyCol.countDocuments(
+                { status: 'active', $or: [{ p1: bot.username }, { p2: bot.username }] });
+            if (activeCount >= MAX_DAILY_PER_USER) continue;
+            const botUser = await usersCol.findOne({ username: bot.username });
+            if (!botUser) continue;
+            await dailyCol.insertOne({
+                _id: genId(), creator: bot.username, creatorRating: botUser.rating || 1000,
+                creatorEmail: null, status: 'waiting', createdAt: Date.now(),
+            });
+        }
+    } catch (e) { console.error('ensureBotDailyRooms error', e); }
+}
+setInterval(ensureBotDailyRooms, 60 * 1000);
+
+// ── 일일 대전 봇: 지연된 착수 처리 (30초마다 확인) ──
+async function sweepBotDailyMoves() {
+    try {
+        await connectDB();
+        const due = await dailyCol.find(
+            { status: 'active', botTurnAt: { $ne: null, $lte: Date.now() } }).toArray();
+        for (const doc of due) {
+            const botUsername = doc.turn === P1 ? doc.p1 : doc.p2;
+            const level = bots.BOT_LEVEL_MAP.get(botUsername);
+            if (!level) continue; // 안전장치: 실제로 봇 차례가 아니면 건너뜀
+            const move = botAI.chooseMove(doc.board, doc.turn, level);
+            if (!move) continue;
+            await performDailyMove(doc._id, botUsername, move[0], move[1]);
+        }
+    } catch (e) { console.error('sweepBotDailyMoves error', e); }
+}
+setInterval(sweepBotDailyMoves, 30 * 1000);
+
 // 포트 먼저 열고 DB는 백그라운드 연결 (Render 포트 스캔 타임아웃 방지)
 server.listen(PORT, () => console.log(`✅ 서버 실행 중: http://localhost:${PORT}`));
 connectDB()
+    .then(() => { ensureBotDailyRooms(); })
     .catch(err => console.error('MongoDB 연결 실패:', err.message));
