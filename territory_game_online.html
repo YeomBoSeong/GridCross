@@ -213,6 +213,11 @@ body{
 .cell.prv1-st{background:rgba(88,166,255,.6)!important;box-shadow:inset 0 0 0 2px var(--blue);}
 .cell.prv2{background:rgba(248,81,73,.28)!important;box-shadow:inset 0 0 0 2px rgba(248,81,73,.7);}
 .cell.prv2-st{background:rgba(248,81,73,.6)!important;box-shadow:inset 0 0 0 2px var(--red);}
+#move-confirm-bar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:200;
+    display:flex;gap:10px;padding:10px 14px;border-radius:14px;
+    background:var(--bg2);border:1px solid var(--border);box-shadow:0 6px 20px rgba(0,0,0,.35);}
+#move-confirm-bar[hidden]{display:none;}
+#move-confirm-bar .btn{padding:10px 22px;font-size:.95rem;}
 @keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
 .cell.pop{animation:pop .22s ease-out forwards;}
 @keyframes flip{0%{transform:scale(1) rotateY(0deg);filter:brightness(1);}40%{transform:scale(1.25) rotateY(90deg);filter:brightness(2.5);}70%{transform:scale(1.15) rotateY(0deg);filter:brightness(1.8);}100%{transform:scale(1) rotateY(0deg);filter:brightness(1);}}
@@ -431,6 +436,11 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 </style>
 </head>
 <body>
+
+<div id="move-confirm-bar" hidden>
+    <button class="btn btn-success" onclick="sfx.click();confirmPendingMove()" data-i18n="app.confirmMove">착수</button>
+    <button class="btn btn-danger"  onclick="sfx.click();cancelPendingMove()" data-i18n="app.cancelMove">취소</button>
+</div>
 
 <button id="lang-toggle" onclick="toggleLang()"><span>🌐</span><span id="lang-toggle-label">EN</span></button>
 
@@ -1170,6 +1180,8 @@ ko:{
     'rules.tips.li5':'내 덩어리가 포위당하지 않으려면 <b>벽(모서리)에 붙여서</b> 영역을 넓히는 것도 좋은 전략입니다.',
     'rules.tips.li6':'끝에 남은 빈 칸은 위치가 중요합니다 — 꼼꼼히 계산하세요.',
     'rules.backBtn':'← 메뉴로 돌아가기',
+    'app.confirmMove':'착수',
+    'app.cancelMove':'취소',
     'local.aiDiffLbl':'AI 난이도',
     'local.goFirst':'🔵 내가 선공',
     'local.goSecond':'🔴 AI가 선공',
@@ -1330,6 +1342,8 @@ en:{
     'rules.tips.li5':'Keeping your own groups from being sieged is easier if you expand <b>along the walls (edges)</b>.',
     'rules.tips.li6':'The position of the last remaining empty cells matters a lot — calculate carefully.',
     'rules.backBtn':'← Back to Menu',
+    'app.confirmMove':'Place',
+    'app.cancelMove':'Cancel',
     'local.aiDiffLbl':'AI Difficulty',
     'local.goFirst':'🔵 I go first',
     'local.goSecond':'🔴 AI goes first',
@@ -1648,7 +1662,7 @@ function startOnlineGame(msg){
     if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (${t('common.me')})`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent=`🔵 ${t('common.meShort')}`;$e('olbl2').textContent=`🔴 ${oppN}`;}
     else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (${t('common.me')})`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent=`🔴 ${t('common.meShort')}`;}
     $e('msg-o').textContent='';$e('forfeit-btn').style.display='';
-    buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),'online');
+    buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),clearHoverOnline,'online');
     renderOnlineBoard();
     const p1=msg.p1||0,p2=msg.p2||0;
     syncOnlineUI(p1,p2,BOARD_N*BOARD_N-p1-p2);showScreen('s-online-game');
@@ -1859,7 +1873,7 @@ function renderDailyGame(){
     }
     $e('msg-d').textContent='';$e('dcapmsg').classList.remove('show');
     $e('daily-result-box').style.display='none';$e('daily-forfeit-btn').style.display=g.status==='active'?'':'none';
-    buildGrid($e('dgrid'),(r,c)=>dailyClick(r,c),(r,c)=>hoverInDaily(r,c),'daily');
+    buildGrid($e('dgrid'),(r,c)=>dailyClick(r,c),(r,c)=>hoverInDaily(r,c),clearHoverDaily,'daily');
     renderDailyBoard();syncDailyUI();
     clearInterval(dDeadlineInterval);
     if(g.status==='finished'){showDailyResult();}
@@ -2000,7 +2014,7 @@ function initLocalGame(){
     lTurn=(lMode==='pvai'&&!lHumanFirst)?P2:P1;lEnded=false;lCapCounts=[0,0];$e('msg-l').textContent='';
     $e('lcap1').textContent=capturedLabel(0);$e('lcap2').textContent=capturedLabel(0);$e('lcapmsg').classList.remove('show');
     $e('llbl1').textContent=t('local.p1Label');$e('llbl2').textContent=lMode==='pvai'?t('local.aiLabel'):t('local.p2Label');
-    buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),'local');syncLocalUI();
+    buildGrid($e('lgrid'),(r,c)=>localClick(r,c),(r,c)=>hoverInLocal(r,c),clearHoverLocal,'local');syncLocalUI();
     if(lMode==='pvai'&&lTurn===P2)setTimeout(aiTurn,480);
 }
 function localClick(r,c){if(lEnded||lBoard[r][c]!==EMPTY)return;if(lMode==='pvai'&&lTurn===P2)return;doLocalMove(r,c,lTurn);}
@@ -2203,6 +2217,37 @@ function minimax(g,depth,isMax,alpha,beta){
     }
 }
 
+// ── 앱(Capacitor) 전용 착수 확인 UX ──────────────
+// 웹에서는 탭=즉시 착수지만, 네이티브 앱에서는 PC 웹 호버 미리보기처럼
+// 반투명 십자가만 먼저 보여주고 착수/취소 버튼으로 확정하게 함.
+function isNativeApp(){
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+let pendingMove=null; // { gridEl, r, c, clickCb, clearCb }
+function isPreviewedCell(gridEl,r,c){
+    const el=qrc(gridEl,r,c);
+    return !!(el && (el.classList.contains('prv1')||el.classList.contains('prv1-st')||el.classList.contains('prv2')||el.classList.contains('prv2-st')));
+}
+function handleAppTap(gridEl,r,c,clickCb,hoverCb,clearCb){
+    hoverCb(r,c); // 기존 호버 미리보기 로직 재사용 — 무효한 칸이면 내부에서 알아서 아무것도 안 그림
+    if(!isPreviewedCell(gridEl,r,c)){ pendingMove=null; $e('move-confirm-bar').hidden=true; return; }
+    pendingMove={gridEl,r,c,clickCb,clearCb};
+    $e('move-confirm-bar').hidden=false;
+}
+function confirmPendingMove(){
+    if(!pendingMove)return;
+    const{gridEl,r,c,clickCb}=pendingMove;
+    pendingMove=null;$e('move-confirm-bar').hidden=true;
+    // 확정 직전 보드가 바뀌었을 수 있으니(상대 수가 그 사이 들어온 경우 등) 재확인 후 조용히 무시
+    if(!isPreviewedCell(gridEl,r,c))return;
+    clickCb(r,c);
+}
+function cancelPendingMove(){
+    if(!pendingMove)return;
+    pendingMove.clearCb();
+    pendingMove=null;$e('move-confirm-bar').hidden=true;
+}
+
 // ── Grid DOM ──────────────────────────────────
 function getCellSize(){
     // .screen의 max-width(600px)를 기준으로, 뷰포트에서 body 패딩(32) + grid-wrap 패딩(12) + grid 패딩(4) 제외
@@ -2210,14 +2255,14 @@ function getCellSize(){
     const size  = Math.floor((avail - (BOARD_N-1)*2) / BOARD_N);
     return Math.max(17, Math.min(38, size));
 }
-function buildGrid(gridEl,clickCb,hoverCb,kind){
+function buildGrid(gridEl,clickCb,hoverCb,clearCb,kind){
     gridEl.innerHTML='';
     const sz=getCellSize();
     gridEl.style.gridTemplateColumns=`repeat(${BOARD_N},${sz}px)`;
     for(let r=0;r<BOARD_N;r++)for(let c=0;c<BOARD_N;c++){
         const d=document.createElement('div');d.className='cell';d.dataset.rc=`${r},${c}`;
         d.style.width=d.style.height=sz+'px';
-        d.addEventListener('click',()=>clickCb(r,c));
+        d.addEventListener('click',()=>{isNativeApp()?handleAppTap(gridEl,r,c,clickCb,hoverCb,clearCb):clickCb(r,c);});
         d.addEventListener('mouseenter',()=>hoverCb(r,c));
         d.addEventListener('mouseleave',()=>gridEl.querySelectorAll('.prv1,.prv1-st,.prv2,.prv2-st').forEach(el=>el.classList.remove('prv1','prv1-st','prv2','prv2-st')));
         gridEl.appendChild(d);
