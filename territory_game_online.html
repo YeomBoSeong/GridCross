@@ -435,14 +435,10 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 }
 
 /* ── 앱(Capacitor) 전용: 광고-제목 간격 축소 + 로컬 대전 안내문 제거 ──
-   (body.native-app는 페이지 로드 시 JS로 붙임 — 웹에는 영향 없음) */
-body.native-app #ad-horiz-top{margin:0 auto 8px;}
-body.native-app #lang-toggle{top:60px;}
-body.native-app:has(#s-login.active) #lang-toggle{top:14px;}
-@media(max-width:540px){
-    body.native-app #lang-toggle{top:56px;}
-    body.native-app:has(#s-login.active) #lang-toggle{top:8px;}
-}
+   (body.native-app는 페이지 로드 시 JS로 붙임 — 웹에는 영향 없음)
+   언어 토글(고정 위치)이 광고 아래 top:64px에 떠 있으므로, 토글 높이(~38px)만큼은
+   여백을 남겨야 제목과 겹치지 않음(64+38≈102px) */
+body.native-app #ad-horiz-top{margin:0 auto 58px;}
 body.native-app .rules-inline{display:none;}
 </style>
 </head>
