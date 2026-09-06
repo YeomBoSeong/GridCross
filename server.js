@@ -992,6 +992,10 @@ const DAILY_ROOM_CREATED_JITTER_MS = 45 * 60 * 1000;
 function jitteredCreatedAt() {
     return Date.now() - Math.floor(Math.random() * DAILY_ROOM_CREATED_JITTER_MS);
 }
+// 아무도 참가 안 한 봇 방을 이 시간 이상 방치하면 "방금 열린 것"처럼 생성 시각을 새로 갱신함.
+// 봇마다 이 문턱을 넘는 시점이 제각각이라(=자연히 시간차가 남) 나중에 하루/이틀 지나도
+// 전부 "1일 전"/"2일 전"으로 뭉쳐 보이는 일이 없음 — 항상 "몇 시간 전" 이내로 유지됨.
+const BOT_ROOM_REFRESH_AFTER_MS = 3 * 60 * 60 * 1000;
 
 // ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 (단, 이미 누군가와 경기 중이면 열지 않음) ──
 async function ensureBotDailyRooms() {
@@ -999,7 +1003,12 @@ async function ensureBotDailyRooms() {
         await connectDB();
         for (const bot of bots.DAILY_BOTS) {
             const existing = await dailyCol.findOne({ creator: bot.username, status: 'waiting' });
-            if (existing) continue;
+            if (existing) {
+                if (Date.now() - existing.createdAt > BOT_ROOM_REFRESH_AFTER_MS) {
+                    await dailyCol.updateOne({ _id: existing._id }, { $set: { createdAt: jitteredCreatedAt() } });
+                }
+                continue;
+            }
             const activeCount = await dailyCol.countDocuments(
                 { status: 'active', $or: [{ p1: bot.username }, { p2: bot.username }] });
             if (activeCount > 0) continue; // 봇은 한 번에 한 경기만 — 경기 중엔 새 방을 열지 않음
