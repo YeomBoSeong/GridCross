@@ -433,9 +433,26 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 @media(min-width:541px) and (max-width:979px){
     body{padding-top:0;}
 }
+
+/* ── 앱(Capacitor) 전용: 광고-제목 간격 축소 + 로컬 대전 안내문 제거 ──
+   (body.native-app는 페이지 로드 시 JS로 붙임 — 웹에는 영향 없음) */
+body.native-app #ad-horiz-top{margin:0 auto 8px;}
+body.native-app #lang-toggle{top:60px;}
+body.native-app:has(#s-login.active) #lang-toggle{top:14px;}
+@media(max-width:540px){
+    body.native-app #lang-toggle{top:56px;}
+    body.native-app:has(#s-login.active) #lang-toggle{top:8px;}
+}
+body.native-app .rules-inline{display:none;}
 </style>
 </head>
 <body>
+
+<script>
+// 앱(Capacitor) 안에서 로드된 경우 body에 클래스를 붙여, 앱 전용 CSS(광고-제목 간격 축소 등)가
+// 첫 렌더부터 바로 적용되게 함. 일반 웹에는 영향 없음.
+if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())document.body.classList.add('native-app');
+</script>
 
 <div id="move-confirm-bar" hidden>
     <button class="btn btn-success" onclick="sfx.click();confirmPendingMove()" data-i18n="app.confirmMove">착수</button>
