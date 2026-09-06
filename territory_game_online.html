@@ -2236,10 +2236,11 @@ function handleAppTap(gridEl,r,c,clickCb,hoverCb,clearCb){
 }
 function confirmPendingMove(){
     if(!pendingMove)return;
-    const{gridEl,r,c,clickCb}=pendingMove;
+    const{r,c,clickCb}=pendingMove;
     pendingMove=null;$e('move-confirm-bar').hidden=true;
-    // 확정 직전 보드가 바뀌었을 수 있으니(상대 수가 그 사이 들어온 경우 등) 재확인 후 조용히 무시
-    if(!isPreviewedCell(gridEl,r,c))return;
+    // 유효성 재검증은 clickCb(=onlineClick 등) 내부에서 이미 함(턴/빈칸/게임종료 체크).
+    // 여기서 미리보기 CSS 클래스로 다시 재확인하면, 버튼 탭 과정에서 모바일 웹뷰가
+    // 그리드 쪽에 합성 mouseleave를 발생시켜 미리보기가 지워진 것까지 "무효"로 오판할 수 있음.
     clickCb(r,c);
 }
 function cancelPendingMove(){
