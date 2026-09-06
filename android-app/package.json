@@ -1,0 +1,18 @@
+{
+  "name": "gridcross-android",
+  "version": "1.0.0",
+  "description": "GridCross(십자땅따먹기) Android 앱 쉘 — Capacitor로 라이브 사이트(gridcrossgame.onrender.com)를 감쌈. 루트 Node 서버(Render 배포 대상)와 완전히 분리된 별도 프로젝트.",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.1"
+  }
+}

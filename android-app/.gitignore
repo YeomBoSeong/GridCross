@@ -1,0 +1,19 @@
+# Node
+node_modules/
+
+# 로컬 머신 전용(SDK 절대경로 등) — 커밋하면 안 됨
+android/local.properties
+
+# Android/Gradle 빌드 산출물
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/.idea/
+android/*.iml
+android/app/*.iml
+android/local.gradle
+
+# 서명 키(있다면 절대 커밋 금지)
+android/*.keystore
+android/*.jks

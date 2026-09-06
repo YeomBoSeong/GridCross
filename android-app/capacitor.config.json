@@ -1,0 +1,9 @@
+{
+  "appId": "com.gridcross.app",
+  "appName": "십자 땅따먹기",
+  "webDir": "www",
+  "server": {
+    "url": "https://gridcrossgame.onrender.com",
+    "cleartext": false
+  }
+}
