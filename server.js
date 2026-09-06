@@ -992,22 +992,6 @@ setInterval(async () => {
 // 정상 경로는 항상 생성 시각이 지금(0)이므로 이 상수와는 무관함)
 const DAILY_ROOM_RESET_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
-// ── 일회성: 기존 봇 대기방들의 생성 시각을 0~7일 범위로 재분산 (사용 후 제거 예정) ──
-app.post('/api/admin/one-time-jitter-bot-rooms-7d', async (req, res) => {
-    try {
-        await connectDB();
-        const rooms = await dailyCol.find({ status: 'waiting' }).toArray();
-        let updated = 0;
-        for (const r of rooms) {
-            if (!bots.isBotUsername(r.creator)) continue;
-            const createdAt = Date.now() - Math.floor(Math.random() * DAILY_ROOM_RESET_AFTER_MS);
-            await dailyCol.updateOne({ _id: r._id }, { $set: { createdAt } });
-            updated++;
-        }
-        res.json({ ok: true, updated });
-    } catch (e) { res.json({ ok: false, error: e.message }); }
-});
-
 // ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 (단, 이미 누군가와 경기 중이면 열지 않음) ──
 async function ensureBotDailyRooms() {
     try {
