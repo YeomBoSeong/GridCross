@@ -993,23 +993,6 @@ function jitteredCreatedAt() {
     return Date.now() - Math.floor(Math.random() * DAILY_ROOM_CREATED_JITTER_MS);
 }
 
-// ── 일회성: 기존 봇 대기방들의 생성 시각을 넓게 흩어놓기 (사용 후 제거 예정) ──
-app.post('/api/admin/one-time-jitter-bot-rooms', async (req, res) => {
-    try {
-        await connectDB();
-        const rooms = await dailyCol.find({ status: 'waiting' }).toArray();
-        let updated = 0;
-        const WIDE_JITTER_MS = 20 * 60 * 60 * 1000; // 최대 20시간 전까지 넓게 분산
-        for (const r of rooms) {
-            if (!bots.isBotUsername(r.creator)) continue;
-            const createdAt = Date.now() - Math.floor(Math.random() * WIDE_JITTER_MS);
-            await dailyCol.updateOne({ _id: r._id }, { $set: { createdAt } });
-            updated++;
-        }
-        res.json({ ok: true, updated });
-    } catch (e) { res.json({ ok: false, error: e.message }); }
-});
-
 // ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 (단, 이미 누군가와 경기 중이면 열지 않음) ──
 async function ensureBotDailyRooms() {
     try {
