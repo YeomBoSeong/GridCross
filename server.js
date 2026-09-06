@@ -261,7 +261,7 @@ app.get('/api/leaderboard', async (req, res) => {
     try {
         const col  = await connectDB();
         const list = await col
-            .find({}, { projection: { password: 0, _id: 0, sessionToken: 0 } })
+            .find({}, { projection: { password: 0, _id: 0, sessionToken: 0, isBot: 0, botMode: 0, botLevel: 0 } })
             .sort({ rating: -1 })
             .toArray();
         res.json(list);
@@ -298,7 +298,7 @@ app.get('/api/ai/conquerors', async (req, res) => {
     try {
         const col  = await connectDB();
         const list = await col
-            .find({ aiWins: lv }, { projection: { password: 0, _id: 0, sessionToken: 0 } })
+            .find({ aiWins: lv }, { projection: { password: 0, _id: 0, sessionToken: 0, isBot: 0, botMode: 0, botLevel: 0 } })
             .sort({ rating: -1 })
             .toArray();
         // 유저가 정복한 가장 높은 난이도에서만 표시 (낮은 난이도 목록에는 중복 노출 안 함)
