@@ -312,8 +312,8 @@ app.get('/api/ai/conquerors', async (req, res) => {
 // ── WebSocket 게임 서버 ───────────────────────
 
 const TURN_TIME  = 20;
-const REALTIME_BOT_MIN_DELAY_MS = 2000;
-const REALTIME_BOT_MAX_DELAY_MS = 18000;
+const REALTIME_BOT_MIN_DELAY_MS = 3000;
+const REALTIME_BOT_MAX_DELAY_MS = 10000;
 const QUEUE_BOT_FALLBACK_MS     = 10000;
 
 const waitingQueue        = [];
@@ -977,7 +977,14 @@ setInterval(async () => {
     } catch (e) { console.error('daily sweep error', e); }
 }, 5 * 60 * 1000);
 
-// ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 ──
+// 봇 대기방 생성 시각에 무작위 편차를 줘 여러 방이 한꺼번에 생성돼도
+// 리더보드/방 목록에서 전부 같은 시각으로 보이지 않게 함
+const DAILY_ROOM_CREATED_JITTER_MS = 45 * 60 * 1000;
+function jitteredCreatedAt() {
+    return Date.now() - Math.floor(Math.random() * DAILY_ROOM_CREATED_JITTER_MS);
+}
+
+// ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 (단, 이미 누군가와 경기 중이면 열지 않음) ──
 async function ensureBotDailyRooms() {
     try {
         await connectDB();
@@ -986,12 +993,12 @@ async function ensureBotDailyRooms() {
             if (existing) continue;
             const activeCount = await dailyCol.countDocuments(
                 { status: 'active', $or: [{ p1: bot.username }, { p2: bot.username }] });
-            if (activeCount >= MAX_DAILY_PER_USER) continue;
+            if (activeCount > 0) continue; // 봇은 한 번에 한 경기만 — 경기 중엔 새 방을 열지 않음
             const botUser = await usersCol.findOne({ username: bot.username });
             if (!botUser) continue;
             await dailyCol.insertOne({
                 _id: genId(), creator: bot.username, creatorRating: botUser.rating || 1000,
-                creatorEmail: null, status: 'waiting', createdAt: Date.now(),
+                creatorEmail: null, status: 'waiting', createdAt: jitteredCreatedAt(),
             });
         }
     } catch (e) { console.error('ensureBotDailyRooms error', e); }
