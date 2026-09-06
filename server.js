@@ -327,17 +327,24 @@ function makeBotPseudoWs(username, rating, level) {
     return { username, rating, isBot: true, botLevel: level, gameId: null, lang: 'ko', readyState: null };
 }
 
-// 사용 가능한(대전 중이 아닌) 실시간 봇 하나를 무작위로 골라 최신 레이팅과 함께 반환
-async function pickFreeBot() {
+// 사용 가능한(대전 중이 아닌) 실시간 봇 하나를 무작위로 골라 "즉시"(동기적으로) 예약함.
+// busyBots 체크 직후 비동기 DB 조회가 끼면 그 사이 다른 매칭 요청이 같은 봇을 집어갈 수 있어
+// (동시에 여러 명이 10초 폴백에 걸리는 경우), 레이팅 조회 전에 먼저 busyBots에 추가해 경합을 막는다.
+function reserveFreeBot() {
     const free = bots.REALTIME_BOTS.filter(b => !busyBots.has(b.username));
     if (!free.length) return null;
     const pick = free[Math.floor(Math.random() * free.length)];
+    busyBots.add(pick.username);
+    return pick; // { username, level }
+}
+
+async function fetchBotRating(username) {
     try {
         const col  = await connectDB();
-        const user = await col.findOne({ username: pick.username });
-        return { username: pick.username, level: pick.level, rating: (user && user.rating) || 1000 };
+        const user = await col.findOne({ username });
+        return (user && user.rating) || 1000;
     } catch (e) {
-        return { username: pick.username, level: pick.level, rating: 1000 };
+        return 1000;
     }
 }
 
@@ -780,12 +787,14 @@ function startGame(p1ws, p2ws, mode) {
 function scheduleBotFallback(ws) {
     ws._botFallbackTimer = setTimeout(async () => {
         if (ws.gameId || !waitingQueue.includes(ws)) return;
-        const bot = await pickFreeBot();
-        if (!bot) { scheduleBotFallback(ws); return; } // 봇이 전부 사용 중이면 재시도
+        const pick = reserveFreeBot();
+        if (!pick) { scheduleBotFallback(ws); return; } // 봇이 전부 사용 중이면 재시도
         const idx = waitingQueue.indexOf(ws);
-        if (idx === -1 || ws.gameId) return; // 그 사이 다른 곳에서 매칭/이탈됨
+        if (idx === -1 || ws.gameId) { busyBots.delete(pick.username); return; } // 그 사이 다른 곳에서 매칭/이탈됨 -> 예약 해제
         waitingQueue.splice(idx, 1);
-        const botWs = makeBotPseudoWs(bot.username, bot.rating, bot.level);
+        const rating = await fetchBotRating(pick.username);
+        if (ws.gameId) { busyBots.delete(pick.username); return; } // 레이팅 조회 중 다른 경로로 이미 게임 시작된 경우 방어
+        const botWs = makeBotPseudoWs(pick.username, rating, pick.level);
         startGame(ws, botWs, 'bot');
     }, QUEUE_BOT_FALLBACK_MS);
 }
