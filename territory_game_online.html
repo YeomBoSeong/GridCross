@@ -440,6 +440,9 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
    여백을 남겨야 제목과 겹치지 않음(64+38≈102px) */
 body.native-app #ad-horiz-top{margin:0 auto 58px;}
 body.native-app .rules-inline{display:none;}
+/* 상단 여백을 줄이니 화면 전체가 스크롤 없이 딱 맞게 되면서, 맨 아래 버튼이
+   화면 하단 고정된 개인정보처리방침 링크와 겹치는 경우가 생김 — 하단 여백을 더 둠 */
+body.native-app{padding-bottom:96px;}
 </style>
 </head>
 <body>
