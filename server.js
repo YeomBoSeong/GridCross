@@ -986,16 +986,27 @@ setInterval(async () => {
     } catch (e) { console.error('daily sweep error', e); }
 }, 5 * 60 * 1000);
 
-// 봇 대기방 생성 시각에 무작위 편차를 줘 여러 방이 한꺼번에 생성돼도
-// 리더보드/방 목록에서 전부 같은 시각으로 보이지 않게 함
-const DAILY_ROOM_CREATED_JITTER_MS = 45 * 60 * 1000;
-function jitteredCreatedAt() {
-    return Date.now() - Math.floor(Math.random() * DAILY_ROOM_CREATED_JITTER_MS);
-}
-// 아무도 참가 안 한 봇 방을 이 시간 이상 방치하면 "방금 열린 것"처럼 생성 시각을 새로 갱신함.
-// 봇마다 이 문턱을 넘는 시점이 제각각이라(=자연히 시간차가 남) 나중에 하루/이틀 지나도
-// 전부 "1일 전"/"2일 전"으로 뭉쳐 보이는 일이 없음 — 항상 "몇 시간 전" 이내로 유지됨.
-const BOT_ROOM_REFRESH_AFTER_MS = 3 * 60 * 60 * 1000;
+// 아무도 참가 안 한 봇 방이 이 기간(7일)을 넘기면 생성 시각을 지금(0)으로 초기화함.
+// 그 전까지는 시각을 건드리지 않음 — 실제 사람이 만든 방처럼 자연스럽게 나이를 먹다가,
+// 너무 오래돼 보이기 직전에만 리셋되는 것. (사람과 막 게임을 끝낸 봇이 새 방을 여는
+// 정상 경로는 항상 생성 시각이 지금(0)이므로 이 상수와는 무관함)
+const DAILY_ROOM_RESET_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+// ── 일회성: 기존 봇 대기방들의 생성 시각을 0~7일 범위로 재분산 (사용 후 제거 예정) ──
+app.post('/api/admin/one-time-jitter-bot-rooms-7d', async (req, res) => {
+    try {
+        await connectDB();
+        const rooms = await dailyCol.find({ status: 'waiting' }).toArray();
+        let updated = 0;
+        for (const r of rooms) {
+            if (!bots.isBotUsername(r.creator)) continue;
+            const createdAt = Date.now() - Math.floor(Math.random() * DAILY_ROOM_RESET_AFTER_MS);
+            await dailyCol.updateOne({ _id: r._id }, { $set: { createdAt } });
+            updated++;
+        }
+        res.json({ ok: true, updated });
+    } catch (e) { res.json({ ok: false, error: e.message }); }
+});
 
 // ── 일일 대전 봇: 항상 대기방 하나씩 열어두기 (단, 이미 누군가와 경기 중이면 열지 않음) ──
 async function ensureBotDailyRooms() {
@@ -1004,8 +1015,8 @@ async function ensureBotDailyRooms() {
         for (const bot of bots.DAILY_BOTS) {
             const existing = await dailyCol.findOne({ creator: bot.username, status: 'waiting' });
             if (existing) {
-                if (Date.now() - existing.createdAt > BOT_ROOM_REFRESH_AFTER_MS) {
-                    await dailyCol.updateOne({ _id: existing._id }, { $set: { createdAt: jitteredCreatedAt() } });
+                if (Date.now() - existing.createdAt >= DAILY_ROOM_RESET_AFTER_MS) {
+                    await dailyCol.updateOne({ _id: existing._id }, { $set: { createdAt: Date.now() } });
                 }
                 continue;
             }
@@ -1014,9 +1025,11 @@ async function ensureBotDailyRooms() {
             if (activeCount > 0) continue; // 봇은 한 번에 한 경기만 — 경기 중엔 새 방을 열지 않음
             const botUser = await usersCol.findOne({ username: bot.username });
             if (!botUser) continue;
+            // 방이 없다는 건 곧 사람과의 이전 대국이 끝났다는 뜻(방은 참가돼야만 사라짐) —
+            // 그래서 새로 여는 방은 항상 "방금 생성"(0)으로 시작함
             await dailyCol.insertOne({
                 _id: genId(), creator: bot.username, creatorRating: botUser.rating || 1000,
-                creatorEmail: null, status: 'waiting', createdAt: jitteredCreatedAt(),
+                creatorEmail: null, status: 'waiting', createdAt: Date.now(),
             });
         }
     } catch (e) { console.error('ensureBotDailyRooms error', e); }
