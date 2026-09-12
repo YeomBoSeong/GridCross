@@ -257,6 +257,12 @@ app.post('/api/session/resume', async (req, res) => {
     }
 });
 
+function withBotColor(list) {
+    return list.map(u => bots.isBotUsername(u.username)
+        ? { ...u, color: bots.BOT_COLOR_MAP.get(u.username) }
+        : u);
+}
+
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const col  = await connectDB();
@@ -264,7 +270,7 @@ app.get('/api/leaderboard', async (req, res) => {
             .find({}, { projection: { password: 0, _id: 0, sessionToken: 0, isBot: 0, botMode: 0, botLevel: 0 } })
             .sort({ rating: -1 })
             .toArray();
-        res.json(list);
+        res.json(withBotColor(list));
     } catch (e) {
         res.json([]);
     }
@@ -303,7 +309,7 @@ app.get('/api/ai/conquerors', async (req, res) => {
             .toArray();
         // 유저가 정복한 가장 높은 난이도에서만 표시 (낮은 난이도 목록에는 중복 노출 안 함)
         const topOnly = list.filter(u => Math.max(...(u.aiWins || [lv])) === lv);
-        res.json(topOnly);
+        res.json(withBotColor(topOnly));
     } catch (e) {
         res.json([]);
     }

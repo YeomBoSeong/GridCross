@@ -30,8 +30,20 @@ function isBotUsername(username) {
     return BOT_LEVEL_MAP.has(username);
 }
 
+// ── 봇 닉네임 색 ──────────────────────────────
+// 실제 유저의 "AI 정복자" 닉네임 색(territory_game_online.html의 AI_LEVEL_CFG)과 같은 팔레트에서
+// 유저명 해시로 고정 색을 골라줌 — 모든 봇이 흰색으로 보여 봇임이 쉽게 티나는 문제 방지.
+// 서버 재시작/배포와 무관하게 항상 같은 봇에 같은 색이 나오도록 랜덤 대신 결정적 해시 사용.
+const NICK_COLORS = ['#8b5a2b', '#d4b106', '#ff8c00', '#2ea043', '#3b82f6', '#9b59b6', '#e74c3c'];
+function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+}
+const BOT_COLOR_MAP = new Map(ALL_BOTS.map(b => [b.username, NICK_COLORS[hashStr(b.username) % NICK_COLORS.length]]));
+
 module.exports = {
     REALTIME_BOTS, DAILY_BOTS, ALL_BOTS,
-    BOT_LEVEL_MAP, BOT_MODE_MAP,
+    BOT_LEVEL_MAP, BOT_MODE_MAP, BOT_COLOR_MAP,
     isBotUsername,
 };

@@ -2308,7 +2308,7 @@ async function loadOnlineLb(){
     if(!data.length){$e('lb-body').innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">${t('lb.noOnlineRecords')}</td></tr>`;return;}
     const sym=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
     const rc=i=>`rank${i<3?' t'+(i+1):''}`;
-    $e('lb-body').innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td><td class="stat">${u.wins}</td><td class="stat">${u.losses}</td><td class="stat">${u.draws}</td></tr>`).join('');
+    $e('lb-body').innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${u.color||nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td><td class="stat">${u.wins}</td><td class="stat">${u.losses}</td><td class="stat">${u.draws}</td></tr>`).join('');
 }
 async function selectAiLevel(level){
     lbAiLevel=Number(level);
@@ -2319,7 +2319,7 @@ async function selectAiLevel(level){
     if(!data.length){body.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">${noConquerorsYetText(lbAiLevel)}</td></tr>`;return;}
     const sym=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
     const rc=i=>`rank${i<3?' t'+(i+1):''}`;
-    body.innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td></tr>`).join('');
+    body.innerHTML=data.map((u,i)=>`<tr><td class="${rc(i)}">${sym(i)}</td><td class="uname-cell${u.username===currentUser?.username?' me':''}"><span style="color:${u.color||nameColor(u.aiWins)}">${u.username}</span>${u.username===currentUser?.username?` (${t('common.me')})`:''}</td><td class="rating-cell">${u.rating}</td></tr>`).join('');
 }
 function closeLeaderboard(){$e('lb-modal').classList.remove('show');}
 $e('lb-modal').addEventListener('click',e=>{if(e.target===$e('lb-modal'))closeLeaderboard();});
