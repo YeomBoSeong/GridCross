@@ -89,13 +89,13 @@ async function seedBots() {
                         password: hashPw(crypto.randomBytes(16).toString('hex')),
                         rating: 1000, wins: 0, losses: 0, draws: 0,
                     },
+                    // "AI 정복자" 목록에 봇 난이도와 일치하는 레벨로만 노출되도록 aiWins를 해당 레벨로 고정
                     $set: {
                         isBot: true,
                         botMode: bots.BOT_MODE_MAP.get(bot.username),
                         botLevel: bot.level,
+                        aiWins: [bots.BOT_CONQ_LEVEL_MAP.get(bot.username)],
                     },
-                    // "AI 정복자" 목록에 노출되도록 배정된 레벨을 aiWins에 심어줌 (기존 값 있으면 유지, 중복 추가 안 됨)
-                    $addToSet: { aiWins: bots.BOT_CONQ_LEVEL_MAP.get(bot.username) },
                 },
                 { upsert: true }
             );

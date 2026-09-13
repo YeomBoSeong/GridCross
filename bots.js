@@ -32,18 +32,11 @@ function isBotUsername(username) {
 
 // ── 봇 닉네임 색 & AI 정복자 노출 ──────────────
 // 실유저의 "AI 정복자" 닉네임 색(territory_game_online.html의 AI_LEVEL_CFG)과 같은 팔레트에서
-// 유저명 해시로 LV.1~7 중 하나를 고정 배정 — 모든 봇이 흰색으로 보여 봇임이 쉽게 티나는 문제 방지.
+// 봇의 실제 난이도(level)와 동일한 LV를 그대로 배정 — 예: LV.6 봇 → AI 정복 LV.6(보라색).
 // 배정된 레벨을 aiWins에도 심어서(seedBots) 해당 레벨의 "AI 정복자" 목록에 실제로 노출되게 함.
-// 서버 재시작/배포와 무관하게 항상 같은 봇에 같은 레벨/색이 나오도록 랜덤 대신 결정적 해시 사용.
 const AI_LEVEL_COLORS = { 1: '#8b5a2b', 2: '#d4b106', 3: '#ff8c00', 4: '#2ea043', 5: '#3b82f6', 6: '#9b59b6', 7: '#e74c3c' };
-function hashStr(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-    return Math.abs(h);
-}
-const AI_LEVELS = Object.keys(AI_LEVEL_COLORS).map(Number);
-const BOT_CONQ_LEVEL_MAP = new Map(ALL_BOTS.map(b => [b.username, AI_LEVELS[hashStr(b.username) % AI_LEVELS.length]]));
-const BOT_COLOR_MAP = new Map(ALL_BOTS.map(b => [b.username, AI_LEVEL_COLORS[BOT_CONQ_LEVEL_MAP.get(b.username)]]));
+const BOT_CONQ_LEVEL_MAP = new Map(ALL_BOTS.map(b => [b.username, b.level]));
+const BOT_COLOR_MAP = new Map(ALL_BOTS.map(b => [b.username, AI_LEVEL_COLORS[b.level]]));
 
 module.exports = {
     REALTIME_BOTS, DAILY_BOTS, ALL_BOTS,
