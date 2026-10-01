@@ -232,6 +232,7 @@ body{
 
 /* timer */
 #s-online-game{gap:8px;}
+#s-online-game .capture-msg{margin-top:-8px;}
 #timer-row{display:flex;align-items:center;gap:8px;}
 #timer-wrap{flex:1;display:flex;align-items:center;gap:10px;background:var(--bg2);
     border:1px solid var(--border);border-radius:10px;padding:7px 14px;}
@@ -1019,12 +1020,17 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
     <div class="capture-msg" id="dcapmsg"></div>
     <div class="grid-wrap"><div class="grid" id="dgrid"></div></div>
     <div id="msg-d"></div>
-    <div id="daily-result-box" class="result-card" style="display:none">
-        <div id="dr-emoji" style="font-size:2rem"></div>
+</div>
+
+<!-- ══ DAILY RESULT MODAL ══ -->
+<div id="daily-result-box" class="modal-overlay">
+    <div class="result-card">
+        <div id="dr-emoji" style="font-size:2.5rem"></div>
         <div id="dr-title" class="result-title"></div>
         <div id="dr-score" class="result-score"></div>
         <div id="dr-rating" class="result-rating-row" style="display:none"></div>
         <button class="btn btn-primary" style="margin-top:4px;padding:11px 24px" onclick="sfx.click();closeDailyGame()" data-i18n="daily.backToList">← 목록으로</button>
+        <button class="btn btn-ghost" style="padding:8px 20px" onclick="sfx.click();$e('daily-result-box').classList.remove('show')" data-i18n="daily.viewBoard">보드 보기</button>
     </div>
 </div>
 
@@ -1247,6 +1253,7 @@ ko:{
     'online.waitingRooms':'참가 대기 중인 방',
     'daily.title':'일일 게임',
     'daily.backToList':'← 목록으로',
+    'daily.viewBoard':'보드 보기',
     'daily.noRooms':'대기 중인 방이 없습니다',
     'daily.noGames':'진행 중인 일일 게임이 없습니다',
     'daily.myWaitingRoom':'내가 만든 방 (대기 중)',
@@ -1412,6 +1419,7 @@ en:{
     'online.waitingRooms':'Rooms Waiting for Players',
     'daily.title':'Daily Game',
     'daily.backToList':'← Back to List',
+    'daily.viewBoard':'View board',
     'daily.noRooms':'No rooms waiting',
     'daily.noGames':'No daily games in progress',
     'daily.myWaitingRoom':'Room I created (waiting)',
@@ -1516,6 +1524,41 @@ const AI_LEVEL_CFG={
     6:{depth:5,beam:12,color:'#9b59b6',name:'보라색',nameEn:'Purple'},
     7:{depth:6,beam:12,color:'#e74c3c',name:'빨간색',nameEn:'Red'},
 };
+// ── 대국 화면 닉네임 색(AI 정복자 색) ──
+// 공/이모지(🔵🔴)는 그대로 두고 닉네임만 색을 입힘. 정복 기록이 없으면 기본(흰색).
+const nameColorCache={};   // 상대 닉네임 → {c:색, t:조회시각}
+const NAME_COLOR_TTL=5*60*1000;
+let oNames=null;           // 온라인 대국 {p1,p2} 닉네임
+function colorFor(name){
+    if(currentUser&&name===currentUser.username)return nameColor(currentUser.aiWins);
+    const e=nameColorCache[name];return e?e.c:'var(--text)';
+}
+async function ensureNameColors(names){
+    const now=Date.now();
+    const need=names.filter(n=>n&&!(currentUser&&n===currentUser.username)&&!(nameColorCache[n]&&now-nameColorCache[n].t<NAME_COLOR_TTL));
+    if(!need.length)return;
+    try{
+        const res=await fetch('/api/name-colors?names='+encodeURIComponent(need.join(','))).then(r=>r.json());
+        need.forEach(n=>{nameColorCache[n]={c:(res&&res[n])||'var(--text)',t:now};});
+    }catch(e){}
+}
+function setPlayerName(el,ball,name,color,suffix){
+    el.textContent='';el.append(ball+' ');
+    const nm=document.createElement('span');nm.textContent=name;nm.style.color=color;el.append(nm);
+    if(suffix)el.append(' '+suffix);
+}
+// pairs: [[배지 요소 id, 점수판 라벨 id, 공 이모지, 닉네임], ...]
+function paintNames(pairs){
+    if(!currentUser)return;
+    const me=currentUser.username;
+    pairs.forEach(([bid,lid,ball,n])=>{
+        const isMe=n===me;
+        setPlayerName($e(bid),ball,n,colorFor(n),isMe?`(${t('common.me')})`:'');
+        if(isMe)$e(lid).textContent=`${ball} ${t('common.meShort')}`;else setPlayerName($e(lid),ball,n,colorFor(n));
+    });
+}
+function paintOnlineNames(){if(oNames)paintNames([['pb1-name','olbl1','🔵',oNames.p1],['pb2-name','olbl2','🔴',oNames.p2]]);}
+function paintDailyNames(){if(dGame)paintNames([['dpb1-name','dlbl1','🔵',dGame.p1],['dpb2-name','dlbl2','🔴',dGame.p2]]);}
 function nameColor(aiWins){
     if(!aiWins||!aiWins.length)return 'var(--text)';
     const best=Math.max(...aiWins);
@@ -1688,8 +1731,10 @@ function startOnlineGame(msg){
     oTurn=msg.turn||P1;oEnded=false;oCapCounts=[0,0];oOptimisticMove=null;$e('ocap1').textContent=capturedLabel(0);$e('ocap2').textContent=capturedLabel(0);$e('ocapmsg').classList.remove('show');
     $e('challenge-notif').classList.remove('show');$e('result-modal').classList.remove('show');pendingChallengeFrom=null;
     const myN=currentUser.username,oppN=msg.opponent,myR=currentUser.rating,opR=msg.opponentRating;
-    if(myNum===1){$e('pb1-name').textContent=`🔵 ${myN} (${t('common.me')})`;$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-name').textContent=`🔴 ${oppN}`;$e('pb2-rat').textContent=`⚡${opR}`;$e('olbl1').textContent=`🔵 ${t('common.meShort')}`;$e('olbl2').textContent=`🔴 ${oppN}`;}
-    else{$e('pb1-name').textContent=`🔵 ${oppN}`;$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-name').textContent=`🔴 ${myN} (${t('common.me')})`;$e('pb2-rat').textContent=`⚡${myR}`;$e('olbl1').textContent=`🔵 ${oppN}`;$e('olbl2').textContent=`🔴 ${t('common.meShort')}`;}
+    oNames=myNum===1?{p1:myN,p2:oppN}:{p1:oppN,p2:myN};
+    if(myNum===1){$e('pb1-rat').textContent=`⚡${myR}`;$e('pb2-rat').textContent=`⚡${opR}`;}
+    else{$e('pb1-rat').textContent=`⚡${opR}`;$e('pb2-rat').textContent=`⚡${myR}`;}
+    paintOnlineNames();ensureNameColors([myN,oppN]).then(paintOnlineNames);
     $e('msg-o').textContent='';$e('forfeit-btn').style.display='';
     buildGrid($e('ogrid'),(r,c)=>onlineClick(r,c),(r,c)=>hoverInOnline(r,c),clearHoverOnline,'online');
     renderOnlineBoard();
@@ -1885,23 +1930,16 @@ function openDailyGameFromData(game){
     renderDailyGame();showScreen('s-daily-game');
 }
 function closeDailyGame(){
-    clearInterval(dDeadlineInterval);dGame=null;dGameId=null;
+    clearInterval(dDeadlineInterval);dGame=null;dGameId=null;$e('daily-result-box').classList.remove('show');
     showScreen('s-online');switchTabById('tab-daily');
 }
 
 function renderDailyGame(){
     const g=dGame;
-    if(dMyNum===P1){
-        $e('dpb1-name').textContent=`🔵 ${currentUser.username} (${t('common.me')})`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
-        $e('dpb2-name').textContent=`🔴 ${g.p2}`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
-        $e('dlbl1').textContent=`🔵 ${t('common.meShort')}`;$e('dlbl2').textContent=`🔴 ${g.p2}`;
-    }else{
-        $e('dpb1-name').textContent=`🔵 ${g.p1}`;$e('dpb1-rat').textContent=`⚡${g.p1Rating}`;
-        $e('dpb2-name').textContent=`🔴 ${currentUser.username} (${t('common.me')})`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
-        $e('dlbl1').textContent=`🔵 ${g.p1}`;$e('dlbl2').textContent=`🔴 ${t('common.meShort')}`;
-    }
+    $e('dpb1-rat').textContent=`⚡${g.p1Rating}`;$e('dpb2-rat').textContent=`⚡${g.p2Rating}`;
+    paintDailyNames();ensureNameColors([g.p1,g.p2]).then(paintDailyNames);
     $e('msg-d').textContent='';$e('dcapmsg').classList.remove('show');
-    $e('daily-result-box').style.display='none';$e('daily-forfeit-btn').style.display=g.status==='active'?'':'none';
+    $e('daily-result-box').classList.remove('show');$e('daily-forfeit-btn').style.display=g.status==='active'?'':'none';
     buildGrid($e('dgrid'),(r,c)=>dailyClick(r,c),(r,c)=>hoverInDaily(r,c),clearHoverDaily,'daily');
     renderDailyBoard();syncDailyUI();
     clearInterval(dDeadlineInterval);
@@ -2008,7 +2046,7 @@ function showDailyResult(){
     }
     if(result==='draw')sfx._tone(440,.3,'sine',.12);else if(iWon)sfx.win();else sfx.lose();
     $e('daily-forfeit-btn').style.display='none';
-    $e('daily-result-box').style.display='flex';
+    $e('daily-result-box').classList.add('show');
     $e('dturn').textContent=t('common.gameOver');
 }
 

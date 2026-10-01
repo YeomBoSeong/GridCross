@@ -265,6 +265,21 @@ function withBotColor(list) {
         : u);
 }
 
+// 대국 화면 닉네임 색용: 닉네임 → AI 정복자 색(정복 기록이 없으면 null). 읽기 전용.
+app.get('/api/name-colors', async (req, res) => {
+    const names = String(req.query.names || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 4);
+    const out = {};
+    try {
+        const col = await connectDB();
+        for (const name of names) {
+            if (bots.isBotUsername(name)) { out[name] = bots.BOT_COLOR_MAP.get(name); continue; }
+            const u = await col.findOne({ username: name }, { projection: { aiWins: 1, _id: 0 } });
+            out[name] = (u && u.aiWins && u.aiWins.length) ? (bots.AI_LEVEL_COLORS[Math.max(...u.aiWins)] || null) : null;
+        }
+    } catch (e) { /* 색 조회 실패는 기본색으로 폴백 */ }
+    res.json(out);
+});
+
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const col  = await connectDB();
