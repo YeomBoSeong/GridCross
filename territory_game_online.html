@@ -439,6 +439,8 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 @media(max-width:540px){
     body:has(#s-login.active) #lang-toggle{top:8px;}
 }
+/* 모바일 키보드가 열려 화면 높이가 낮아지면 하단 고정 링크가 입력칸 위에 겹치므로 숨김 */
+@media(max-height:480px){#footer-privacy-link{display:none;}}
 @media(min-width:541px) and (max-width:979px){
     body{padding-top:0;}
 }
