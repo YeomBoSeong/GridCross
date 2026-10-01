@@ -224,6 +224,11 @@ body{
 #msg-l,#msg-o{min-height:1.8rem;font-size:1.1rem;font-weight:bold;text-align:center;}
 .capture-msg{min-height:1.3rem;font-size:.88rem;font-weight:bold;text-align:center;color:#e3b341;opacity:0;transition:opacity .3s;}
 .capture-msg.show{opacity:1;}
+/* 온라인/일일 대국: 빈 메시지 줄이 보드 위 간격을 넓히므로 높이를 접고(점수바~보드 간격 = 점수판~점수바 간격),
+   포획 메시지는 보드 위쪽에 알약 모양으로 겹쳐 표시 */
+#s-online-game .capture-msg,#s-daily-game .capture-msg{position:relative;z-index:3;
+    margin:-14px 0 -1.3rem;line-height:1.3rem;padding:0 12px;border-radius:10px;
+    background:rgba(13,17,23,.88);white-space:nowrap;pointer-events:none;}
 
 /* timer */
 #s-online-game{gap:8px;}
@@ -426,6 +431,10 @@ body{
 }
 /* 로그인 화면은 광고가 보이지 않으므로(전체화면 오버레이) 토글을 원래 위치로 유지 */
 body:has(#s-login.active) #lang-toggle{top:14px;}
+/* 메인 메뉴를 뺀 모든 화면: 제목 윗공간을 더 줄임(메인은 제목이 길어 언어 버튼과 겹칠 수 있어 유지) */
+@media(max-width:979px){
+    body:not(:has(#s-menu.active)) #ad-horiz-top{margin-bottom:12px;}
+}
 @media(max-width:540px){
     body:has(#s-login.active) #lang-toggle{top:8px;}
 }
