@@ -17,3 +17,4 @@ android/local.gradle
 # 서명 키(있다면 절대 커밋 금지)
 android/*.keystore
 android/*.jks
+android/keystore.properties
