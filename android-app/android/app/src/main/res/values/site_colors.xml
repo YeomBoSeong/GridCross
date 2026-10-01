@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 사이트 배경색(territory_game_online.html의 bg 변수와 동일). 시스템 바 여백 영역이 흰색으로 비치지 않게 창 배경에 사용 -->
+    <color name="siteBackground">#0d1117</color>
+</resources>
