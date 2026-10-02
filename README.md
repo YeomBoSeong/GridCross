@@ -81,7 +81,7 @@ GridCross/
 
 | 메인 메뉴 | AI 대전 |
 |-----------|---------|
-| ![메뉴](메뉴.png) | ![게임플레이](게임플레이.png) |
+| ![메뉴](android-app/assets/screenshot2_menu.png) | ![게임플레이](android-app/assets/screenshot1_gameplay.png) |
 
 ---
 
