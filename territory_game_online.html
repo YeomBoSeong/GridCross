@@ -446,7 +446,7 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 /* 앱 안에서는 애드핏 광고 자리를 없앰 — 언어 버튼도 광고 아래가 아닌 원래 위치로 */
 html.native-app .ad-desktop-left,html.native-app .ad-desktop-right,html.native-app #ad-horiz-top{display:none!important;}
 html.native-app #lang-toggle{top:14px;}
-html.native-app body:has(#s-menu.active){padding-top:52px;} /* 메인은 제목이 길어 언어 버튼 아래로 내림 */
+html.native-app body{padding-top:52px;} /* 모든 화면에서 제목을 언어 버튼 아래로 내림 */
 @media(max-width:540px){
     body:has(#s-login.active) #lang-toggle{top:8px;}
 }

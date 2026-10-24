@@ -73,7 +73,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     // 웹(사이트)에서는 카카오 애드핏을 쓰지만 앱 안에서는 숨기고(territory_game_online.html의 native-app),
-    // 대신 웹뷰 아래에 AdMob 적응형 배너를 붙인다. 웹뷰를 세로 LinearLayout으로 감싸 배너와 겹치지 않게 함.
+    // 대신 웹뷰 위(기존 애드핏 자리)에 AdMob 적응형 배너를 붙인다. 웹뷰를 세로 LinearLayout으로 감싸 배너와 겹치지 않게 함.
     private void setupBannerAd() {
         WebView webView = getBridge().getWebView();
         ViewGroup parent = (ViewGroup) webView.getParent();
@@ -83,11 +83,11 @@ public class MainActivity extends BridgeActivity {
 
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.addView(webView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         adContainer = new FrameLayout(this);
         adContainer.setBackgroundColor(Color.parseColor("#0d1117")); // 사이트 배경색(--bg)
         column.addView(adContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        column.addView(webView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         parent.addView(column, index, webViewParams);
 
         new Thread(() -> MobileAds.initialize(this, status -> {})).start();
