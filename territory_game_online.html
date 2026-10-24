@@ -20,7 +20,14 @@
 <meta name="twitter:description" content="12×12 보드에서 십자 모양으로 땅을 점령하는 온라인 전략 게임.">
 <meta name="google-site-verification" content="sSqqsEQFi1CN6Pg4jk9VRVl2XeRWoBjt08-SDUUYcJE" />
 <meta name="naver-site-verification" content="1505adfe6ccf0760a5747c6c216c0b5176bbc29f" />
-<script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
+<script>
+// 안드로이드 앱(Capacitor) 안에서는 애드핏 대신 네이티브 AdMob 배너(화면 하단)를 쓰므로 애드핏 스크립트를 아예 불러오지 않음
+if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){
+    document.documentElement.classList.add('native-app');
+}else{
+    (function(){var s=document.createElement('script');s.src='//t1.kakaocdn.net/kas/static/ba.min.js';s.async=true;document.head.appendChild(s);})();
+}
+</script>
 <style>
 :root {
     color-scheme: only dark;
@@ -436,6 +443,9 @@ body:has(#s-login.active) #lang-toggle{top:14px;}
 @media(max-width:979px){
     body:not(:has(#s-menu.active)) #ad-horiz-top{margin-bottom:12px;}
 }
+/* 앱 안에서는 애드핏 광고 자리를 없앰 — 언어 버튼도 광고 아래가 아닌 원래 위치로 */
+html.native-app .ad-desktop-left,html.native-app .ad-desktop-right,html.native-app #ad-horiz-top{display:none!important;}
+html.native-app #lang-toggle{top:14px;}
 @media(max-width:540px){
     body:has(#s-login.active) #lang-toggle{top:8px;}
 }

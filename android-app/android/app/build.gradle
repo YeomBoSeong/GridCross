@@ -13,9 +13,12 @@ android {
         applicationId "com.gridcross.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.1.1"
+        versionCode 6
+        versionName "1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // AdMob ID는 gradle.properties에서 읽음(release용 실제 ID). debug 빌드는 아래에서 항상 Google 공식 테스트 ID로 덮어씀
+        manifestPlaceholders = [admobAppId: project.property('admobAppId')]
+        resValue "string", "admob_banner_id", project.property('admobBannerId')
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -36,6 +39,9 @@ android {
         debug {
             // 플레이스토어 앱(com.gridcross.app)과 공존하도록 별도 패키지로 설치 — 앱 이름은 src/debug/res에서 "test"
             applicationIdSuffix ".test"
+            // 개발 중 실제 광고를 노출/클릭하면 무효 트래픽으로 계정이 제한될 수 있어 debug는 테스트 광고만 사용
+            manifestPlaceholders = [admobAppId: "ca-app-pub-3940256099942544~3347511713"]
+            resValue "string", "admob_banner_id", "ca-app-pub-3940256099942544/9214589741"
         }
         release {
             minifyEnabled false
@@ -57,6 +63,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation "com.google.android.gms:play-services-ads:$playServicesAdsVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
